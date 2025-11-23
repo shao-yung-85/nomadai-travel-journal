@@ -1,0 +1,7 @@
+{
+  "name": "NomadAI Travel Journal",
+  "description": "A smart travel companion app to record itineraries and edit travel photos using Gemini AI.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

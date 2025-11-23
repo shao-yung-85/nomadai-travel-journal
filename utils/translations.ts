@@ -1,0 +1,285 @@
+
+export const translations = {
+  'zh-TW': {
+    // Common
+    back: '返回',
+    cancel: '取消',
+    confirm: '確認',
+    save: '儲存',
+    delete: '刪除',
+    edit: '編輯',
+    loading: '載入中...',
+    day: 'Day',
+    
+    // TripList
+    my_trips: '我的旅程',
+    start_adventure: '開始新的冒險',
+    click_to_add: '點擊下方按鈕新增行程',
+    trips_count: '個行程',
+    
+    // AddTrip
+    new_trip: '新增旅程',
+    destination: '目的地 / 標題',
+    cover_photo: '封面照片',
+    upload_photo: '上傳照片',
+    ai_generate_cover: 'AI 自動生成',
+    start_date: '開始日期',
+    end_date: '結束日期',
+    create_trip: '建立旅程',
+    add_trip_hint: '您之後可以隨時新增詳細的行程安排',
+    
+    // TripDetail
+    itinerary: '行程',
+    map: '地圖',
+    budget: '記帳',
+    bookings: '預定',
+    ai_guide: 'AI 導遊',
+    add_activity: '新增行程',
+    edit_activity: '編輯行程',
+    add_expense: '新增消費',
+    add_booking: '新增預定',
+    weather: '當地天氣',
+    nav_quick_jump: '快速跳轉',
+    no_itinerary: '尚無行程規劃',
+    click_add: '點擊右下角按鈕新增',
+    delete_trip_title: '刪除行程？',
+    delete_trip_confirm: '您確定要刪除「{title}」嗎？所有的紀錄都將消失且無法復原。',
+    confirm_delete: '確認刪除',
+    
+    // Forms
+    activity_name: '活動名稱',
+    time: '時間',
+    location: '地點',
+    notes: '備註 (選填)',
+    expense_item: '項目名稱',
+    amount: '金額',
+    payer: '付款人',
+    payment_method: '方式',
+    booking_type: '類型',
+    provider: '供應商 / 名稱',
+    booking_ref: '訂單編號 (選填)',
+    
+    // AI Planner
+    ai_planner_title: 'AI 行程規劃',
+    ai_planner_intro: '嗨！我是你的 AI 旅遊助理。告訴我你想去哪裡？玩幾天？我會依照景點距離幫你安排最順路的行程。',
+    ai_planning: '沒問題！我正在幫你規劃行程。這需要一點時間（約 10-20 秒）。',
+    ai_done: '行程規劃完成！你可以去列表查看了。✨',
+    input_placeholder: '輸入您的旅遊想法...',
+    planning_process: '規劃運算中...',
+    
+    // Magic Editor
+    magic_editor_title: '魔法修圖室',
+    upload_hint: '上傳旅遊照片',
+    magic_prompt_placeholder: '把天氣變成晴天、加入熱氣球...',
+    start_magic: '開始生成',
+    generating: '魔法顯影中...',
+    
+    // Settings
+    settings_title: '設定',
+    general: '一般',
+    language: '語言',
+    appearance: '外觀與風格',
+    minimalist_mode: '極簡純文字模式',
+    minimalist_desc: '隱藏圖片，專注於資訊列表',
+    data_mgmt: '資料管理',
+    reset_all: '重置所有紀錄',
+    reset_confirm: '確定要重置所有應用程式資料嗎？這將刪除所有您的行程、消費紀錄與設定。此動作無法復原。',
+    
+    // Tools
+    tools_title: '實用工具箱',
+    tool_emergency: '急救電話',
+    tool_card: '刷卡攻略',
+    tool_map: '足跡地圖',
+    tool_restroom: '找廁所',
+    tool_visa: '簽證檢核',
+    tool_culture: '文化指南'
+  },
+  'en-US': {
+    // Common
+    back: 'Back',
+    cancel: 'Cancel',
+    confirm: 'Confirm',
+    save: 'Save',
+    delete: 'Delete',
+    edit: 'Edit',
+    loading: 'Loading...',
+    day: 'Day',
+
+    // TripList
+    my_trips: 'My Trips',
+    start_adventure: 'Start New Adventure',
+    click_to_add: 'Click button below to add trip',
+    trips_count: 'items',
+
+    // AddTrip
+    new_trip: 'New Trip',
+    destination: 'Destination / Title',
+    cover_photo: 'Cover Photo',
+    upload_photo: 'Upload',
+    ai_generate_cover: 'AI Generate',
+    start_date: 'Start Date',
+    end_date: 'End Date',
+    create_trip: 'Create Trip',
+    add_trip_hint: 'You can add detailed itinerary later',
+
+    // TripDetail
+    itinerary: 'Itinerary',
+    map: 'Map',
+    budget: 'Budget',
+    bookings: 'Bookings',
+    ai_guide: 'AI Guide',
+    add_activity: 'Add Activity',
+    edit_activity: 'Edit Activity',
+    add_expense: 'Add Expense',
+    add_booking: 'Add Booking',
+    weather: 'Weather',
+    nav_quick_jump: 'Jump to',
+    no_itinerary: 'No itinerary yet',
+    click_add: 'Click button to add',
+    delete_trip_title: 'Delete Trip?',
+    delete_trip_confirm: 'Are you sure you want to delete "{title}"? This cannot be undone.',
+    confirm_delete: 'Delete',
+
+    // Forms
+    activity_name: 'Activity Name',
+    time: 'Time',
+    location: 'Location',
+    notes: 'Notes (Optional)',
+    expense_item: 'Item Name',
+    amount: 'Amount',
+    payer: 'Payer',
+    payment_method: 'Method',
+    booking_type: 'Type',
+    provider: 'Provider / Name',
+    booking_ref: 'Ref Number (Optional)',
+
+    // AI Planner
+    ai_planner_title: 'AI Planner',
+    ai_planner_intro: 'Hi! I am your AI travel assistant. Where do you want to go?',
+    ai_planning: 'Sure! I am planning your trip. This takes about 10-20 seconds.',
+    ai_done: 'Planning complete! Check your trip list. ✨',
+    input_placeholder: 'Enter your travel ideas...',
+    planning_process: 'Processing...',
+
+    // Magic Editor
+    magic_editor_title: 'Magic Editor',
+    upload_hint: 'Upload Photo',
+    magic_prompt_placeholder: 'Make it sunny, add balloons...',
+    start_magic: 'Generate',
+    generating: 'Processing...',
+
+    // Settings
+    settings_title: 'Settings',
+    general: 'General',
+    language: 'Language',
+    appearance: 'Appearance',
+    minimalist_mode: 'Minimalist Mode',
+    minimalist_desc: 'Hide images, focus on text',
+    data_mgmt: 'Data Management',
+    reset_all: 'Reset All Data',
+    reset_confirm: 'Are you sure? This will delete all trips and settings. This cannot be undone.',
+
+    // Tools
+    tools_title: 'Tools',
+    tool_emergency: 'Emergency',
+    tool_card: 'Card Tips',
+    tool_map: 'Scratch Map',
+    tool_restroom: 'Restroom',
+    tool_visa: 'Visa Check',
+    tool_culture: 'Culture'
+  },
+  'ja-JP': {
+    // Common
+    back: '戻る',
+    cancel: 'キャンセル',
+    confirm: '確認',
+    save: '保存',
+    delete: '削除',
+    edit: '編集',
+    loading: '読み込み中...',
+    day: 'Day',
+
+    // TripList
+    my_trips: '私の旅',
+    start_adventure: '新しい冒険を始める',
+    click_to_add: '下のボタンで追加',
+    trips_count: '件の予定',
+
+    // AddTrip
+    new_trip: '新しい旅',
+    destination: '目的地 / タイトル',
+    cover_photo: 'カバー写真',
+    upload_photo: 'アップロード',
+    ai_generate_cover: 'AI生成',
+    start_date: '開始日',
+    end_date: '終了日',
+    create_trip: '作成',
+    add_trip_hint: '詳細なスケジュールは後で追加できます',
+
+    // TripDetail
+    itinerary: '日程',
+    map: '地図',
+    budget: '家計簿',
+    bookings: '予約',
+    ai_guide: 'AIガイド',
+    add_activity: '予定を追加',
+    edit_activity: '予定を編集',
+    add_expense: '支出を追加',
+    add_booking: '予約を追加',
+    weather: '現地の天気',
+    nav_quick_jump: 'ジャンプ',
+    no_itinerary: '予定がありません',
+    click_add: 'ボタンで追加',
+    delete_trip_title: '旅程を削除？',
+    delete_trip_confirm: '本当に「{title}」を削除しますか？復元はできません。',
+    confirm_delete: '削除する',
+
+    // Forms
+    activity_name: '活動名',
+    time: '時間',
+    location: '場所',
+    notes: 'メモ (任意)',
+    expense_item: '項目名',
+    amount: '金額',
+    payer: '支払人',
+    payment_method: '方法',
+    booking_type: 'タイプ',
+    provider: '提供者 / 名称',
+    booking_ref: '予約番号 (任意)',
+
+    // AI Planner
+    ai_planner_title: 'AIプランナー',
+    ai_planner_intro: 'こんにちは！AIトラベルアシスタントです。どこに行きたいですか？',
+    ai_planning: '了解しました！計画を作成中です（約10〜20秒かかります）。',
+    ai_done: '計画完了！リストを確認してください。✨',
+    input_placeholder: '旅行のアイデアを入力...',
+    planning_process: '計算中...',
+
+    // Magic Editor
+    magic_editor_title: '魔法の編集室',
+    upload_hint: '写真をアップロード',
+    magic_prompt_placeholder: '晴れにして、風船を追加...',
+    start_magic: '生成開始',
+    generating: '現像中...',
+
+    // Settings
+    settings_title: '設定',
+    general: '一般',
+    language: '言語',
+    appearance: '外観',
+    minimalist_mode: 'ミニマリストモード',
+    minimalist_desc: '画像を隠してテキストに集中',
+    data_mgmt: 'データ管理',
+    reset_all: '全データをリセット',
+    reset_confirm: '本当にリセットしますか？全てのデータが削除されます。',
+
+    // Tools
+    tools_title: 'ツール',
+    tool_emergency: '緊急連絡',
+    tool_card: 'カード情報',
+    tool_map: '足跡マップ',
+    tool_restroom: 'トイレ検索',
+    tool_visa: 'ビザ確認',
+    tool_culture: '文化ガイド'
+  }
+};
