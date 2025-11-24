@@ -2,11 +2,24 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
 const apiKey = process.env.API_KEY || '';
-const ai = new GoogleGenAI({ apiKey });
+
+let aiClient: GoogleGenAI | null = null;
+
+const getAiClient = () => {
+    if (!aiClient) {
+        if (!apiKey) {
+            console.warn("Gemini API Key is missing!");
+            // We don't throw here to avoid crashing the app on load, 
+            // but calls will fail later.
+        }
+        aiClient = new GoogleGenAI({ apiKey });
+    }
+    return aiClient;
+};
 
 // Helper to strip data:image/png;base64, prefix
 const cleanBase64 = (base64Data: string) => {
-  return base64Data.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '');
+    return base64Data.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '');
 };
 
 const getMimeType = (base64Data: string) => {
@@ -15,53 +28,53 @@ const getMimeType = (base64Data: string) => {
 };
 
 export const editTravelPhoto = async (
-  base64Image: string,
-  prompt: string
+    base64Image: string,
+    prompt: string
 ): Promise<string> => {
-  try {
-    const mimeType = getMimeType(base64Image);
-    const cleanData = cleanBase64(base64Image);
+    try {
+        const mimeType = getMimeType(base64Image);
+        const cleanData = cleanBase64(base64Image);
 
-    // Using gemini-2.5-flash-image (Nano Banana) for image editing tasks
-    const model = 'gemini-2.5-flash-image';
+        // Using gemini-2.5-flash-image (Nano Banana) for image editing tasks
+        const model = 'gemini-2.5-flash-image';
 
-    const response = await ai.models.generateContent({
-      model: model,
-      contents: {
-        parts: [
-          {
-            inlineData: {
-              data: cleanData,
-              mimeType: mimeType,
+        const response = await getAiClient().models.generateContent({
+            model: model,
+            contents: {
+                parts: [
+                    {
+                        inlineData: {
+                            data: cleanData,
+                            mimeType: mimeType,
+                        },
+                    },
+                    {
+                        text: `Edit this image based on the following instruction: ${prompt}. Return the edited image.`,
+                    },
+                ],
             },
-          },
-          {
-            text: `Edit this image based on the following instruction: ${prompt}. Return the edited image.`,
-          },
-        ],
-      },
-    });
+        });
 
-    // Extract image from response parts
-    if (response.candidates && response.candidates[0].content.parts) {
-      for (const part of response.candidates[0].content.parts) {
-        if (part.inlineData && part.inlineData.data) {
-           // Construct a usable data URI
-           return `data:image/png;base64,${part.inlineData.data}`;
+        // Extract image from response parts
+        if (response.candidates && response.candidates[0].content.parts) {
+            for (const part of response.candidates[0].content.parts) {
+                if (part.inlineData && part.inlineData.data) {
+                    // Construct a usable data URI
+                    return `data:image/png;base64,${part.inlineData.data}`;
+                }
+            }
         }
-      }
-    }
 
-    throw new Error("No image generated in response");
-  } catch (error) {
-    console.error("Error editing travel photo:", error);
-    throw error;
-  }
+        throw new Error("No image generated in response");
+    } catch (error) {
+        console.error("Error editing travel photo:", error);
+        throw error;
+    }
 };
 
 export const generateCoverImage = async (location: string): Promise<string> => {
     try {
-        const response = await ai.models.generateContent({
+        const response = await getAiClient().models.generateContent({
             model: 'gemini-2.5-flash-image',
             contents: {
                 parts: [
@@ -80,7 +93,7 @@ export const generateCoverImage = async (location: string): Promise<string> => {
                 }
             }
         }
-         throw new Error("No image generated");
+        throw new Error("No image generated");
     } catch (error) {
         console.error("Error generating cover image:", error);
         throw error;
@@ -88,7 +101,7 @@ export const generateCoverImage = async (location: string): Promise<string> => {
 }
 
 export const generateTripPlan = async (userPrompt: string, language: string = 'zh-TW') => {
-    const langMap: {[key: string]: string} = {
+    const langMap: { [key: string]: string } = {
         'zh-TW': 'Traditional Chinese (Taiwan) (繁體中文)',
         'en-US': 'English',
         'ja-JP': 'Japanese'
@@ -96,7 +109,7 @@ export const generateTripPlan = async (userPrompt: string, language: string = 'z
     const targetLang = langMap[language] || langMap['zh-TW'];
 
     try {
-        const response = await ai.models.generateContent({
+        const response = await getAiClient().models.generateContent({
             model: "gemini-2.5-flash",
             contents: `Help me plan a trip. ${userPrompt}`,
             config: {
@@ -196,7 +209,7 @@ export const generateTripPlan = async (userPrompt: string, language: string = 'z
 
 export const getVisaRequirements = async (passport: string, destination: string) => {
     try {
-        const response = await ai.models.generateContent({
+        const response = await getAiClient().models.generateContent({
             model: "gemini-2.5-flash",
             contents: `I hold a ${passport} passport and want to travel to ${destination}. 
             What are the visa requirements, entry rules, and any vaccination requirements? 
@@ -212,7 +225,7 @@ export const getVisaRequirements = async (passport: string, destination: string)
 
 export const getCulturalEtiquette = async (location: string) => {
     try {
-        const response = await ai.models.generateContent({
+        const response = await getAiClient().models.generateContent({
             model: "gemini-2.5-flash",
             contents: `I am currently in (or planning to go to) ${location}. 
             Give me a quick guide on:
@@ -230,7 +243,7 @@ export const getCulturalEtiquette = async (location: string) => {
 
 export const getAttractionGuide = async (location: string, activity: string) => {
     try {
-        const response = await ai.models.generateContent({
+        const response = await getAiClient().models.generateContent({
             model: "gemini-2.5-flash",
             contents: `Tell me about "${activity}" at "${location}". 
             Provide a very short fun fact, the best photo spot, and one "pro tip" for visiting.
@@ -245,7 +258,7 @@ export const getAttractionGuide = async (location: string, activity: string) => 
 
 export const getEmergencyInfo = async (country: string) => {
     try {
-         const response = await ai.models.generateContent({
+        const response = await getAiClient().models.generateContent({
             model: "gemini-2.5-flash",
             contents: `I am travelling in ${country}. 
             List the emergency phone numbers for: Police, Ambulance, Fire.
@@ -259,8 +272,8 @@ export const getEmergencyInfo = async (country: string) => {
 }
 
 export const getCreditCardAdvice = async (destination: string) => {
-     try {
-         const response = await ai.models.generateContent({
+    try {
+        const response = await getAiClient().models.generateContent({
             model: "gemini-2.5-flash",
             contents: `I am travelling to ${destination}. 
             What kind of credit cards are best to use there (Visa, Mastercard, Amex, JCB)?
