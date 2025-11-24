@@ -1,4 +1,5 @@
 import React from 'react';
+console.log('NomadAI App Starting...');
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
