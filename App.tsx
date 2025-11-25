@@ -91,7 +91,10 @@ const App: React.FC = () => {
   const [trips, setTrips] = useState<Trip[]>(() => {
     try {
       const savedTrips = localStorage.getItem(STORAGE_KEYS.TRIPS);
-      return savedTrips ? JSON.parse(savedTrips) : INITIAL_TRIPS;
+      if (!savedTrips) return INITIAL_TRIPS;
+      const parsed = JSON.parse(savedTrips);
+      // Ensure parsed data is actually an array
+      return Array.isArray(parsed) ? parsed : INITIAL_TRIPS;
     } catch (e) {
       console.error("Failed to load trips", e);
       return INITIAL_TRIPS;
@@ -101,7 +104,9 @@ const App: React.FC = () => {
   const [settings, setSettings] = useState<AppSettings>(() => {
     try {
       const savedSettings = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-      return savedSettings ? JSON.parse(savedSettings) : { language: 'zh-TW', minimalistMode: false };
+      if (!savedSettings) return { language: 'zh-TW', minimalistMode: false };
+      const parsed = JSON.parse(savedSettings);
+      return parsed && typeof parsed === 'object' ? parsed : { language: 'zh-TW', minimalistMode: false };
     } catch (e) {
       return { language: 'zh-TW', minimalistMode: false };
     }
