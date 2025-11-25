@@ -644,49 +644,71 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
                                     <input
                                         value={newExpenseName}
                                         onChange={(e) => setNewExpenseName(e.target.value)}
-                                        placeholder="..."
+                                        placeholder="例如: 章魚燒"
                                         className="w-full bg-white p-4 rounded-xl text-base font-bold border-none shadow-sm outline-none placeholder:font-normal"
                                         autoFocus
                                     />
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-xs font-bold text-gray-400 ml-1">{t.amount}</label>
-                                    <input
-                                        value={newExpenseAmount}
-                                        onChange={(e) => setNewExpenseAmount(e.target.value)}
-                                        type="number"
-                                        placeholder="$ 0"
-                                        className="w-full bg-white p-4 rounded-xl text-xl font-bold border-none shadow-sm outline-none placeholder:font-normal"
-                                    />
-                                </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="space-y-1">
-                                        <label className="text-xs font-bold text-gray-400 ml-1">{t.payer}</label>
+                                    <div className="flex items-center bg-white rounded-xl border-none shadow-sm px-4">
+                                        <span className="text-gray-400 font-bold mr-2">¥</span>
                                         <input
-                                            value={newExpensePayer}
-                                            onChange={(e) => setNewExpensePayer(e.target.value)}
-                                            placeholder={t.payer_placeholder || "Who paid?"}
-                                            className="w-full bg-white p-3 rounded-xl font-medium border-none shadow-sm outline-none"
+                                            value={newExpenseAmount}
+                                            onChange={(e) => setNewExpenseAmount(e.target.value)}
+                                            type="number"
+                                            placeholder="0"
+                                            className="w-full bg-transparent py-4 text-xl font-bold border-none outline-none placeholder:font-normal"
                                         />
                                     </div>
-                                    <div className="space-y-1">
-                                        <label className="text-xs font-bold text-gray-400 ml-1">{t.payment_method}</label>
-                                        <select
-                                            value={newExpenseMethod}
-                                            onChange={(e) => setNewExpenseMethod(e.target.value)}
-                                            className="w-full bg-white p-3 rounded-xl font-medium border-none shadow-sm outline-none h-[48px]"
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="flex bg-white rounded-xl p-1 shadow-sm">
+                                        <button
+                                            onClick={() => setNewExpensePayer('ME')}
+                                            className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${newExpensePayer === 'ME' || newExpensePayer === '' ? 'bg-ink text-white shadow-sm' : 'text-gray-400 hover:text-ink'}`}
                                         >
-                                            <option value="Cash">Cash</option>
-                                            <option value="Credit Card">Credit Card</option>
-                                        </select>
+                                            {t.payer_me}
+                                        </button>
+                                        <button
+                                            onClick={() => setNewExpensePayer('OTHER')}
+                                            className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${newExpensePayer === 'OTHER' ? 'bg-ink text-white shadow-sm' : 'text-gray-400 hover:text-ink'}`}
+                                        >
+                                            {t.payer_other}
+                                        </button>
+                                    </div>
+                                    <div className="flex bg-white rounded-xl p-1 shadow-sm">
+                                        <button
+                                            onClick={() => setNewExpenseMethod('Cash')}
+                                            className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${newExpenseMethod === 'Cash' ? 'bg-ink text-white shadow-sm' : 'text-gray-400 hover:text-ink'}`}
+                                        >
+                                            {t.payment_cash}
+                                        </button>
+                                        <button
+                                            onClick={() => setNewExpenseMethod('Card')}
+                                            className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${newExpenseMethod === 'Card' ? 'bg-ink text-white shadow-sm' : 'text-gray-400 hover:text-ink'}`}
+                                        >
+                                            {t.payment_card}
+                                        </button>
                                     </div>
                                 </div>
+
+                                <div className="space-y-1">
+                                    <select
+                                        className="w-full bg-white p-3 rounded-xl font-bold text-ink border-none shadow-sm outline-none h-[48px] text-center"
+                                    >
+                                        <option value="Individual">{t.split_individual}</option>
+                                        <option value="Shared">{t.split_shared}</option>
+                                    </select>
+                                </div>
+
                                 <button
                                     onClick={handleAddExpense}
                                     disabled={!newExpenseName || !newExpenseAmount}
                                     className="w-full bg-coral text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-coral/30 mt-4 active:scale-95 transition-all disabled:opacity-50 disabled:shadow-none"
                                 >
-                                    {t.confirm}
+                                    + 記下一筆
                                 </button>
                             </div>
                         </div>
@@ -792,7 +814,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
                                     <input
                                         value={newBookingOrigin}
                                         onChange={(e) => setNewBookingOrigin(e.target.value)}
-                                        placeholder="TPE"
+                                        placeholder={t.placeholder_origin}
                                         className="w-full bg-white p-3 rounded-xl font-medium border-none shadow-sm outline-none"
                                     />
                                 </div>
@@ -801,7 +823,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
                                     <input
                                         value={newBookingDest}
                                         onChange={(e) => setNewBookingDest(e.target.value)}
-                                        placeholder="KIX"
+                                        placeholder={t.placeholder_dest}
                                         className="w-full bg-white p-3 rounded-xl font-medium border-none shadow-sm outline-none"
                                     />
                                 </div>

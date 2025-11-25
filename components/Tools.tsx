@@ -12,9 +12,10 @@ import {
     FirstAidIcon,
     PlusIcon,
     TrashIcon,
-    SquaresPlusIcon
+    SquaresPlusIcon,
+    TranslateIcon
 } from './Icons';
-import { getVisaRequirements, getCulturalEtiquette, getEmergencyInfo, getCreditCardAdvice } from '../services/gemini';
+import { getVisaRequirements, getCulturalEtiquette, getEmergencyInfo, getCreditCardAdvice, getTranslation } from '../services/gemini';
 import { Expense, TimeCapsule, Trip, AppSettings } from '../types';
 import { translations } from '../utils/translations';
 
@@ -24,7 +25,7 @@ interface ToolsProps {
     settings: AppSettings;
 }
 
-type ToolView = 'MENU' | 'EXPENSE' | 'VISA' | 'CULTURE' | 'RESTROOM' | 'SCRATCH_MAP' | 'TIME_CAPSULE' | 'EMERGENCY' | 'CARD_ADVICE';
+type ToolView = 'MENU' | 'EXPENSE' | 'VISA' | 'CULTURE' | 'RESTROOM' | 'SCRATCH_MAP' | 'TIME_CAPSULE' | 'EMERGENCY' | 'CARD_ADVICE' | 'TRANSLATION';
 
 // --- Sub-Components ---
 
@@ -334,6 +335,74 @@ const ScratchMap = ({ onBack, trips, t }: { onBack: () => void, trips?: Trip[], 
     )
 }
 
+
+const TranslationTool = ({ onBack, t, language }: { onBack: () => void, t: any, language: string }) => {
+    const [text, setText] = useState('');
+    const [targetLang, setTargetLang] = useState('Japanese');
+    const [result, setResult] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+
+    const handleTranslate = async () => {
+        if (!text) return;
+        setLoading(true);
+        try {
+            const res = await getTranslation(text, targetLang, language);
+            setResult(res);
+        } catch (e) {
+            setResult("Error");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="flex flex-col h-full bg-paper">
+            <div className="bg-paper p-4 flex items-center gap-2 sticky top-0 z-10">
+                <button onClick={onBack}><ChevronLeftIcon className="w-6 h-6 text-gray-500" /></button>
+                <h3 className="font-bold text-lg text-ink">{t.tool_translation || "Translation"}</h3>
+            </div>
+            <div className="p-5 flex-1 overflow-y-auto pb-32">
+                <div className="space-y-4">
+                    <div>
+                        <label className="text-xs font-bold text-gray-400 uppercase">{t.translate_to}</label>
+                        <select value={targetLang} onChange={e => setTargetLang(e.target.value)} className="w-full mt-2 p-3 bg-white rounded-xl text-ink font-medium border border-sand outline-none">
+                            <option value="Japanese">{t.lang_ja}</option>
+                            <option value="English">{t.lang_en}</option>
+                            <option value="Traditional Chinese">{t.lang_zh}</option>
+                            <option value="Korean">{t.lang_ko}</option>
+                            <option value="Thai">{t.lang_th}</option>
+                            <option value="French">{t.lang_fr}</option>
+                            <option value="Spanish">{t.lang_es}</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="text-xs font-bold text-gray-400 uppercase">{t.enter_text}</label>
+                        <textarea
+                            value={text}
+                            onChange={e => setText(e.target.value)}
+                            placeholder={t.enter_text}
+                            rows={4}
+                            className="w-full mt-2 p-4 bg-white rounded-2xl border border-sand shadow-sm outline-none resize-none"
+                        />
+                    </div>
+                    <button onClick={handleTranslate} disabled={loading || !text} className="w-full bg-purple-500 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-purple-200 disabled:opacity-50">
+                        {loading ? t.loading : t.confirm}
+                    </button>
+                </div>
+
+                {result && (
+                    <div className="mt-6 bg-white p-6 rounded-3xl shadow-card border border-sand animate-fade-in">
+                        <div className="text-xs font-bold text-gray-400 uppercase mb-2">{t.translate_result}</div>
+                        <div className="text-lg font-medium text-ink leading-relaxed whitespace-pre-line">
+                            {result}
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    )
+}
+
 // --- Main Tools Container ---
 
 const Tools: React.FC<ToolsProps> = ({ onBack, trips, settings }) => {
@@ -349,13 +418,16 @@ const Tools: React.FC<ToolsProps> = ({ onBack, trips, settings }) => {
     if (activeTool === 'CARD_ADVICE') return <CardAdvice onBack={() => setActiveTool('MENU')} t={t} language={settings.language} />;
     if (activeTool === 'TIME_CAPSULE') return <div onClick={() => setActiveTool('MENU')}>Coming Soon</div>;
 
+    if (activeTool === 'TRANSLATION') return <TranslationTool onBack={() => setActiveTool('MENU')} t={t} language={settings.language} />;
+
     const tools = [
-        { id: 'EMERGENCY', name: t.tool_emergency, icon: FirstAidIcon, color: 'text-red-500', bg: 'bg-red-50', desc: 'SOS / Police' },
-        { id: 'CARD_ADVICE', name: t.tool_card, icon: CreditCardIcon, color: 'text-indigo-500', bg: 'bg-indigo-50', desc: 'Payment Tips' },
-        { id: 'SCRATCH_MAP', name: t.tool_map, icon: GlobeAltIcon, color: 'text-teal-500', bg: 'bg-teal-50', desc: 'Visited List' },
-        { id: 'RESTROOM', name: t.tool_restroom, icon: ToiletIcon, color: 'text-cyan-500', bg: 'bg-cyan-50', desc: 'WC Finder' },
-        { id: 'VISA', name: t.tool_visa, icon: PassportIcon, color: 'text-blue-500', bg: 'bg-blue-50', desc: 'Entry Rules' },
-        { id: 'CULTURE', name: t.tool_culture, icon: LightBulbIcon, color: 'text-orange-500', bg: 'bg-orange-50', desc: 'Tips / Taboos' },
+        { id: 'TRANSLATION', name: t.tool_translation, icon: TranslateIcon, color: 'text-purple-500', bg: 'bg-purple-50', desc: t.desc_translator },
+        { id: 'EMERGENCY', name: t.tool_emergency, icon: FirstAidIcon, color: 'text-red-500', bg: 'bg-red-50', desc: t.desc_emergency },
+        { id: 'CARD_ADVICE', name: t.tool_card, icon: CreditCardIcon, color: 'text-indigo-500', bg: 'bg-indigo-50', desc: t.desc_card },
+        { id: 'SCRATCH_MAP', name: t.tool_map, icon: GlobeAltIcon, color: 'text-teal-500', bg: 'bg-teal-50', desc: t.desc_map },
+        { id: 'RESTROOM', name: t.tool_restroom, icon: ToiletIcon, color: 'text-cyan-500', bg: 'bg-cyan-50', desc: t.desc_restroom },
+        { id: 'VISA', name: t.tool_visa, icon: PassportIcon, color: 'text-blue-500', bg: 'bg-blue-50', desc: t.desc_visa },
+        { id: 'CULTURE', name: t.tool_culture, icon: LightBulbIcon, color: 'text-orange-500', bg: 'bg-orange-50', desc: t.desc_culture },
     ];
 
     return (

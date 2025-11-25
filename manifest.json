@@ -1,7 +1,8 @@
 {
   "name": "NomadAI Travel Journal",
   "short_name": "NomadAI",
-  "start_url": ".",
+  "start_url": "/nomadai-travel-journal/index.html",
+  "scope": "/nomadai-travel-journal/",
   "display": "standalone",
   "background_color": "#F9F7F2",
   "theme_color": "#D65A5A",

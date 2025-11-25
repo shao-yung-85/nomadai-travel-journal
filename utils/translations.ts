@@ -10,13 +10,13 @@ export const translations = {
     edit: '編輯',
     loading: '載入中...',
     day: 'Day',
-    
+
     // TripList
     my_trips: '我的旅程',
     start_adventure: '開始新的冒險',
     click_to_add: '點擊下方按鈕新增行程',
     trips_count: '個行程',
-    
+
     // AddTrip
     new_trip: '新增旅程',
     destination: '目的地 / 標題',
@@ -27,7 +27,7 @@ export const translations = {
     end_date: '結束日期',
     create_trip: '建立旅程',
     add_trip_hint: '您之後可以隨時新增詳細的行程安排',
-    
+
     // TripDetail
     itinerary: '行程',
     map: '地圖',
@@ -45,7 +45,7 @@ export const translations = {
     delete_trip_title: '刪除行程？',
     delete_trip_confirm: '您確定要刪除「{title}」嗎？所有的紀錄都將消失且無法復原。',
     confirm_delete: '確認刪除',
-    
+
     // Forms
     activity_name: '活動名稱',
     time: '時間',
@@ -58,7 +58,7 @@ export const translations = {
     booking_type: '類型',
     provider: '供應商 / 名稱',
     booking_ref: '訂單編號 (選填)',
-    
+
     // AI Planner
     ai_planner_title: 'AI 行程規劃',
     ai_planner_intro: '嗨！我是你的 AI 旅遊助理。告訴我你想去哪裡？玩幾天？我會依照景點距離幫你安排最順路的行程。',
@@ -66,14 +66,14 @@ export const translations = {
     ai_done: '行程規劃完成！你可以去列表查看了。✨',
     input_placeholder: '輸入您的旅遊想法...',
     planning_process: '規劃運算中...',
-    
+
     // Magic Editor
     magic_editor_title: '魔法修圖室',
     upload_hint: '上傳旅遊照片',
     magic_prompt_placeholder: '把天氣變成晴天、加入熱氣球...',
     start_magic: '開始生成',
     generating: '魔法顯影中...',
-    
+
     // Settings
     settings_title: '設定',
     general: '一般',
@@ -84,7 +84,7 @@ export const translations = {
     data_mgmt: '資料管理',
     reset_all: '重置所有紀錄',
     reset_confirm: '確定要重置所有應用程式資料嗎？這將刪除所有您的行程、消費紀錄與設定。此動作無法復原。',
-    
+
     // Tools
     tools_title: '實用工具箱',
     tool_emergency: '急救電話',
@@ -92,7 +92,47 @@ export const translations = {
     tool_map: '足跡地圖',
     tool_restroom: '找廁所',
     tool_visa: '簽證檢核',
-    tool_culture: '文化指南'
+    tool_translation: '隨身翻譯',
+    tool_culture: '文化指南',
+
+    // New Translations
+    theme_color: '主題顏色',
+    payer_me: '我付',
+    payer_other: '他付',
+    payment_cash: '現金',
+    payment_card: '刷卡',
+    split_individual: '個人',
+    split_shared: '共同',
+    translate_to: '翻譯成',
+    enter_text: '輸入文字...',
+    translate_result: '翻譯結果',
+
+    // Tool Descriptions
+    desc_translator: 'AI 隨身翻譯',
+    desc_emergency: '緊急電話 / 報警',
+    desc_card: '刷卡與支付建議',
+    desc_map: '已造訪國家地圖',
+    desc_restroom: '尋找附近廁所',
+    desc_visa: '入境簽證資訊',
+    desc_culture: '當地文化與禁忌',
+
+    // AI Prompts
+    prompt_tokyo: '東京五天四夜',
+    prompt_bangkok: '曼谷美食之旅',
+    prompt_paris: '巴黎浪漫蜜月',
+
+    // Placeholders
+    placeholder_item: '例如：章魚燒',
+    placeholder_payer: '誰付錢？',
+
+    // Languages
+    lang_ja: '日文',
+    lang_en: '英文',
+    lang_zh: '繁體中文',
+    lang_ko: '韓文',
+    lang_th: '泰文',
+    lang_fr: '法文',
+    lang_es: '西班牙文'
   },
   'en-US': {
     // Common

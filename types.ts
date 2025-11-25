@@ -117,4 +117,5 @@ export interface MagicEditorState {
 export interface AppSettings {
   language: 'zh-TW' | 'en-US' | 'ja-JP';
   minimalistMode: boolean;
+  themeColor?: string;
 }

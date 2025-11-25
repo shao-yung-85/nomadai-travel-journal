@@ -30,7 +30,7 @@ const Settings: React.FC<SettingsProps> = ({ onBack, settings, onUpdateSettings,
             </div>
 
             <div className="flex-1 overflow-y-auto p-5 space-y-8 pb-32">
-                
+
                 {/* General Settings */}
                 <div className="space-y-3">
                     <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">{t.general}</h3>
@@ -43,7 +43,7 @@ const Settings: React.FC<SettingsProps> = ({ onBack, settings, onUpdateSettings,
                                 </div>
                                 <span className="font-bold text-ink">{t.language}</span>
                             </div>
-                            <select 
+                            <select
                                 value={settings.language}
                                 onChange={(e) => onUpdateSettings({ language: e.target.value as any })}
                                 className="bg-transparent text-gray-500 font-medium outline-none text-right cursor-pointer"
@@ -60,6 +60,26 @@ const Settings: React.FC<SettingsProps> = ({ onBack, settings, onUpdateSettings,
                 <div className="space-y-3">
                     <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">{t.appearance}</h3>
                     <div className="bg-white rounded-3xl overflow-hidden shadow-card border border-sand divide-y divide-gray-50">
+                        {/* Theme Color */}
+                        <div className="p-5 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 bg-pink-50 text-pink-500 rounded-xl">
+                                    <div className="w-5 h-5 rounded-full bg-current"></div>
+                                </div>
+                                <span className="font-bold text-ink">{t.theme_color}</span>
+                            </div>
+                            <div className="flex gap-2">
+                                {['#D65A5A', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6'].map(color => (
+                                    <button
+                                        key={color}
+                                        onClick={() => onUpdateSettings({ themeColor: color })}
+                                        className={`w-8 h-8 rounded-full border-2 transition-all ${settings.themeColor === color ? 'border-gray-400 scale-110' : 'border-transparent hover:scale-105'}`}
+                                        style={{ backgroundColor: color }}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+
                         {/* Minimalist Mode Toggle */}
                         <div className="p-5 flex items-center justify-between cursor-pointer" onClick={() => onUpdateSettings({ minimalistMode: !settings.minimalistMode })}>
                             <div className="flex items-center gap-3">
@@ -71,7 +91,7 @@ const Settings: React.FC<SettingsProps> = ({ onBack, settings, onUpdateSettings,
                                     <div className="text-xs text-gray-400 mt-0.5 font-medium">{t.minimalist_desc}</div>
                                 </div>
                             </div>
-                            <button 
+                            <button
                                 className={`w-14 h-8 rounded-full transition-all relative ${settings.minimalistMode ? 'bg-coral' : 'bg-gray-200'}`}
                             >
                                 <div className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-sm transition-all duration-300 ${settings.minimalistMode ? 'left-7' : 'left-1'}`}></div>
@@ -84,8 +104,8 @@ const Settings: React.FC<SettingsProps> = ({ onBack, settings, onUpdateSettings,
                 <div className="space-y-3">
                     <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">{t.data_mgmt}</h3>
                     <div className="bg-white rounded-3xl overflow-hidden shadow-card border border-sand divide-y divide-gray-50">
-                         {/* Reset App */}
-                         <button onClick={handleReset} className="w-full p-5 flex items-center justify-between hover:bg-red-50 transition-colors group">
+                        {/* Reset App */}
+                        <button onClick={handleReset} className="w-full p-5 flex items-center justify-between hover:bg-red-50 transition-colors group">
                             <div className="flex items-center gap-3">
                                 <div className="p-2.5 bg-red-50 text-red-500 rounded-xl group-hover:bg-red-100">
                                     <TrashIcon className="w-5 h-5" />
@@ -96,7 +116,7 @@ const Settings: React.FC<SettingsProps> = ({ onBack, settings, onUpdateSettings,
                         </button>
                     </div>
                 </div>
-                
+
                 <div className="text-center text-xs text-gray-400 py-4 font-medium">
                     NomadAI Travel Journal v2.0
                 </div>

@@ -118,6 +118,11 @@ const App: React.FC = () => {
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+    if (settings.themeColor) {
+      document.documentElement.style.setProperty('--color-coral', settings.themeColor);
+    } else {
+      document.documentElement.style.removeProperty('--color-coral');
+    }
   }, [settings]);
 
   const handleAddTrip = (newTrip: Trip) => {

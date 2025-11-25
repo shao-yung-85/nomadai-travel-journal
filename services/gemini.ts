@@ -333,3 +333,22 @@ export const optimizeRoute = async (items: any[], language: string = 'zh-TW') =>
         throw error;
     }
 };
+
+export const getTranslation = async (text: string, targetLang: string, userLang: string = 'zh-TW'): Promise<string | null> => {
+    const ai = await getAiClient();
+    if (!ai) return null;
+    const model = ai.getGenerativeModel({ model: "gemini-pro" });
+    const prompt = `Translate the following text to ${targetLang}.
+    Text: "${text}"
+    
+    Only provide the translated text.`;
+
+    try {
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        return response.text();
+    } catch (error) {
+        console.error("Translation Error:", error);
+        return null;
+    }
+};
