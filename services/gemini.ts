@@ -67,6 +67,18 @@ const getResponseText = (response: any): string => {
 
 const MODEL_NAME = 'gemini-2.5-flash-preview-09-2025';
 
+// Note: Image generation and editing is not supported by Gemini Flash models
+// This function is disabled until we integrate with an image generation API
+export const editTravelPhoto = async (
+    base64Image: string,
+    prompt: string
+): Promise<string> => {
+    console.warn('Image editing is not supported. Returning original image.');
+    return base64Image;
+};
+
+/*
+// Original implementation (requires image generation model)
 export const editTravelPhoto = async (
     base64Image: string,
     prompt: string
@@ -102,29 +114,22 @@ export const editTravelPhoto = async (
         throw new Error("No image generated in response");
     });
 };
+*/
 
 export const generateCoverImage = async (location: string): Promise<string> => {
-    return callAiWithFallback(async (ai) => {
-        const response = await ai.models.generateContent({
-            model: MODEL_NAME,
-            contents: {
-                parts: [
-                    {
-                        text: `A beautiful, cinematic travel photography shot of ${location}. High quality, 4k, sunny day, inspiring travel vibes.`,
-                    },
-                ],
-            },
-        });
+    try {
+        // Use Unsplash API for travel photos
+        // Format: https://source.unsplash.com/1600x900/?travel,{location}
+        const query = encodeURIComponent(location);
+        const unsplashUrl = `https://source.unsplash.com/1600x900/?travel,${query},destination`;
 
-        if (response.candidates && response.candidates[0].content.parts) {
-            for (const part of response.candidates[0].content.parts) {
-                if (part.inlineData && part.inlineData.data) {
-                    return `data:image/png;base64,${part.inlineData.data}`;
-                }
-            }
-        }
-        throw new Error("No image generated");
-    });
+        // Return the Unsplash URL directly
+        return unsplashUrl;
+    } catch (error) {
+        console.error('Failed to generate cover image:', error);
+        // Fallback to placeholder
+        return `https://via.placeholder.com/1600x900/D4A574/FFFFFF?text=${encodeURIComponent(location)}`;
+    }
 }
 
 export const generateTripPlan = async (userPrompt: string, language: string = 'zh-TW') => {
