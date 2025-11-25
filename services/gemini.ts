@@ -2,19 +2,25 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
 const apiKey = process.env.API_KEY || '';
+const backupKey = 'AIzaSyAOtra718u35-8wCxRrdnq-Lh2P-Y39dow';
 
-let aiClient: GoogleGenAI | null = null;
-
-const getAiClient = () => {
-    if (!aiClient) {
-        if (!apiKey) {
-            console.warn("Gemini API Key is missing!");
-            // We don't throw here to avoid crashing the app on load, 
-            // but calls will fail later.
+// Helper to wrap API calls with fallback
+const callAiWithFallback = async (apiCall: (client: GoogleGenAI) => Promise<any>) => {
+    try {
+        // Try primary key (or backup if primary is missing)
+        const client = new GoogleGenAI({ apiKey: apiKey || backupKey });
+        return await apiCall(client);
+    } catch (error: any) {
+        console.warn("Primary API Key failed, trying backup...", error);
+        // If primary failed, try backup explicitly
+        try {
+            const client = new GoogleGenAI({ apiKey: backupKey });
+            return await apiCall(client);
+        } catch (backupError) {
+            console.error("Backup API Key also failed:", backupError);
+            throw backupError;
         }
-        aiClient = new GoogleGenAI({ apiKey });
     }
-    return aiClient;
 };
 
 // Helper to strip data:image/png;base64, prefix
@@ -27,7 +33,6 @@ const getMimeType = (base64Data: string) => {
     return match ? match[1] : 'image/jpeg';
 };
 
-
 const langMap: { [key: string]: string } = {
     'zh-TW': 'Traditional Chinese (Taiwan) (繁體中文)',
     'en-US': 'English',
@@ -38,14 +43,12 @@ export const editTravelPhoto = async (
     base64Image: string,
     prompt: string
 ): Promise<string> => {
-    try {
+    return callAiWithFallback(async (ai) => {
         const mimeType = getMimeType(base64Image);
         const cleanData = cleanBase64(base64Image);
-
-        // Using gemini-1.5-flash (Nano Banana) for image editing tasks
         const model = 'gemini-1.5-flash';
 
-        const response = await getAiClient().models.generateContent({
+        const response = await ai.models.generateContent({
             model: model,
             contents: {
                 parts: [
@@ -62,26 +65,20 @@ export const editTravelPhoto = async (
             },
         });
 
-        // Extract image from response parts
         if (response.candidates && response.candidates[0].content.parts) {
             for (const part of response.candidates[0].content.parts) {
                 if (part.inlineData && part.inlineData.data) {
-                    // Construct a usable data URI
                     return `data:image/png;base64,${part.inlineData.data}`;
                 }
             }
         }
-
         throw new Error("No image generated in response");
-    } catch (error) {
-        console.error("Error editing travel photo:", error);
-        throw error;
-    }
+    });
 };
 
 export const generateCoverImage = async (location: string): Promise<string> => {
-    try {
-        const response = await getAiClient().models.generateContent({
+    return callAiWithFallback(async (ai) => {
+        const response = await ai.models.generateContent({
             model: 'gemini-1.5-flash',
             contents: {
                 parts: [
@@ -92,7 +89,6 @@ export const generateCoverImage = async (location: string): Promise<string> => {
             },
         });
 
-        // Extract image from response parts
         if (response.candidates && response.candidates[0].content.parts) {
             for (const part of response.candidates[0].content.parts) {
                 if (part.inlineData && part.inlineData.data) {
@@ -101,17 +97,14 @@ export const generateCoverImage = async (location: string): Promise<string> => {
             }
         }
         throw new Error("No image generated");
-    } catch (error) {
-        console.error("Error generating cover image:", error);
-        throw error;
-    }
+    });
 }
 
 export const generateTripPlan = async (userPrompt: string, language: string = 'zh-TW') => {
     const targetLang = langMap[language] || langMap['zh-TW'];
 
-    try {
-        const response = await getAiClient().models.generateContent({
+    return callAiWithFallback(async (ai) => {
+        const response = await ai.models.generateContent({
             model: "gemini-1.5-flash",
             contents: `Help me plan a trip. ${userPrompt}`,
             config: {
@@ -119,34 +112,43 @@ export const generateTripPlan = async (userPrompt: string, language: string = 'z
                 Create a detailed itinerary based on the user's request. 
                 
                 CRITICAL PLANNING RULES:
-                1. **Distance & Logic**: Group attractions that are geographically close to each other on the same day to minimize travel time. Do not jump between distant locations in one day.
-                2. **Feasibility**: Ensure the schedule is realistic. Allow enough time for travel and meals. Do not pack too many activities.
+                1. **Distance & Logic**: Group attractions that are geographically close to each other on the same day.
+                2. **Feasibility**: Ensure the schedule is realistic.
                 3. **Language**: All content MUST be in ${targetLang}.
+                4. **Travel Info**: You MUST estimate the travel mode and duration to the NEXT activity.
                 
                 FORMAT REQUIREMENTS:
                 Return response in JSON format matching the schema.
-                Ensure 'itinerary' items include the 'day' field (e.g., 1, 2, 3).
-                Dates should be relative to now if not specified.
-                Include realistic mock budget data in local currency.
+                Ensure 'itinerary' items include the 'day' field.
+                Include 'travelToNext' for each item (except the last one of the day) describing how to get to the next spot.
                 `,
                 responseMimeType: "application/json",
                 responseSchema: {
                     type: Type.OBJECT,
                     properties: {
-                        title: { type: Type.STRING, description: "Trip title" },
-                        startDate: { type: Type.STRING, description: "YYYY-MM-DD" },
-                        endDate: { type: Type.STRING, description: "YYYY-MM-DD" },
+                        title: { type: Type.STRING },
+                        startDate: { type: Type.STRING },
+                        endDate: { type: Type.STRING },
                         itinerary: {
                             type: Type.ARRAY,
                             items: {
                                 type: Type.OBJECT,
                                 properties: {
                                     id: { type: Type.STRING },
-                                    day: { type: Type.INTEGER, description: "Day number of the trip (1, 2, 3...)" },
-                                    time: { type: Type.STRING, description: "HH:MM" },
+                                    day: { type: Type.INTEGER },
+                                    time: { type: Type.STRING },
                                     activity: { type: Type.STRING },
                                     location: { type: Type.STRING },
-                                    notes: { type: Type.STRING, description: "Transport info or tips" }
+                                    notes: { type: Type.STRING },
+                                    travelToNext: {
+                                        type: Type.OBJECT,
+                                        properties: {
+                                            mode: { type: Type.STRING, enum: ['WALK', 'TRAIN', 'BUS', 'CAR', 'FLIGHT'] },
+                                            duration: { type: Type.STRING, description: "e.g. 15 min" },
+                                            details: { type: Type.STRING, description: "e.g. JR Yamanote Line" }
+                                        },
+                                        nullable: true
+                                    }
                                 }
                             }
                         },
@@ -154,7 +156,7 @@ export const generateTripPlan = async (userPrompt: string, language: string = 'z
                             type: Type.OBJECT,
                             properties: {
                                 total: { type: Type.NUMBER },
-                                currency: { type: Type.STRING, enum: ["TWD", "JPY", "USD", "EUR"] },
+                                currency: { type: Type.STRING },
                                 spent: { type: Type.NUMBER },
                                 categories: {
                                     type: Type.ARRAY,
@@ -186,11 +188,11 @@ export const generateTripPlan = async (userPrompt: string, language: string = 'z
                             items: {
                                 type: Type.OBJECT,
                                 properties: {
-                                    date: { type: Type.STRING, description: "MM/DD" },
+                                    date: { type: Type.STRING },
                                     tempHigh: { type: Type.NUMBER },
                                     tempLow: { type: Type.NUMBER },
-                                    condition: { type: Type.STRING, description: "Sunny, Rainy, Cloudy etc" },
-                                    icon: { type: Type.STRING, description: "Single emoji representing weather" }
+                                    condition: { type: Type.STRING },
+                                    icon: { type: Type.STRING }
                                 }
                             }
                         }
@@ -200,20 +202,16 @@ export const generateTripPlan = async (userPrompt: string, language: string = 'z
         });
 
         if (response.text) {
-            return JSON.parse(response.text);
+            return JSON.parse(response.text());
         }
         throw new Error("Empty response from AI");
-    } catch (error) {
-        console.error("Error generating trip plan:", error);
-        // Throw a user-friendly error
-        throw new Error("AI Generation Failed. Please check your API key or try again later.");
-    }
+    });
 }
 
 export const getVisaRequirements = async (passport: string, destination: string, language: string = 'zh-TW') => {
     const targetLang = langMap[language] || langMap['zh-TW'];
-    try {
-        const response = await getAiClient().models.generateContent({
+    return callAiWithFallback(async (ai) => {
+        const response = await ai.models.generateContent({
             model: "gemini-1.5-flash",
             contents: `I hold a ${passport} passport and want to travel to ${destination}. 
             What are the visa requirements, entry rules, and any vaccination requirements? 
@@ -221,17 +219,14 @@ export const getVisaRequirements = async (passport: string, destination: string,
             Include a 'Difficulty Level' (Easy, Moderate, Hard) at the top.
             Response MUST be in ${targetLang}.`
         });
-        return response.text;
-    } catch (error) {
-        console.error("Error fetching visa info:", error);
-        throw error;
-    }
+        return response.text();
+    });
 };
 
 export const getCulturalEtiquette = async (location: string, language: string = 'zh-TW') => {
     const targetLang = langMap[language] || langMap['zh-TW'];
-    try {
-        const response = await getAiClient().models.generateContent({
+    return callAiWithFallback(async (ai) => {
+        const response = await ai.models.generateContent({
             model: "gemini-1.5-flash",
             contents: `I am currently in (or planning to go to) ${location}. 
             Give me a quick guide on:
@@ -241,77 +236,80 @@ export const getCulturalEtiquette = async (location: string, language: string = 
             Keep it short, fun, and formatted in Markdown.
             Response MUST be in ${targetLang}.`
         });
-        return response.text;
-    } catch (error) {
-        console.error("Error fetching cultural tips:", error);
-        throw error;
-    }
+        return response.text();
+    });
 };
 
 export const getAttractionGuide = async (location: string, activity: string, language: string = 'zh-TW') => {
     const targetLang = langMap[language] || langMap['zh-TW'];
-    try {
-        const response = await getAiClient().models.generateContent({
-            model: "gemini-1.5-flash",
-            contents: `Tell me about "${activity}" at "${location}". 
-            Provide a very short fun fact, the best photo spot, and one "pro tip" for visiting.
-            Format as simple Markdown (bold keys). Keep it under 100 words.
-            Response MUST be in ${targetLang}.`
-        });
-        return response.text;
-    } catch (error) {
-        console.error("Error fetching attraction guide:", error);
-        return "暫時無法取得導覽資訊，請稍後再試。";
-    }
+    return callAiWithFallback(async (ai) => {
+        try {
+            const response = await ai.models.generateContent({
+                model: "gemini-1.5-flash",
+                contents: `Tell me about "${activity}" at "${location}". 
+                Provide a very short fun fact, the best photo spot, and one "pro tip" for visiting.
+                Format as simple Markdown (bold keys). Keep it under 100 words.
+                Response MUST be in ${targetLang}.`
+            });
+            return response.text();
+        } catch (error) {
+            console.error("Error fetching attraction guide:", error);
+            return "暫時無法取得導覽資訊，請稍後再試。";
+        }
+    });
 };
 
 export const getEmergencyInfo = async (country: string, language: string = 'zh-TW') => {
     const targetLang = langMap[language] || langMap['zh-TW'];
-    try {
-        const response = await getAiClient().models.generateContent({
-            model: "gemini-1.5-flash",
-            contents: `I am travelling in ${country}. 
-            List the emergency phone numbers for: Police, Ambulance, Fire.
-            Also list the address and phone number of the nearest major hospital in the capital city.
-            Format as a clear list.
-            Response MUST be in ${targetLang}.`
-        });
-        return response.text;
-    } catch (error) {
-        return "無法取得緊急資訊。請直接撥打國際通用緊急電話 112。";
-    }
+    return callAiWithFallback(async (ai) => {
+        try {
+            const response = await ai.models.generateContent({
+                model: "gemini-1.5-flash",
+                contents: `I am travelling in ${country}. 
+                List the emergency phone numbers for: Police, Ambulance, Fire.
+                Also list the address and phone number of the nearest major hospital in the capital city.
+                Format as a clear list.
+                Response MUST be in ${targetLang}.`
+            });
+            return response.text();
+        } catch (error) {
+            return "無法取得緊急資訊。請直接撥打國際通用緊急電話 112。";
+        }
+    });
 }
 
 export const getCreditCardAdvice = async (destination: string, language: string = 'zh-TW') => {
     const targetLang = langMap[language] || langMap['zh-TW'];
-    try {
-        const response = await getAiClient().models.generateContent({
-            model: "gemini-1.5-flash",
-            contents: `I am travelling to ${destination}. 
-            What kind of credit cards are best to use there (Visa, Mastercard, Amex, JCB)?
-            Are cash payments preferred?
-            Any tips on currency exchange or dynamic currency conversion (DCC)?
-            Keep it concise.
-            Response MUST be in ${targetLang}.`
-        });
-        return response.text;
-    } catch (error) {
-        return "無法取得建議。一般建議攜帶 Visa/Mastercard 並準備少量當地現金。";
-    }
+    return callAiWithFallback(async (ai) => {
+        try {
+            const response = await ai.models.generateContent({
+                model: "gemini-1.5-flash",
+                contents: `I am travelling to ${destination}. 
+                What kind of credit cards are best to use there (Visa, Mastercard, Amex, JCB)?
+                Are cash payments preferred?
+                Any tips on currency exchange or dynamic currency conversion (DCC)?
+                Keep it concise.
+                Response MUST be in ${targetLang}.`
+            });
+            return response.text();
+        } catch (error) {
+            return "無法取得建議。一般建議攜帶 Visa/Mastercard 並準備少量當地現金。";
+        }
+    });
 }
 
 export const optimizeRoute = async (items: any[], language: string = 'zh-TW') => {
     const targetLang = langMap[language] || langMap['zh-TW'];
-    try {
+    return callAiWithFallback(async (ai) => {
         // Simplify items for the prompt to save tokens
-        const simplifiedItems = items.map(item => ({
+        const simplifiedItems = items.map((item: any) => ({
             id: item.id,
             activity: item.activity,
             location: item.location,
             time: item.time
         }));
 
-        const response = await getAiClient().models.generateContent({
+        const response = await ai.models.generateContent({
             model: "gemini-1.5-flash",
             contents: `I have a list of activities for one day. Reorder them to create the most efficient geographical route.
             
@@ -326,27 +324,26 @@ export const optimizeRoute = async (items: any[], language: string = 'zh-TW') =>
         });
 
         if (response.text) {
-            return JSON.parse(response.text);
+            return JSON.parse(response.text());
         }
         throw new Error("Empty response");
-    } catch (error) {
-        console.error("Error optimizing route:", error);
-        throw error;
-    }
+    });
 };
 
 export const getTranslation = async (text: string, targetLang: string, userLang: string = 'zh-TW'): Promise<string | null> => {
-    try {
-        const response = await getAiClient().models.generateContent({
-            model: "gemini-2.5-flash",
-            contents: `Translate the following text to ${targetLang}.
-            Text: "${text}"
-            
-            Only provide the translated text.`
-        });
-        return response.text;
-    } catch (error) {
-        console.error("Translation Error:", error);
-        return null;
-    }
+    return callAiWithFallback(async (ai) => {
+        try {
+            const response = await ai.models.generateContent({
+                model: "gemini-1.5-flash",
+                contents: `Translate the following text to ${targetLang}.
+                Text: "${text}"
+                
+                Only provide the translated text.`
+            });
+            return response.text();
+        } catch (error) {
+            console.error("Translation Error:", error);
+            return null;
+        }
+    });
 };
