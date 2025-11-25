@@ -180,7 +180,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
 
     const handleOptimizeRoute = async (day: number) => {
         const dayItems = groupedItems[day];
-        if (!dayItems || dayItems.length < 3) {
+        if (!dayItems || dayItems?.length < 3) {
             alert(t.optimize_route_min_items || "Need at least 3 items to optimize.");
             return;
         }
@@ -366,7 +366,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
     };
 
     const renderWeather = () => {
-        if (!trip.weather || trip.weather.length === 0) return null;
+        if (!trip.weather || trip.weather?.length === 0) return null;
         return (
             <div className="mb-6">
                 <h4 className="text-xs font-bold text-gray-400 mb-3 uppercase tracking-wider ml-1">{t.weather}</h4>
@@ -416,7 +416,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
 
                 {!isMinimalist && renderWeather()}
 
-                {trip.itinerary.length > 0 ? (
+                {trip.itinerary?.length > 0 ? (
                     <div>
                         {!isMinimalist && <h4 className="text-xs font-bold text-gray-400 mb-4 uppercase tracking-wider ml-1">{t.itinerary}</h4>}
 
@@ -732,10 +732,10 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
                 <div className="space-y-3">
                     <div className="flex justify-between items-end px-2">
                         <h4 className="text-xl font-bold text-ink">{t.budget}</h4>
-                        <span className="text-xs font-bold text-gray-400 bg-white px-2 py-1 rounded-lg border border-sand">{expenses.length} {t.trips_count}</span>
+                        <span className="text-xs font-bold text-gray-400 bg-white px-2 py-1 rounded-lg border border-sand">{expenses?.length || 0} {t.trips_count}</span>
                     </div>
 
-                    {expenses.length > 0 ? (
+                    {expenses?.length > 0 ? (
                         <div className="grid grid-cols-1 gap-3">
                             {expenses.map((ex, idx) => (
                                 <div key={idx} className="bg-white p-4 rounded-2xl border border-sand shadow-card flex items-center justify-between group hover:border-coral/30 transition-all">
@@ -908,7 +908,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
                     </div>
                 </div>
             ))}
-            {(!trip.bookings || trip.bookings.length === 0) && <div className="text-center text-gray-400 py-20 font-medium">{t.no_itinerary}</div>}
+            {(!trip.bookings || trip.bookings?.length === 0) && <div className="text-center text-gray-400 py-20 font-medium">{t.no_itinerary}</div>}
 
             {/* Add Booking Modal */}
             {isAddingBooking && (
