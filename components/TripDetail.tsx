@@ -1084,7 +1084,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
     return (
         <div className="flex flex-col h-full bg-paper relative">
             {/* Paper-like Header */}
-            <div className="px-5 py-4 flex items-center justify-between sticky top-0 z-30 bg-paper/95 backdrop-blur-sm shadow-sm border-b border-sand/50">
+            <div className="px-5 pt-8 pb-4 flex items-center justify-between sticky top-0 z-30 bg-paper/95 backdrop-blur-sm shadow-sm border-b border-sand/50" style={{ paddingTop: 'max(2rem, env(safe-area-inset-top))' }}>
                 <button onClick={onBack} className="p-2.5 -ml-2 rounded-full bg-white shadow-card text-ink hover:text-coral active:scale-95 transition-all">
                     <ChevronLeftIcon className="w-5 h-5 stroke-2" />
                 </button>
