@@ -9,7 +9,7 @@ import AIPlanner from './components/AIPlanner';
 import Tools from './components/Tools';
 import Settings from './components/Settings';
 import { HomeIcon, SparklesIcon, SquaresPlusIcon, ChatBubbleIcon } from './components/Icons';
-import { generateTripPlan } from './services/gemini';
+import { generateTripPlan, generateCoverImage } from './services/gemini';
 
 // Mock initial data - used only if local storage is empty
 const INITIAL_TRIPS: Trip[] = [
@@ -27,47 +27,47 @@ const INITIAL_TRIPS: Trip[] = [
       { id: '202', day: 2, time: '14:00', activity: '金閣寺', location: '北區金閣寺町', notes: '陽光下最美' }
     ],
     bookings: [
-        { 
-            id: 'f1', 
-            number: 'BR132', 
-            airline: 'EVA Air', 
-            departureTime: '08:30', 
-            arrivalTime: '12:10', 
-            origin: 'TPE', 
-            destination: 'KIX', 
-            status: 'Confirmed',
-            type: 'FLIGHT',
-            bookingReference: '6XYZ99',
-            passengerNames: ['Wang Xiao-Ming', 'Chen Xiao-Mei'],
-            bookingUrl: 'https://www.evaair.com'
-        },
-        {
-            id: 'h1',
-            number: 'Check-in: 15:00',
-            airline: 'Kyoto Granvia',
-            departureTime: '15:00',
-            arrivalTime: '11:00',
-            origin: 'Nov 10',
-            destination: 'Nov 15',
-            status: 'Confirmed',
-            type: 'HOTEL',
-            bookingReference: 'HTL-88822',
-            passengerNames: ['Wang Xiao-Ming'],
-            bookingUrl: 'https://www.booking.com'
-        }
+      {
+        id: 'f1',
+        number: 'BR132',
+        airline: 'EVA Air',
+        departureTime: '08:30',
+        arrivalTime: '12:10',
+        origin: 'TPE',
+        destination: 'KIX',
+        status: 'Confirmed',
+        type: 'FLIGHT',
+        bookingReference: '6XYZ99',
+        passengerNames: ['Wang Xiao-Ming', 'Chen Xiao-Mei'],
+        bookingUrl: 'https://www.evaair.com'
+      },
+      {
+        id: 'h1',
+        number: 'Check-in: 15:00',
+        airline: 'Kyoto Granvia',
+        departureTime: '15:00',
+        arrivalTime: '11:00',
+        origin: 'Nov 10',
+        destination: 'Nov 15',
+        status: 'Confirmed',
+        type: 'HOTEL',
+        bookingReference: 'HTL-88822',
+        passengerNames: ['Wang Xiao-Ming'],
+        bookingUrl: 'https://www.booking.com'
+      }
     ],
     budget: {
-        total: 50000,
-        currency: 'TWD',
-        expenses: [
-            { id: 'e1', title: '機票', amount: 15000, category: 'Transport', date: '2023-10-01', payer: '我', paymentMethod: 'Credit Card' },
-            { id: 'e2', title: '住宿訂金', amount: 5000, category: 'Accommodation', date: '2023-10-05', payer: '小明', paymentMethod: 'Cash' },
-        ]
+      total: 50000,
+      currency: 'TWD',
+      expenses: [
+        { id: 'e1', title: '機票', amount: 15000, category: 'Transport', date: '2023-10-01', payer: '我', paymentMethod: 'Credit Card' },
+        { id: 'e2', title: '住宿訂金', amount: 5000, category: 'Accommodation', date: '2023-10-05', payer: '小明', paymentMethod: 'Cash' },
+      ]
     },
     weather: [
-        { date: '11/10', tempHigh: 18, tempLow: 10, condition: 'Sunny', icon: '☀️' },
-        { date: '11/11', tempHigh: 17, tempLow: 9, condition: 'Cloudy', icon: '☁️' },
-        { date: '11/12', tempHigh: 16, tempLow: 8, condition: 'Rain', icon: '🌧️' }
+      { date: '11/10', tempHigh: 18, tempLow: 10, condition: 'Sunny', icon: '☀️' },
+      { date: '11/11', tempHigh: 17, tempLow: 9, condition: 'Cloudy', icon: '☁️' },
+      { date: '11/12', tempHigh: 16, tempLow: 8, condition: 'Rain', icon: '🌧️' }
     ]
   },
   {
@@ -75,36 +75,36 @@ const INITIAL_TRIPS: Trip[] = [
     title: '台北美食探險',
     startDate: '2024-03-05',
     endDate: '2024-03-12',
-    coverImage: 'https://images.unsplash.com/photo-1470004914212-05527e49370b?q=80&w=800&auto=format&fit=crop', 
+    coverImage: 'https://images.unsplash.com/photo-1470004914212-05527e49370b?q=80&w=800&auto=format&fit=crop',
     itinerary: [],
     budget: { total: 10000, currency: 'TWD', expenses: [] }
   }
 ];
 
 const STORAGE_KEYS = {
-    TRIPS: 'nomad_app_trips_v2',
-    SETTINGS: 'nomad_app_settings_v2'
+  TRIPS: 'nomad_app_trips_v2',
+  SETTINGS: 'nomad_app_settings_v2'
 };
 
 const App: React.FC = () => {
   // Load initial state from LocalStorage
   const [trips, setTrips] = useState<Trip[]>(() => {
-      try {
-          const savedTrips = localStorage.getItem(STORAGE_KEYS.TRIPS);
-          return savedTrips ? JSON.parse(savedTrips) : INITIAL_TRIPS;
-      } catch (e) {
-          console.error("Failed to load trips", e);
-          return INITIAL_TRIPS;
-      }
+    try {
+      const savedTrips = localStorage.getItem(STORAGE_KEYS.TRIPS);
+      return savedTrips ? JSON.parse(savedTrips) : INITIAL_TRIPS;
+    } catch (e) {
+      console.error("Failed to load trips", e);
+      return INITIAL_TRIPS;
+    }
   });
 
   const [settings, setSettings] = useState<AppSettings>(() => {
-      try {
-          const savedSettings = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-          return savedSettings ? JSON.parse(savedSettings) : { language: 'zh-TW', minimalistMode: false };
-      } catch (e) {
-          return { language: 'zh-TW', minimalistMode: false };
-      }
+    try {
+      const savedSettings = localStorage.getItem(STORAGE_KEYS.SETTINGS);
+      return savedSettings ? JSON.parse(savedSettings) : { language: 'zh-TW', minimalistMode: false };
+    } catch (e) {
+      return { language: 'zh-TW', minimalistMode: false };
+    }
   });
 
   const [viewState, setViewState] = useState<ViewState>(ViewState.HOME);
@@ -113,18 +113,18 @@ const App: React.FC = () => {
 
   // Persistence Effects
   useEffect(() => {
-      localStorage.setItem(STORAGE_KEYS.TRIPS, JSON.stringify(trips));
+    localStorage.setItem(STORAGE_KEYS.TRIPS, JSON.stringify(trips));
   }, [trips]);
 
   useEffect(() => {
-      localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
   }, [settings]);
 
   const handleAddTrip = (newTrip: Trip) => {
     setTrips([newTrip, ...trips]);
     if (viewState === ViewState.AI_PLANNER) {
-        setSelectedTrip(newTrip);
-        setViewState(ViewState.TRIP_DETAILS);
+      setSelectedTrip(newTrip);
+      setViewState(ViewState.TRIP_DETAILS);
     }
   };
 
@@ -132,72 +132,86 @@ const App: React.FC = () => {
     setTrips(trips.map(t => t.id === updatedTrip.id ? updatedTrip : t));
     // Important: Update selectedTrip reference so Detail view re-renders immediately
     if (selectedTrip?.id === updatedTrip.id) {
-        setSelectedTrip(updatedTrip);
+      setSelectedTrip(updatedTrip);
     }
   };
 
   const handleStartBackgroundGeneration = async (userPrompt: string) => {
-      const tempId = Date.now().toString();
-      setBackgroundTasks(prev => [...prev, tempId]);
+    const tempId = Date.now().toString();
+    setBackgroundTasks(prev => [...prev, tempId]);
 
-      try {
-        const tripPlan = await generateTripPlan(userPrompt, settings.language);
-        
-        const newTrip: Trip = {
-            ...tripPlan,
-            id: tempId,
-            coverImage: tripPlan.coverImage || `https://source.unsplash.com/800x600/?travel,${tripPlan.title.split(' ')[0]}`,
-        };
+    try {
+      const tripPlan = await generateTripPlan(userPrompt, settings.language);
 
-        setTrips(prev => [newTrip, ...prev]);
-        setBackgroundTasks(prev => prev.filter(id => id !== tempId));
-
-      } catch (error) {
-          console.error("Background generation failed", error);
-          setBackgroundTasks(prev => prev.filter(id => id !== tempId));
-          alert("AI Generation Failed.");
+      // Generate cover image
+      let coverImage = tripPlan.coverImage;
+      if (!coverImage) {
+        try {
+          // Use the trip title or first location as the prompt for the image
+          const imagePrompt = tripPlan.title || userPrompt;
+          coverImage = await generateCoverImage(imagePrompt);
+        } catch (imgError) {
+          console.error("Failed to generate cover image:", imgError);
+          // Fallback to Unsplash if AI image generation fails
+          coverImage = `https://source.unsplash.com/800x600/?travel,${tripPlan.title.split(' ')[0]}`;
+        }
       }
+
+      const newTrip: Trip = {
+        ...tripPlan,
+        id: tempId,
+        coverImage: coverImage,
+      };
+
+      setTrips(prev => [newTrip, ...prev]);
+      setBackgroundTasks(prev => prev.filter(id => id !== tempId));
+
+    } catch (error) {
+      console.error("Background generation failed", error);
+      setBackgroundTasks(prev => prev.filter(id => id !== tempId));
+      alert("AI Generation Failed.");
+    }
   };
 
   const handleDeleteTrip = (tripId: string) => {
-      setTrips(trips.filter(t => t.id !== tripId));
-      setSelectedTrip(null);
-      setViewState(ViewState.HOME);
+    setTrips(trips.filter(t => t.id !== tripId));
+    setSelectedTrip(null);
+    setViewState(ViewState.HOME);
   };
 
   const handleUpdateSettings = (newSettings: Partial<AppSettings>) => {
-      setSettings(prev => ({...prev, ...newSettings}));
+    setSettings(prev => ({ ...prev, ...newSettings }));
   };
 
   const handleResetApp = () => {
-      setTrips([]);
-      localStorage.removeItem(STORAGE_KEYS.TRIPS);
-      localStorage.removeItem(STORAGE_KEYS.SETTINGS);
-      setSelectedTrip(null);
-      setViewState(ViewState.HOME);
-      setTrips(INITIAL_TRIPS);
+    setTrips([]);
+    localStorage.removeItem(STORAGE_KEYS.TRIPS);
+    localStorage.removeItem(STORAGE_KEYS.SETTINGS);
+    setSelectedTrip(null);
+    setViewState(ViewState.HOME);
+    setTrips(INITIAL_TRIPS);
   };
 
   const renderContent = () => {
     switch (viewState) {
       case ViewState.HOME:
         return (
-          <TripList 
-            trips={trips} 
+          <TripList
+            trips={trips}
             onSelectTrip={(trip) => {
               setSelectedTrip(trip);
               setViewState(ViewState.TRIP_DETAILS);
-            }} 
-            onAddTrip={() => setViewState(ViewState.ADD_TRIP)} 
+            }}
+            onAddTrip={() => setViewState(ViewState.ADD_TRIP)}
             onOpenSettings={() => setViewState(ViewState.SETTINGS)}
             settings={settings}
           />
         );
       case ViewState.ADD_TRIP:
         return (
-          <AddTripForm 
-            onSave={(t) => { handleAddTrip(t); setViewState(ViewState.HOME); }} 
-            onCancel={() => setViewState(ViewState.HOME)} 
+          <AddTripForm
+            onSave={(t) => { handleAddTrip(t); setViewState(ViewState.HOME); }}
+            onCancel={() => setViewState(ViewState.HOME)}
             settings={settings}
           />
         );
@@ -205,32 +219,32 @@ const App: React.FC = () => {
         return <MagicEditor settings={settings} />;
       case ViewState.AI_PLANNER:
         return (
-            <AIPlanner 
-                onStartGeneration={handleStartBackgroundGeneration}
-                onCancel={() => setViewState(ViewState.HOME)}
-                settings={settings}
-            />
+          <AIPlanner
+            onStartGeneration={handleStartBackgroundGeneration}
+            onCancel={() => setViewState(ViewState.HOME)}
+            settings={settings}
+          />
         );
       case ViewState.TOOLS:
         return <Tools onBack={() => setViewState(ViewState.HOME)} trips={trips} settings={settings} />;
       case ViewState.TRIP_DETAILS:
         return selectedTrip ? (
-            <TripDetail 
-                trip={selectedTrip} 
-                onBack={() => setViewState(ViewState.HOME)} 
-                onDelete={handleDeleteTrip}
-                onUpdateTrip={handleUpdateTrip}
-                settings={settings}
-            />
+          <TripDetail
+            trip={selectedTrip}
+            onBack={() => setViewState(ViewState.HOME)}
+            onDelete={handleDeleteTrip}
+            onUpdateTrip={handleUpdateTrip}
+            settings={settings}
+          />
         ) : null;
       case ViewState.SETTINGS:
         return (
-            <Settings 
-                onBack={() => setViewState(ViewState.HOME)}
-                settings={settings}
-                onUpdateSettings={handleUpdateSettings}
-                onResetApp={handleResetApp}
-            />
+          <Settings
+            onBack={() => setViewState(ViewState.HOME)}
+            settings={settings}
+            onUpdateSettings={handleUpdateSettings}
+            onResetApp={handleResetApp}
+          />
         );
       default:
         return null;
@@ -238,10 +252,10 @@ const App: React.FC = () => {
   };
 
   const showBottomNav = [
-      ViewState.HOME, 
-      ViewState.MAGIC_EDITOR, 
-      ViewState.TOOLS, 
-      ViewState.AI_PLANNER 
+    ViewState.HOME,
+    ViewState.MAGIC_EDITOR,
+    ViewState.TOOLS,
+    ViewState.AI_PLANNER
   ].includes(viewState);
 
   return (
@@ -252,47 +266,47 @@ const App: React.FC = () => {
 
       {showBottomNav && (
         <div className="absolute bottom-6 left-4 right-4 z-40">
-            <div className="bg-white/90 backdrop-blur-xl border border-white/50 shadow-float rounded-3xl px-2 py-3 flex justify-around items-center">
-            <button 
-                onClick={() => setViewState(ViewState.HOME)}
-                className={`flex flex-col items-center gap-1 p-2 rounded-2xl transition-all w-16 ${viewState === ViewState.HOME ? 'text-coral scale-105' : 'text-gray-400 hover:text-gray-600'}`}
+          <div className="bg-white/90 backdrop-blur-xl border border-white/50 shadow-float rounded-3xl px-2 py-3 flex justify-around items-center">
+            <button
+              onClick={() => setViewState(ViewState.HOME)}
+              className={`flex flex-col items-center gap-1 p-2 rounded-2xl transition-all w-16 ${viewState === ViewState.HOME ? 'text-coral scale-105' : 'text-gray-400 hover:text-gray-600'}`}
             >
-                <HomeIcon className={`w-6 h-6 ${viewState === ViewState.HOME ? 'stroke-2' : 'stroke-[1.5]'}`} />
-                {viewState === ViewState.HOME && <span className="w-1 h-1 bg-coral rounded-full mt-1"></span>}
+              <HomeIcon className={`w-6 h-6 ${viewState === ViewState.HOME ? 'stroke-2' : 'stroke-[1.5]'}`} />
+              {viewState === ViewState.HOME && <span className="w-1 h-1 bg-coral rounded-full mt-1"></span>}
             </button>
 
-            <button 
-                onClick={() => setViewState(ViewState.AI_PLANNER)}
-                className={`relative flex flex-col items-center gap-1 p-2 rounded-2xl transition-all w-16 ${viewState === ViewState.AI_PLANNER ? 'text-coral scale-105' : 'text-gray-400 hover:text-gray-600'}`}
+            <button
+              onClick={() => setViewState(ViewState.AI_PLANNER)}
+              className={`relative flex flex-col items-center gap-1 p-2 rounded-2xl transition-all w-16 ${viewState === ViewState.AI_PLANNER ? 'text-coral scale-105' : 'text-gray-400 hover:text-gray-600'}`}
             >
-                <div className="relative">
-                    <ChatBubbleIcon className={`w-6 h-6 ${viewState === ViewState.AI_PLANNER ? 'stroke-2' : 'stroke-[1.5]'}`} />
-                    {backgroundTasks.length > 0 && (
-                        <span className="absolute -top-1 -right-1 w-3 h-3 bg-coral rounded-full animate-ping"></span>
-                    )}
-                    {backgroundTasks.length > 0 && (
-                        <span className="absolute -top-1 -right-1 w-3 h-3 bg-coral rounded-full border-2 border-white"></span>
-                    )}
-                </div>
-                {viewState === ViewState.AI_PLANNER && <span className="w-1 h-1 bg-coral rounded-full mt-1"></span>}
+              <div className="relative">
+                <ChatBubbleIcon className={`w-6 h-6 ${viewState === ViewState.AI_PLANNER ? 'stroke-2' : 'stroke-[1.5]'}`} />
+                {backgroundTasks.length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-coral rounded-full animate-ping"></span>
+                )}
+                {backgroundTasks.length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-coral rounded-full border-2 border-white"></span>
+                )}
+              </div>
+              {viewState === ViewState.AI_PLANNER && <span className="w-1 h-1 bg-coral rounded-full mt-1"></span>}
             </button>
 
-            <button 
-                onClick={() => setViewState(ViewState.MAGIC_EDITOR)}
-                className={`flex flex-col items-center gap-1 p-2 rounded-2xl transition-all w-16 ${viewState === ViewState.MAGIC_EDITOR ? 'text-coral scale-105' : 'text-gray-400 hover:text-gray-600'}`}
+            <button
+              onClick={() => setViewState(ViewState.MAGIC_EDITOR)}
+              className={`flex flex-col items-center gap-1 p-2 rounded-2xl transition-all w-16 ${viewState === ViewState.MAGIC_EDITOR ? 'text-coral scale-105' : 'text-gray-400 hover:text-gray-600'}`}
             >
-                <SparklesIcon className={`w-6 h-6 ${viewState === ViewState.MAGIC_EDITOR ? 'stroke-2' : 'stroke-[1.5]'}`} />
-                {viewState === ViewState.MAGIC_EDITOR && <span className="w-1 h-1 bg-coral rounded-full mt-1"></span>}
+              <SparklesIcon className={`w-6 h-6 ${viewState === ViewState.MAGIC_EDITOR ? 'stroke-2' : 'stroke-[1.5]'}`} />
+              {viewState === ViewState.MAGIC_EDITOR && <span className="w-1 h-1 bg-coral rounded-full mt-1"></span>}
             </button>
 
-            <button 
-                onClick={() => setViewState(ViewState.TOOLS)}
-                className={`flex flex-col items-center gap-1 p-2 rounded-2xl transition-all w-16 ${viewState === ViewState.TOOLS ? 'text-coral scale-105' : 'text-gray-400 hover:text-gray-600'}`}
+            <button
+              onClick={() => setViewState(ViewState.TOOLS)}
+              className={`flex flex-col items-center gap-1 p-2 rounded-2xl transition-all w-16 ${viewState === ViewState.TOOLS ? 'text-coral scale-105' : 'text-gray-400 hover:text-gray-600'}`}
             >
-                <SquaresPlusIcon className={`w-6 h-6 ${viewState === ViewState.TOOLS ? 'stroke-2' : 'stroke-[1.5]'}`} />
-                {viewState === ViewState.TOOLS && <span className="w-1 h-1 bg-coral rounded-full mt-1"></span>}
+              <SquaresPlusIcon className={`w-6 h-6 ${viewState === ViewState.TOOLS ? 'stroke-2' : 'stroke-[1.5]'}`} />
+              {viewState === ViewState.TOOLS && <span className="w-1 h-1 bg-coral rounded-full mt-1"></span>}
             </button>
-            </div>
+          </div>
         </div>
       )}
     </div>

@@ -27,6 +27,13 @@ const getMimeType = (base64Data: string) => {
     return match ? match[1] : 'image/jpeg';
 };
 
+
+const langMap: { [key: string]: string } = {
+    'zh-TW': 'Traditional Chinese (Taiwan) (繁體中文)',
+    'en-US': 'English',
+    'ja-JP': 'Japanese'
+};
+
 export const editTravelPhoto = async (
     base64Image: string,
     prompt: string
@@ -101,11 +108,6 @@ export const generateCoverImage = async (location: string): Promise<string> => {
 }
 
 export const generateTripPlan = async (userPrompt: string, language: string = 'zh-TW') => {
-    const langMap: { [key: string]: string } = {
-        'zh-TW': 'Traditional Chinese (Taiwan) (繁體中文)',
-        'en-US': 'English',
-        'ja-JP': 'Japanese'
-    };
     const targetLang = langMap[language] || langMap['zh-TW'];
 
     try {
@@ -207,14 +209,16 @@ export const generateTripPlan = async (userPrompt: string, language: string = 'z
     }
 }
 
-export const getVisaRequirements = async (passport: string, destination: string) => {
+export const getVisaRequirements = async (passport: string, destination: string, language: string = 'zh-TW') => {
+    const targetLang = langMap[language] || langMap['zh-TW'];
     try {
         const response = await getAiClient().models.generateContent({
             model: "gemini-2.5-flash",
             contents: `I hold a ${passport} passport and want to travel to ${destination}. 
             What are the visa requirements, entry rules, and any vaccination requirements? 
             Provide a concise summary in Markdown format. 
-            Include a 'Difficulty Level' (Easy, Moderate, Hard) at the top.`
+            Include a 'Difficulty Level' (Easy, Moderate, Hard) at the top.
+            Response MUST be in ${targetLang}.`
         });
         return response.text;
     } catch (error) {
@@ -223,7 +227,8 @@ export const getVisaRequirements = async (passport: string, destination: string)
     }
 };
 
-export const getCulturalEtiquette = async (location: string) => {
+export const getCulturalEtiquette = async (location: string, language: string = 'zh-TW') => {
+    const targetLang = langMap[language] || langMap['zh-TW'];
     try {
         const response = await getAiClient().models.generateContent({
             model: "gemini-2.5-flash",
@@ -232,7 +237,8 @@ export const getCulturalEtiquette = async (location: string) => {
             1. Tipping customs (Restaurants, Taxis, Hotels).
             2. Major cultural taboos (Do's and Don'ts).
             3. Dress code advice.
-            Keep it short, fun, and formatted in Markdown.`
+            Keep it short, fun, and formatted in Markdown.
+            Response MUST be in ${targetLang}.`
         });
         return response.text;
     } catch (error) {
@@ -241,13 +247,15 @@ export const getCulturalEtiquette = async (location: string) => {
     }
 };
 
-export const getAttractionGuide = async (location: string, activity: string) => {
+export const getAttractionGuide = async (location: string, activity: string, language: string = 'zh-TW') => {
+    const targetLang = langMap[language] || langMap['zh-TW'];
     try {
         const response = await getAiClient().models.generateContent({
             model: "gemini-2.5-flash",
             contents: `Tell me about "${activity}" at "${location}". 
             Provide a very short fun fact, the best photo spot, and one "pro tip" for visiting.
-            Format as simple Markdown (bold keys). Keep it under 100 words.`
+            Format as simple Markdown (bold keys). Keep it under 100 words.
+            Response MUST be in ${targetLang}.`
         });
         return response.text;
     } catch (error) {
@@ -256,14 +264,16 @@ export const getAttractionGuide = async (location: string, activity: string) => 
     }
 };
 
-export const getEmergencyInfo = async (country: string) => {
+export const getEmergencyInfo = async (country: string, language: string = 'zh-TW') => {
+    const targetLang = langMap[language] || langMap['zh-TW'];
     try {
         const response = await getAiClient().models.generateContent({
             model: "gemini-2.5-flash",
             contents: `I am travelling in ${country}. 
             List the emergency phone numbers for: Police, Ambulance, Fire.
             Also list the address and phone number of the nearest major hospital in the capital city.
-            Format as a clear list.`
+            Format as a clear list.
+            Response MUST be in ${targetLang}.`
         });
         return response.text;
     } catch (error) {
@@ -271,7 +281,8 @@ export const getEmergencyInfo = async (country: string) => {
     }
 }
 
-export const getCreditCardAdvice = async (destination: string) => {
+export const getCreditCardAdvice = async (destination: string, language: string = 'zh-TW') => {
+    const targetLang = langMap[language] || langMap['zh-TW'];
     try {
         const response = await getAiClient().models.generateContent({
             model: "gemini-2.5-flash",
@@ -279,10 +290,46 @@ export const getCreditCardAdvice = async (destination: string) => {
             What kind of credit cards are best to use there (Visa, Mastercard, Amex, JCB)?
             Are cash payments preferred?
             Any tips on currency exchange or dynamic currency conversion (DCC)?
-            Keep it concise.`
+            Keep it concise.
+            Response MUST be in ${targetLang}.`
         });
         return response.text;
     } catch (error) {
         return "無法取得建議。一般建議攜帶 Visa/Mastercard 並準備少量當地現金。";
     }
 }
+
+export const optimizeRoute = async (items: any[], language: string = 'zh-TW') => {
+    const targetLang = langMap[language] || langMap['zh-TW'];
+    try {
+        // Simplify items for the prompt to save tokens
+        const simplifiedItems = items.map(item => ({
+            id: item.id,
+            activity: item.activity,
+            location: item.location,
+            time: item.time
+        }));
+
+        const response = await getAiClient().models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: `I have a list of activities for one day. Reorder them to create the most efficient geographical route.
+            
+            Current Items: ${JSON.stringify(simplifiedItems)}
+            
+            Return ONLY a JSON array of strings, where each string is the 'id' of the activity in the new order.
+            Do not change the time, just the order of visiting.
+            Example response: ["id1", "id3", "id2"]`,
+            config: {
+                responseMimeType: "application/json"
+            }
+        });
+
+        if (response.text) {
+            return JSON.parse(response.text);
+        }
+        throw new Error("Empty response");
+    } catch (error) {
+        console.error("Error optimizing route:", error);
+        throw error;
+    }
+};
