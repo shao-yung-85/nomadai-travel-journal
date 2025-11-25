@@ -304,6 +304,8 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
     const handleSaveActivity = () => {
         if (!newActivityName) return;
 
+        const existingItem = editingItemId ? trip.itinerary?.find(i => i.id === editingItemId) : null;
+
         const newItem: ItineraryItem = {
             id: editingItemId || Date.now().toString(),
             day: Number(newActivityDay),
@@ -311,6 +313,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
             activity: newActivityName,
             location: newActivityLocation,
             notes: newActivityNotes,
+            attachments: existingItem?.attachments || [], // Preserve existing attachments
             travelToNext: newTravelDuration ? {
                 mode: newTravelMode,
                 duration: newTravelDuration,
@@ -365,9 +368,9 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
         const newItem: ExpenseItem = {
             id: Date.now().toString(),
             title: newExpenseName,
-            amount: parseFloat(newExpenseAmount),
-            category: 'General',
-            date: new Date().toLocaleDateString(),
+            amount: parseInt(newExpenseAmount),
+            category: 'Other',
+            date: new Date().toISOString().split('T')[0],
             payer: newExpensePayer || 'ME',
             paymentMethod: newExpenseMethod
         };
