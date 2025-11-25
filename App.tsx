@@ -306,10 +306,10 @@ const App: React.FC = () => {
             >
               <div className="relative">
                 <ChatBubbleIcon className={`w-6 h-6 ${viewState === ViewState.AI_PLANNER ? 'stroke-2' : 'stroke-[1.5]'}`} />
-                {backgroundTasks.length > 0 && (
+                {backgroundTasks?.length > 0 && (
                   <span className="absolute -top-1 -right-1 w-3 h-3 bg-coral rounded-full animate-ping"></span>
                 )}
-                {backgroundTasks.length > 0 && (
+                {backgroundTasks?.length > 0 && (
                   <span className="absolute -top-1 -right-1 w-3 h-3 bg-coral rounded-full border-2 border-white"></span>
                 )}
               </div>

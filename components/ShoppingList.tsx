@@ -54,13 +54,13 @@ const ShoppingList: React.FC<ShoppingListProps> = ({ trip, onUpdateTrip, t }) =>
                 <div className="absolute top-0 left-0 w-full h-2 bg-coral"></div>
                 <h3 className="text-gray-400 text-sm font-bold uppercase tracking-widest mb-2">{t.shopping_list}</h3>
                 <div className="text-5xl font-black text-ink mb-2 tracking-tight">
-                    {items.filter(i => i.bought).length}
+                    {items?.filter(i => i.bought).length || 0}
                     <span className="text-2xl text-gray-300 mx-2">/</span>
-                    <span className="text-3xl text-gray-400">{items.length}</span>
+                    <span className="text-3xl text-gray-400">{items?.length || 0}</span>
                 </div>
             </div>
 
-            {items.length > 0 ? (
+            {items?.length > 0 ? (
                 <div className="space-y-3">
                     {items.map(item => (
                         <div key={item.id} className={`bg-white p-4 rounded-2xl border ${item.bought ? 'border-green-200 bg-green-50/30' : 'border-sand'} shadow-card flex items-center justify-between group transition-all`}>
