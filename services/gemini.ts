@@ -42,8 +42,8 @@ export const editTravelPhoto = async (
         const mimeType = getMimeType(base64Image);
         const cleanData = cleanBase64(base64Image);
 
-        // Using gemini-2.5-flash-image (Nano Banana) for image editing tasks
-        const model = 'gemini-2.5-flash-image';
+        // Using gemini-1.5-flash (Nano Banana) for image editing tasks
+        const model = 'gemini-1.5-flash';
 
         const response = await getAiClient().models.generateContent({
             model: model,
@@ -82,7 +82,7 @@ export const editTravelPhoto = async (
 export const generateCoverImage = async (location: string): Promise<string> => {
     try {
         const response = await getAiClient().models.generateContent({
-            model: 'gemini-2.5-flash-image',
+            model: 'gemini-1.5-flash',
             contents: {
                 parts: [
                     {
@@ -112,7 +112,7 @@ export const generateTripPlan = async (userPrompt: string, language: string = 'z
 
     try {
         const response = await getAiClient().models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-1.5-flash",
             contents: `Help me plan a trip. ${userPrompt}`,
             config: {
                 systemInstruction: `You are a professional travel agent AI. 
@@ -214,7 +214,7 @@ export const getVisaRequirements = async (passport: string, destination: string,
     const targetLang = langMap[language] || langMap['zh-TW'];
     try {
         const response = await getAiClient().models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-1.5-flash",
             contents: `I hold a ${passport} passport and want to travel to ${destination}. 
             What are the visa requirements, entry rules, and any vaccination requirements? 
             Provide a concise summary in Markdown format. 
@@ -232,7 +232,7 @@ export const getCulturalEtiquette = async (location: string, language: string = 
     const targetLang = langMap[language] || langMap['zh-TW'];
     try {
         const response = await getAiClient().models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-1.5-flash",
             contents: `I am currently in (or planning to go to) ${location}. 
             Give me a quick guide on:
             1. Tipping customs (Restaurants, Taxis, Hotels).
@@ -252,7 +252,7 @@ export const getAttractionGuide = async (location: string, activity: string, lan
     const targetLang = langMap[language] || langMap['zh-TW'];
     try {
         const response = await getAiClient().models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-1.5-flash",
             contents: `Tell me about "${activity}" at "${location}". 
             Provide a very short fun fact, the best photo spot, and one "pro tip" for visiting.
             Format as simple Markdown (bold keys). Keep it under 100 words.
@@ -269,7 +269,7 @@ export const getEmergencyInfo = async (country: string, language: string = 'zh-T
     const targetLang = langMap[language] || langMap['zh-TW'];
     try {
         const response = await getAiClient().models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-1.5-flash",
             contents: `I am travelling in ${country}. 
             List the emergency phone numbers for: Police, Ambulance, Fire.
             Also list the address and phone number of the nearest major hospital in the capital city.
@@ -286,7 +286,7 @@ export const getCreditCardAdvice = async (destination: string, language: string 
     const targetLang = langMap[language] || langMap['zh-TW'];
     try {
         const response = await getAiClient().models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-1.5-flash",
             contents: `I am travelling to ${destination}. 
             What kind of credit cards are best to use there (Visa, Mastercard, Amex, JCB)?
             Are cash payments preferred?
@@ -312,7 +312,7 @@ export const optimizeRoute = async (items: any[], language: string = 'zh-TW') =>
         }));
 
         const response = await getAiClient().models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-1.5-flash",
             contents: `I have a list of activities for one day. Reorder them to create the most efficient geographical route.
             
             Current Items: ${JSON.stringify(simplifiedItems)}
