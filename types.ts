@@ -1,13 +1,21 @@
 
 export interface ItineraryItem {
   id: string;
-  day: number; // Added day field (1, 2, 3...)
+  day: number;
   time: string;
   activity: string;
   location: string;
   notes?: string;
   lat?: number;
   lng?: number;
+  coordinates?: { lat: number; lng: number };
+  attachments?: {
+    id: string;
+    name: string;
+    type: 'image' | 'pdf';
+    data: string; // Base64
+    uploadedAt: string;
+  }[];
   travelToNext?: {
     mode: 'WALK' | 'TRAIN' | 'BUS' | 'CAR' | 'FLIGHT';
     duration: string;
@@ -34,10 +42,14 @@ export interface ExpenseItem {
   id: string;
   title: string;
   amount: number;
-  category: string;
+  category: 'Transport' | 'Food' | 'Accommodation' | 'Activities' | 'Shopping' | 'Other';
   date: string;
-  payer?: string;        // Who paid?
-  paymentMethod?: string; // Which card/cash?
+  payer: string;
+  paymentMethod: 'Cash' | 'Credit Card' | 'Debit Card' | 'Mobile Payment';
+  participants?: string[]; // Who should split this expense
+  splits?: { person: string; amount: number }[]; // Custom split amounts
+  originalCurrency?: string; // e.g. 'JPY', 'KRW'
+  exchangeRate?: number; // Rate to TWD
 }
 
 export interface Budget {
