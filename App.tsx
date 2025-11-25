@@ -82,8 +82,8 @@ const INITIAL_TRIPS: Trip[] = [
 ];
 
 const STORAGE_KEYS = {
-  TRIPS: 'nomad_app_trips_v2',
-  SETTINGS: 'nomad_app_settings_v2'
+  TRIPS: 'nomad_app_trips_v3',
+  SETTINGS: 'nomad_app_settings_v3'
 };
 
 const App: React.FC = () => {
@@ -93,8 +93,16 @@ const App: React.FC = () => {
       const savedTrips = localStorage.getItem(STORAGE_KEYS.TRIPS);
       if (!savedTrips) return INITIAL_TRIPS;
       const parsed = JSON.parse(savedTrips);
-      // Ensure parsed data is actually an array
-      return Array.isArray(parsed) ? parsed : INITIAL_TRIPS;
+      // Ensure parsed data is actually an array and sanitize items
+      if (!Array.isArray(parsed)) return INITIAL_TRIPS;
+
+      return parsed.map(trip => ({
+        ...trip,
+        itinerary: Array.isArray(trip.itinerary) ? trip.itinerary : [],
+        bookings: Array.isArray(trip.bookings) ? trip.bookings : [],
+        weather: Array.isArray(trip.weather) ? trip.weather : [],
+        budget: trip.budget || { total: 0, currency: 'TWD', expenses: [] }
+      }));
     } catch (e) {
       console.error("Failed to load trips", e);
       return INITIAL_TRIPS;
