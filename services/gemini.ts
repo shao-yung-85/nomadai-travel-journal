@@ -39,6 +39,22 @@ const langMap: { [key: string]: string } = {
     'ja-JP': 'Japanese'
 };
 
+// Helper to safely extract text from response
+const getResponseText = (response: any): string => {
+    if (typeof response.text === 'string') {
+        return response.text;
+    }
+    if (typeof response.text === 'function') {
+        return response.text();
+    }
+    if (response.candidates && response.candidates[0] && response.candidates[0].content && response.candidates[0].content.parts && response.candidates[0].content.parts[0].text) {
+        return response.candidates[0].content.parts[0].text;
+    }
+    throw new Error("No text found in AI response");
+};
+
+const MODEL_NAME = 'gemini-2.5-flash-preview-09-2025';
+
 export const editTravelPhoto = async (
     base64Image: string,
     prompt: string
@@ -46,10 +62,9 @@ export const editTravelPhoto = async (
     return callAiWithFallback(async (ai) => {
         const mimeType = getMimeType(base64Image);
         const cleanData = cleanBase64(base64Image);
-        const model = 'gemini-1.5-flash';
 
         const response = await ai.models.generateContent({
-            model: model,
+            model: MODEL_NAME,
             contents: {
                 parts: [
                     {
@@ -79,7 +94,7 @@ export const editTravelPhoto = async (
 export const generateCoverImage = async (location: string): Promise<string> => {
     return callAiWithFallback(async (ai) => {
         const response = await ai.models.generateContent({
-            model: 'gemini-1.5-flash',
+            model: MODEL_NAME,
             contents: {
                 parts: [
                     {
@@ -105,7 +120,7 @@ export const generateTripPlan = async (userPrompt: string, language: string = 'z
 
     return callAiWithFallback(async (ai) => {
         const response = await ai.models.generateContent({
-            model: "gemini-1.5-flash",
+            model: MODEL_NAME,
             contents: `Help me plan a trip. ${userPrompt}`,
             config: {
                 systemInstruction: `You are a professional travel agent AI. 
@@ -201,8 +216,9 @@ export const generateTripPlan = async (userPrompt: string, language: string = 'z
             }
         });
 
-        if (response.text) {
-            return JSON.parse(response.text());
+        const text = getResponseText(response);
+        if (text) {
+            return JSON.parse(text);
         }
         throw new Error("Empty response from AI");
     });
@@ -212,14 +228,14 @@ export const getVisaRequirements = async (passport: string, destination: string,
     const targetLang = langMap[language] || langMap['zh-TW'];
     return callAiWithFallback(async (ai) => {
         const response = await ai.models.generateContent({
-            model: "gemini-1.5-flash",
+            model: MODEL_NAME,
             contents: `I hold a ${passport} passport and want to travel to ${destination}. 
             What are the visa requirements, entry rules, and any vaccination requirements? 
             Provide a concise summary in Markdown format. 
             Include a 'Difficulty Level' (Easy, Moderate, Hard) at the top.
             Response MUST be in ${targetLang}.`
         });
-        return response.text();
+        return getResponseText(response);
     });
 };
 
@@ -227,7 +243,7 @@ export const getCulturalEtiquette = async (location: string, language: string = 
     const targetLang = langMap[language] || langMap['zh-TW'];
     return callAiWithFallback(async (ai) => {
         const response = await ai.models.generateContent({
-            model: "gemini-1.5-flash",
+            model: MODEL_NAME,
             contents: `I am currently in (or planning to go to) ${location}. 
             Give me a quick guide on:
             1. Tipping customs (Restaurants, Taxis, Hotels).
@@ -236,7 +252,7 @@ export const getCulturalEtiquette = async (location: string, language: string = 
             Keep it short, fun, and formatted in Markdown.
             Response MUST be in ${targetLang}.`
         });
-        return response.text();
+        return getResponseText(response);
     });
 };
 
@@ -245,13 +261,13 @@ export const getAttractionGuide = async (location: string, activity: string, lan
     return callAiWithFallback(async (ai) => {
         try {
             const response = await ai.models.generateContent({
-                model: "gemini-1.5-flash",
+                model: MODEL_NAME,
                 contents: `Tell me about "${activity}" at "${location}". 
                 Provide a very short fun fact, the best photo spot, and one "pro tip" for visiting.
                 Format as simple Markdown (bold keys). Keep it under 100 words.
                 Response MUST be in ${targetLang}.`
             });
-            return response.text();
+            return getResponseText(response);
         } catch (error) {
             console.error("Error fetching attraction guide:", error);
             return "暫時無法取得導覽資訊，請稍後再試。";
@@ -264,14 +280,14 @@ export const getEmergencyInfo = async (country: string, language: string = 'zh-T
     return callAiWithFallback(async (ai) => {
         try {
             const response = await ai.models.generateContent({
-                model: "gemini-1.5-flash",
+                model: MODEL_NAME,
                 contents: `I am travelling in ${country}. 
                 List the emergency phone numbers for: Police, Ambulance, Fire.
                 Also list the address and phone number of the nearest major hospital in the capital city.
                 Format as a clear list.
                 Response MUST be in ${targetLang}.`
             });
-            return response.text();
+            return getResponseText(response);
         } catch (error) {
             return "無法取得緊急資訊。請直接撥打國際通用緊急電話 112。";
         }
@@ -283,7 +299,7 @@ export const getCreditCardAdvice = async (destination: string, language: string 
     return callAiWithFallback(async (ai) => {
         try {
             const response = await ai.models.generateContent({
-                model: "gemini-1.5-flash",
+                model: MODEL_NAME,
                 contents: `I am travelling to ${destination}. 
                 What kind of credit cards are best to use there (Visa, Mastercard, Amex, JCB)?
                 Are cash payments preferred?
@@ -291,7 +307,7 @@ export const getCreditCardAdvice = async (destination: string, language: string 
                 Keep it concise.
                 Response MUST be in ${targetLang}.`
             });
-            return response.text();
+            return getResponseText(response);
         } catch (error) {
             return "無法取得建議。一般建議攜帶 Visa/Mastercard 並準備少量當地現金。";
         }
@@ -310,7 +326,7 @@ export const optimizeRoute = async (items: any[], language: string = 'zh-TW') =>
         }));
 
         const response = await ai.models.generateContent({
-            model: "gemini-1.5-flash",
+            model: MODEL_NAME,
             contents: `I have a list of activities for one day. Reorder them to create the most efficient geographical route.
             
             Current Items: ${JSON.stringify(simplifiedItems)}
@@ -323,8 +339,9 @@ export const optimizeRoute = async (items: any[], language: string = 'zh-TW') =>
             }
         });
 
-        if (response.text) {
-            return JSON.parse(response.text());
+        const text = getResponseText(response);
+        if (text) {
+            return JSON.parse(text);
         }
         throw new Error("Empty response");
     });
@@ -334,13 +351,13 @@ export const getTranslation = async (text: string, targetLang: string, userLang:
     return callAiWithFallback(async (ai) => {
         try {
             const response = await ai.models.generateContent({
-                model: "gemini-1.5-flash",
+                model: MODEL_NAME,
                 contents: `Translate the following text to ${targetLang}.
                 Text: "${text}"
                 
                 Only provide the translated text.`
             });
-            return response.text();
+            return getResponseText(response);
         } catch (error) {
             console.error("Translation Error:", error);
             return null;
