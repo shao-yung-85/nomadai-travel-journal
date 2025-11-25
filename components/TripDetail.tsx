@@ -64,6 +64,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
     const [newBookingTime, setNewBookingTime] = useState('');
 
     // Trip Editing State
+    const [isEditMode, setIsEditMode] = useState(false);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [editedTitle, setEditedTitle] = useState(trip.title);
     const [isEditingCover, setIsEditingCover] = useState(false);
@@ -1088,7 +1089,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
                     <ChevronLeftIcon className="w-5 h-5 stroke-2" />
                 </button>
 
-                {isEditingTitle ? (
+                {isEditMode && isEditingTitle ? (
                     <input
                         type="text"
                         value={editedTitle}
@@ -1099,25 +1100,44 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
                         className="font-extrabold text-ink text-lg text-center bg-transparent border-b-2 border-coral outline-none max-w-[200px]"
                     />
                 ) : (
-                    <h2
-                        className="font-extrabold text-ink text-lg truncate max-w-[200px] cursor-pointer hover:text-coral transition-colors"
-                        onClick={() => {
-                            setIsEditingTitle(true);
-                            setEditedTitle(trip.title);
-                        }}
-                    >
+                    <h2 className="font-extrabold text-ink text-lg truncate max-w-[200px]">
                         {getActiveTabTitle()}
                     </h2>
                 )}
 
-                <button onClick={handleDeleteClick} className="p-2.5 -mr-2 bg-white shadow-card text-gray-400 rounded-full hover:text-red-500 active:scale-95 transition-all">
-                    <TrashIcon className="w-5 h-5" />
-                </button>
+                <div className="flex items-center gap-2">
+                    {isEditMode ? (
+                        <button
+                            onClick={() => {
+                                setIsEditMode(false);
+                                setIsEditingTitle(false);
+                                setEditedTitle(trip.title);
+                            }}
+                            className="p-2.5 bg-green-500 text-white shadow-card rounded-full hover:bg-green-600 active:scale-95 transition-all"
+                        >
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                        </button>
+                    ) : (
+                        <button
+                            onClick={() => setIsEditMode(true)}
+                            className="p-2.5 bg-white shadow-card text-gray-400 rounded-full hover:text-coral active:scale-95 transition-all"
+                        >
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                        </button>
+                    )}
+                    <button onClick={handleDeleteClick} className="p-2.5 -mr-2 bg-white shadow-card text-gray-400 rounded-full hover:text-red-500 active:scale-95 transition-all">
+                        <TrashIcon className="w-5 h-5" />
+                    </button>
+                </div>
             </div>
 
             {/* Cover Image Section (only on ITINERARY tab) */}
             {activeTab === 'ITINERARY' && trip.coverImage && (
-                <div className="relative group">
+                <div className="relative">
                     <img
                         src={trip.coverImage}
                         alt={trip.title}
@@ -1126,14 +1146,31 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
                             e.target.src = `https://placehold.co/800x600/e2e8f0/475569?text=${encodeURIComponent(trip.title.substring(0, 10))}`;
                         }}
                     />
-                    <button
-                        onClick={() => setIsEditingCover(true)}
-                        className="absolute top-4 right-4 bg-white/90 backdrop-blur p-2.5 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity active:scale-95"
-                    >
-                        <svg className="w-5 h-5 text-ink" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                    </button>
+                    {isEditMode && (
+                        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex flex-col items-center justify-center gap-3 animate-fade-in">
+                            <button
+                                onClick={() => {
+                                    setIsEditingTitle(true);
+                                    setEditedTitle(trip.title);
+                                }}
+                                className="bg-white/90 backdrop-blur px-6 py-3 rounded-xl shadow-lg font-bold text-ink hover:bg-white active:scale-95 transition-all flex items-center gap-2"
+                            >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                                編輯標題
+                            </button>
+                            <button
+                                onClick={() => setIsEditingCover(true)}
+                                className="bg-white/90 backdrop-blur px-6 py-3 rounded-xl shadow-lg font-bold text-ink hover:bg-white active:scale-95 transition-all flex items-center gap-2"
+                            >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                編輯封面圖片
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
 
