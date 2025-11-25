@@ -50,7 +50,7 @@ const TripList: React.FC<TripListProps> = ({ trips, onSelectTrip, onAddTrip, onO
             <p className="text-gray-400 text-sm">{t.click_to_add}</p>
           </div>
         ) : (
-          trips.map((trip) => (
+          trips?.map((trip) => (
             <div
               key={trip.id}
               onClick={() => onSelectTrip(trip)}

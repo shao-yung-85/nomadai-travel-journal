@@ -154,7 +154,7 @@ const App: React.FC = () => {
   };
 
   const handleUpdateTrip = (updatedTrip: Trip) => {
-    setTrips(trips.map(t => t.id === updatedTrip.id ? updatedTrip : t));
+    setTrips(trips?.map(t => t.id === updatedTrip.id ? updatedTrip : t));
     // Important: Update selectedTrip reference so Detail view re-renders immediately
     if (selectedTrip?.id === updatedTrip.id) {
       setSelectedTrip(updatedTrip);

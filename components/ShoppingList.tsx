@@ -34,7 +34,7 @@ const ShoppingList: React.FC<ShoppingListProps> = ({ trip, onUpdateTrip, t }) =>
     };
 
     const handleToggleItem = (itemId: string) => {
-        const updatedList = items.map(item =>
+        const updatedList = items?.map(item =>
             item.id === itemId ? { ...item, bought: !item.bought } : item
         );
         onUpdateTrip({ ...trip, shoppingList: updatedList });
@@ -62,7 +62,7 @@ const ShoppingList: React.FC<ShoppingListProps> = ({ trip, onUpdateTrip, t }) =>
 
             {items?.length > 0 ? (
                 <div className="space-y-3">
-                    {items.map(item => (
+                    {items?.map(item => (
                         <div key={item.id} className={`bg-white p-4 rounded-2xl border ${item.bought ? 'border-green-200 bg-green-50/30' : 'border-sand'} shadow-card flex items-center justify-between group transition-all`}>
                             <div className="flex items-center gap-4 flex-1" onClick={() => handleToggleItem(item.id)}>
                                 <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center cursor-pointer transition-colors ${item.bought ? 'bg-green-500 border-green-500' : 'border-gray-300 hover:border-coral'}`}>

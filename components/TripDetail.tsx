@@ -371,7 +371,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
             <div className="mb-6">
                 <h4 className="text-xs font-bold text-gray-400 mb-3 uppercase tracking-wider ml-1">{t.weather}</h4>
                 <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
-                    {trip.weather.map((w, idx) => (
+                    {trip.weather?.map((w, idx) => (
                         <div key={idx} className="flex-shrink-0 flex flex-col items-center justify-center gap-1 bg-white border border-sand p-3 rounded-2xl min-w-[70px] shadow-sm">
                             <span className="text-[10px] font-bold text-gray-400">{w.date}</span>
                             <span className="text-2xl drop-shadow-sm">{w.icon}</span>
@@ -443,7 +443,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
                                 </div>
 
                                 <div className={`space-y-0 relative ${isMinimalist ? '' : 'border-l-2 border-sand ml-4'}`}>
-                                    {groupedItems[day].map((item, idx) => (
+                                    {groupedItems[day]?.map((item, idx) => (
                                         <div key={item.id || idx} className="relative group">
                                             {/* Activity Item */}
                                             <div className={`relative ${isMinimalist ? 'mb-4 border-b border-sand pb-4' : 'pl-8 pb-10 last:pb-0'}`}>
@@ -695,7 +695,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
                         <MapIcon className="w-4 h-4" />
                         Overview
                     </button>
-                    {trip.itinerary.map((item, idx) => (
+                    {trip.itinerary?.map((item, idx) => (
                         <button
                             key={idx}
                             onClick={() => setMapQuery(item.location)}
@@ -737,7 +737,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
 
                     {expenses?.length > 0 ? (
                         <div className="grid grid-cols-1 gap-3">
-                            {expenses.map((ex, idx) => (
+                            {expenses?.map((ex, idx) => (
                                 <div key={idx} className="bg-white p-4 rounded-2xl border border-sand shadow-card flex items-center justify-between group hover:border-coral/30 transition-all">
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 rounded-2xl bg-paper flex flex-col items-center justify-center text-coral border border-sand">
