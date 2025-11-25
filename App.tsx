@@ -123,6 +123,13 @@ const App: React.FC = () => {
     } else {
       document.documentElement.style.removeProperty('--color-coral');
     }
+
+    // Hide loading screen when app is mounted
+    const loader = document.getElementById('loading-screen');
+    if (loader) {
+      loader.style.opacity = '0';
+      setTimeout(() => loader.remove(), 500);
+    }
   }, [settings]);
 
   const handleAddTrip = (newTrip: Trip) => {
