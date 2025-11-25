@@ -63,6 +63,13 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
     const [newBookingDate, setNewBookingDate] = useState('');
     const [newBookingTime, setNewBookingTime] = useState('');
 
+    // Trip Editing State
+    const [isEditingTitle, setIsEditingTitle] = useState(false);
+    const [editedTitle, setEditedTitle] = useState(trip.title);
+    const [isEditingCover, setIsEditingCover] = useState(false);
+    const [newCoverUrl, setNewCoverUrl] = useState('');
+    const [isGeneratingCover, setIsGeneratingCover] = useState(false);
+
     // Share Function
     const handleShare = async () => {
         const lines = [`${trip.title} (${trip.startDate} - ${trip.endDate})`];
@@ -139,6 +146,53 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
 
     const openLink = (url?: string) => {
         if (url) window.open(url, '_blank');
+    };
+
+    const handleSaveTitle = () => {
+        if (editedTitle.trim() && editedTitle !== trip.title) {
+            onUpdateTrip?.({ ...trip, title: editedTitle });
+        }
+        setIsEditingTitle(false);
+    };
+
+    const handleCoverChange = async (source: 'upload' | 'url' | 'ai') => {
+        if (source === 'upload') {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = (e: any) => {
+                const file = e.target?.files?.[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        const base64 = reader.result as string;
+                        onUpdateTrip?.({ ...trip, coverImage: base64 });
+                        setIsEditingCover(false);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            input.click();
+        } else if (source === 'url') {
+            if (newCoverUrl.trim()) {
+                onUpdateTrip?.({ ...trip, coverImage: newCoverUrl });
+                setNewCoverUrl('');
+                setIsEditingCover(false);
+            }
+        } else if (source === 'ai') {
+            setIsGeneratingCover(true);
+            try {
+                const { generateCoverImage } = await import('../services/gemini');
+                const newCover = await generateCoverImage(trip.title);
+                onUpdateTrip?.({ ...trip, coverImage: newCover });
+                setIsEditingCover(false);
+            } catch (error) {
+                console.error('Failed to generate cover:', error);
+                alert('AI 圖片生成失敗，請稍後再試');
+            } finally {
+                setIsGeneratingCover(false);
+            }
+        }
     };
 
     const handleOpenAiGuide = async (activity: string, location: string) => {
@@ -1033,11 +1087,55 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
                 <button onClick={onBack} className="p-2.5 -ml-2 rounded-full bg-white shadow-card text-ink hover:text-coral active:scale-95 transition-all">
                     <ChevronLeftIcon className="w-5 h-5 stroke-2" />
                 </button>
-                <h2 className="font-extrabold text-ink text-lg truncate max-w-[200px]">{getActiveTabTitle()}</h2>
+
+                {isEditingTitle ? (
+                    <input
+                        type="text"
+                        value={editedTitle}
+                        onChange={(e) => setEditedTitle(e.target.value)}
+                        onBlur={handleSaveTitle}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSaveTitle()}
+                        autoFocus
+                        className="font-extrabold text-ink text-lg text-center bg-transparent border-b-2 border-coral outline-none max-w-[200px]"
+                    />
+                ) : (
+                    <h2
+                        className="font-extrabold text-ink text-lg truncate max-w-[200px] cursor-pointer hover:text-coral transition-colors"
+                        onClick={() => {
+                            setIsEditingTitle(true);
+                            setEditedTitle(trip.title);
+                        }}
+                    >
+                        {getActiveTabTitle()}
+                    </h2>
+                )}
+
                 <button onClick={handleDeleteClick} className="p-2.5 -mr-2 bg-white shadow-card text-gray-400 rounded-full hover:text-red-500 active:scale-95 transition-all">
                     <TrashIcon className="w-5 h-5" />
                 </button>
             </div>
+
+            {/* Cover Image Section (only on ITINERARY tab) */}
+            {activeTab === 'ITINERARY' && trip.coverImage && (
+                <div className="relative group">
+                    <img
+                        src={trip.coverImage}
+                        alt={trip.title}
+                        className="w-full h-48 object-cover"
+                        onError={(e: any) => {
+                            e.target.src = `https://placehold.co/800x600/e2e8f0/475569?text=${encodeURIComponent(trip.title.substring(0, 10))}`;
+                        }}
+                    />
+                    <button
+                        onClick={() => setIsEditingCover(true)}
+                        className="absolute top-4 right-4 bg-white/90 backdrop-blur p-2.5 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity active:scale-95"
+                    >
+                        <svg className="w-5 h-5 text-ink" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </button>
+                </div>
+            )}
 
             {/* Floating Tab Bar */}
             <div className="px-4 py-2 z-20 sticky top-[72px] bg-paper/95 backdrop-blur-xl transition-all">
@@ -1126,6 +1224,72 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
                                     {aiGuideContent}
                                 </div>
                             )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Cover Image Editing Modal */}
+            {isEditingCover && (
+                <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onClick={() => setIsEditingCover(false)}>
+                    <div className="bg-white rounded-3xl p-6 shadow-2xl max-w-sm w-full animate-slide-up" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-xl font-bold text-ink mb-4 text-center">更換封面圖片</h3>
+
+                        <div className="space-y-3">
+                            <button
+                                onClick={() => handleCoverChange('upload')}
+                                className="w-full py-4 bg-coral text-white rounded-xl font-bold shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
+                            >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                上傳圖片
+                            </button>
+
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    placeholder="輸入圖片網址..."
+                                    value={newCoverUrl}
+                                    onChange={(e) => setNewCoverUrl(e.target.value)}
+                                    className="w-full px-4 py-3 border-2 border-sand rounded-xl outline-none focus:border-coral font-medium"
+                                />
+                                {newCoverUrl && (
+                                    <button
+                                        onClick={() => handleCoverChange('url')}
+                                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-coral text-white px-4 py-2 rounded-lg font-bold text-sm active:scale-95"
+                                    >
+                                        確認
+                                    </button>
+                                )}
+                            </div>
+
+                            <button
+                                onClick={() => handleCoverChange('ai')}
+                                disabled={isGeneratingCover}
+                                className="w-full py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                            >
+                                {isGeneratingCover ? (
+                                    <>
+                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                        AI 生成中...
+                                    </>
+                                ) : (
+                                    <>
+                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                        </svg>
+                                        AI 自動生成
+                                    </>
+                                )}
+                            </button>
+
+                            <button
+                                onClick={() => setIsEditingCover(false)}
+                                className="w-full py-3 bg-gray-100 rounded-xl font-bold text-gray-600 active:scale-95 transition-all"
+                            >
+                                取消
+                            </button>
                         </div>
                     </div>
                 </div>
