@@ -57,7 +57,7 @@ const AIPlanner: React.FC<AIPlannerProps> = ({ onStartGeneration, onCancel, sett
   };
 
   return (
-    <div className="flex flex-col h-full bg-paper pt-safe">
+    <div className="flex flex-col h-full bg-paper pt-safe pt-12">
       <div className="px-4 py-3 border-b border-sand/50 flex items-center bg-paper sticky top-0 z-10">
         <button onClick={onCancel} className="p-2 -ml-2 rounded-full hover:bg-white text-gray-500 transition-colors">
           <ChevronLeftIcon className="w-6 h-6" />
@@ -72,8 +72,8 @@ const AIPlanner: React.FC<AIPlannerProps> = ({ onStartGeneration, onCancel, sett
         {messages.map((msg, idx) => (
           <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-slide-up`}>
             <div className={`max-w-[85%] p-4 rounded-2xl text-sm font-medium leading-relaxed shadow-sm whitespace-pre-line ${msg.role === 'user'
-                ? 'bg-coral text-white rounded-tr-none'
-                : 'bg-white text-ink border border-sand rounded-tl-none'
+              ? 'bg-coral text-white rounded-tr-none'
+              : 'bg-white text-ink border border-sand rounded-tl-none'
               }`}>
               {msg.content}
             </div>

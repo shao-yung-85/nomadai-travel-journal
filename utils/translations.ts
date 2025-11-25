@@ -132,7 +132,19 @@ export const translations = {
     lang_ko: '韓文',
     lang_th: '泰文',
     lang_fr: '法文',
-    lang_es: '西班牙文'
+    lang_es: '西班牙文',
+    // Share & Travel
+    share_trip: '分享行程',
+    share_success: '已複製行程到剪貼簿！',
+    travel_time: '路程時間',
+    travel_mode: '交通方式',
+    travel_details: '詳細資訊 (例如：搭乘 JR 山手線)',
+    mode_walk: '步行',
+    mode_train: '電車/地鐵',
+    mode_bus: '公車/巴士',
+    mode_car: '開車/計程車',
+    mode_flight: '飛機',
+    minutes: '分鐘',
   },
   'en-US': {
     // Common
@@ -226,7 +238,20 @@ export const translations = {
     tool_map: 'Scratch Map',
     tool_restroom: 'Restroom',
     tool_visa: 'Visa Check',
-    tool_culture: 'Culture'
+    tool_culture: 'Culture',
+
+    // Share & Travel
+    share_trip: 'Share Trip',
+    share_success: 'Copied to clipboard!',
+    travel_time: 'Travel Time',
+    travel_mode: 'Travel Mode',
+    travel_details: 'Details (e.g. JR Line)',
+    mode_walk: 'Walk',
+    mode_train: 'Train/Subway',
+    mode_bus: 'Bus',
+    mode_car: 'Car/Taxi',
+    mode_flight: 'Flight',
+    minutes: 'min',
   },
   'ja-JP': {
     // Common
@@ -320,6 +345,19 @@ export const translations = {
     tool_map: '足跡マップ',
     tool_restroom: 'トイレ検索',
     tool_visa: 'ビザ確認',
-    tool_culture: '文化ガイド'
+    tool_culture: '文化ガイド',
+
+    // Share & Travel
+    share_trip: '共有',
+    share_success: 'クリップボードにコピーしました！',
+    travel_time: '移動時間',
+    travel_mode: '移動手段',
+    travel_details: '詳細 (例: JR山手線)',
+    mode_walk: '徒歩',
+    mode_train: '電車/地下鉄',
+    mode_bus: 'バス',
+    mode_car: '車/タクシー',
+    mode_flight: '飛行機',
+    minutes: '分',
   }
 };

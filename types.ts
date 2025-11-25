@@ -8,6 +8,11 @@ export interface ItineraryItem {
   notes?: string;
   lat?: number;
   lng?: number;
+  travelToNext?: {
+    mode: 'WALK' | 'TRAIN' | 'BUS' | 'CAR' | 'FLIGHT';
+    duration: string;
+    details?: string;
+  };
 }
 
 export interface Flight {

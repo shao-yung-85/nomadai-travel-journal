@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Trip, Flight, ExpenseItem, AppSettings, ItineraryItem } from '../types';
 import { getAttractionGuide, optimizeRoute } from '../services/gemini';
-import { ChevronLeftIcon, MapIcon, WalletIcon, TicketIcon, PlaneIcon, TrashIcon, RobotIcon, ListIcon, PlusIcon, SpeakerWaveIcon, StopIcon, CalendarIcon, MapPinIcon, ClockIcon, PencilIcon, ShoppingBagIcon, SparklesIcon } from './Icons';
+import { ChevronLeftIcon, MapIcon, WalletIcon, TicketIcon, PlaneIcon, TrashIcon, RobotIcon, ListIcon, PlusIcon, SpeakerWaveIcon, StopIcon, CalendarIcon, MapPinIcon, ClockIcon, PencilIcon, ShoppingBagIcon, SparklesIcon, ShareIcon, TrainIcon, BusIcon, CarIcon, WalkIcon } from './Icons';
 import ShoppingList from './ShoppingList';
 import { translations } from '../utils/translations';
 
@@ -41,6 +41,11 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
     const [newActivityNotes, setNewActivityNotes] = useState('');
     const [optimizingDay, setOptimizingDay] = useState<number | null>(null);
 
+    // Travel Info State
+    const [newTravelMode, setNewTravelMode] = useState<'WALK' | 'TRAIN' | 'BUS' | 'CAR' | 'FLIGHT'>('TRAIN');
+    const [newTravelDuration, setNewTravelDuration] = useState('');
+    const [newTravelDetails, setNewTravelDetails] = useState('');
+
     // Budget State
     const [isAddingExpense, setIsAddingExpense] = useState(false);
     const [newExpenseName, setNewExpenseName] = useState('');
@@ -57,6 +62,37 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
     const [newBookingDest, setNewBookingDest] = useState('');
     const [newBookingDate, setNewBookingDate] = useState('');
     const [newBookingTime, setNewBookingTime] = useState('');
+
+    // Share Function
+    const handleShare = async () => {
+        const lines = [`${trip.title} (${trip.startDate} - ${trip.endDate})`];
+
+        sortedDays.forEach(day => {
+            lines.push(`\nDay ${day}:`);
+            groupedItems[day].forEach(item => {
+                lines.push(`${item.time} ${item.activity}`);
+                if (item.travelToNext) {
+                    lines.push(`  ⬇️ ${item.travelToNext.mode} (${item.travelToNext.duration})`);
+                }
+            });
+        });
+
+        const text = lines.join('\n');
+
+        try {
+            if (navigator.share) {
+                await navigator.share({
+                    title: trip.title,
+                    text: text,
+                });
+            } else {
+                await navigator.clipboard.writeText(text);
+                alert(t.share_success);
+            }
+        } catch (error) {
+            console.error('Error sharing:', error);
+        }
+    };
 
     // Handle Stop Speaking when modal closes or component unmounts
     useEffect(() => {
@@ -196,6 +232,17 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
         setNewActivityName(item.activity);
         setNewActivityLocation(item.location);
         setNewActivityNotes(item.notes || '');
+
+        // Load travel info if exists
+        if (item.travelToNext) {
+            setNewTravelMode(item.travelToNext.mode);
+            setNewTravelDuration(item.travelToNext.duration);
+            setNewTravelDetails(item.travelToNext.details || '');
+        } else {
+            setNewTravelDuration('');
+            setNewTravelDetails('');
+        }
+
         setIsAddingActivity(true);
     };
 
@@ -208,7 +255,12 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
             time: newActivityTime,
             activity: newActivityName,
             location: newActivityLocation,
-            notes: newActivityNotes
+            notes: newActivityNotes,
+            travelToNext: newTravelDuration ? {
+                mode: newTravelMode,
+                duration: newTravelDuration,
+                details: newTravelDetails
+            } : undefined
         };
 
         let updatedItinerary;
@@ -229,7 +281,21 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
         setNewActivityName('');
         setNewActivityLocation('');
         setNewActivityNotes('');
+        setNewTravelDuration('');
+        setNewTravelDetails('');
         setIsAddingActivity(false);
+    };
+
+    // Helper to render travel icon
+    const getTravelIcon = (mode: string) => {
+        switch (mode) {
+            case 'WALK': return <WalkIcon className="w-4 h-4" />;
+            case 'TRAIN': return <TrainIcon className="w-4 h-4" />;
+            case 'BUS': return <BusIcon className="w-4 h-4" />;
+            case 'CAR': return <CarIcon className="w-4 h-4" />;
+            case 'FLIGHT': return <PlaneIcon className="w-4 h-4" />;
+            default: return <TrainIcon className="w-4 h-4" />;
+        }
     };
 
     const handleDeleteItem = (itemId: string) => {
@@ -323,18 +389,16 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
         return (
             <div className="pb-40 relative min-h-full">
 
-                {/* Sticky Day Navigation Bar */}
-                {sortedDays.length > 0 && (
-                    <div className="sticky top-0 z-20 bg-paper/95 backdrop-blur-md border-b border-sand/50 py-3 mb-6 -mx-5 px-5 flex items-center gap-2 overflow-x-auto no-scrollbar shadow-sm">
+                {/* Header with Share Button */}
+                <div className="sticky top-0 z-20 bg-paper/95 backdrop-blur-md border-b border-sand/50 py-3 mb-6 -mx-5 px-5 flex items-center justify-between shadow-sm">
+                    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar flex-1 mr-2">
                         <span className="text-xs font-bold text-gray-400 shrink-0 mr-1">{t.nav_quick_jump}</span>
                         {sortedDays.map(day => (
                             <button
                                 key={`nav-${day}`}
                                 onClick={() => {
                                     const el = document.getElementById(`day-header-${day}`);
-                                    if (el) {
-                                        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                    }
+                                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
                                 }}
                                 className="flex-shrink-0 px-4 py-1.5 bg-white border border-sand rounded-full font-bold text-ink text-xs hover:border-coral hover:text-coral hover:shadow-md active:bg-coral active:text-white transition-all whitespace-nowrap"
                             >
@@ -342,7 +406,13 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
                             </button>
                         ))}
                     </div>
-                )}
+                    <button
+                        onClick={handleShare}
+                        className="p-2 bg-white rounded-full border border-sand text-coral hover:bg-coral hover:text-white transition-colors shadow-sm shrink-0"
+                    >
+                        <ShareIcon className="w-5 h-5" />
+                    </button>
+                </div>
 
                 {!isMinimalist && renderWeather()}
 
@@ -374,60 +444,83 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
 
                                 <div className={`space-y-0 relative ${isMinimalist ? '' : 'border-l-2 border-sand ml-4'}`}>
                                     {groupedItems[day].map((item, idx) => (
-                                        <div key={item.id || idx} className={`relative ${isMinimalist ? 'mb-4 border-b border-sand pb-4' : 'pl-8 pb-10 last:pb-0'} group`}>
-                                            {!isMinimalist && (
-                                                <div className="absolute -left-[7px] top-1.5 w-3.5 h-3.5 rounded-full border-2 border-paper shadow-sm bg-gray-300 group-hover:bg-coral transition-colors"></div>
-                                            )}
+                                        <div key={item.id || idx} className="relative group">
+                                            {/* Activity Item */}
+                                            <div className={`relative ${isMinimalist ? 'mb-4 border-b border-sand pb-4' : 'pl-8 pb-10 last:pb-0'}`}>
+                                                {!isMinimalist && (
+                                                    <div className="absolute -left-[7px] top-1.5 w-3.5 h-3.5 rounded-full border-2 border-paper shadow-sm bg-gray-300 group-hover:bg-coral transition-colors"></div>
+                                                )}
 
-                                            <div className="transition-all opacity-90 group-hover:opacity-100">
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-xs font-bold font-mono text-coral bg-coral/10 px-2 py-1 rounded-lg">{item.time}</span>
+                                                <div className="transition-all opacity-90 group-hover:opacity-100">
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-xs font-bold font-mono text-coral bg-coral/10 px-2 py-1 rounded-lg">{item.time}</span>
+                                                        </div>
+                                                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleOpenEditModal(item);
+                                                                }}
+                                                                className="p-1.5 bg-white text-gray-400 rounded-full border border-sand hover:text-coral hover:border-coral"
+                                                            >
+                                                                <PencilIcon className="w-3 h-3" />
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleDeleteItem(item.id);
+                                                                }}
+                                                                className="p-1.5 bg-white text-gray-400 rounded-full border border-sand hover:text-red-500 hover:border-red-500"
+                                                            >
+                                                                <TrashIcon className="w-3 h-3" />
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+
+                                                    <div className="bg-white p-4 rounded-2xl shadow-card border border-transparent hover:border-sand transition-all relative">
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                handleOpenEditModal(item);
+                                                                handleOpenAiGuide(item.activity, item.location);
                                                             }}
-                                                            className="p-1.5 bg-white text-gray-400 rounded-full border border-sand hover:text-coral hover:border-coral"
+                                                            className="absolute top-4 right-4 text-gray-300 hover:text-coral transition-colors"
                                                         >
-                                                            <PencilIcon className="w-3 h-3" />
+                                                            <RobotIcon className="w-5 h-5" />
                                                         </button>
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleDeleteItem(item.id);
-                                                            }}
-                                                            className="p-1.5 bg-white text-gray-400 rounded-full border border-sand hover:text-red-500 hover:border-red-500"
+
+                                                        <h4 className={`font-bold text-ink ${isMinimalist ? 'text-base' : 'text-lg'} mb-1 pr-6`}>{item.activity}</h4>
+                                                        <div
+                                                            onClick={() => openLink(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.location)}`)}
+                                                            className="flex items-center gap-1.5 text-sm text-gray-500 cursor-pointer hover:text-coral truncate mt-1"
                                                         >
-                                                            <TrashIcon className="w-3 h-3" />
-                                                        </button>
+                                                            <MapPinIcon className="w-3.5 h-3.5 shrink-0 text-coral" />
+                                                            {item.location}
+                                                        </div>
+                                                        {item.notes && !isMinimalist && <p className="text-sm text-gray-600 mt-3 pt-3 border-t border-gray-50 leading-relaxed">{item.notes}</p>}
                                                     </div>
-                                                </div>
-
-                                                <div className="bg-white p-4 rounded-2xl shadow-card border border-transparent hover:border-sand transition-all relative">
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleOpenAiGuide(item.activity, item.location);
-                                                        }}
-                                                        className="absolute top-4 right-4 text-gray-300 hover:text-coral transition-colors"
-                                                    >
-                                                        <RobotIcon className="w-5 h-5" />
-                                                    </button>
-
-                                                    <h4 className={`font-bold text-ink ${isMinimalist ? 'text-base' : 'text-lg'} mb-1 pr-6`}>{item.activity}</h4>
-                                                    <div
-                                                        onClick={() => openLink(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.location)}`)}
-                                                        className="flex items-center gap-1.5 text-sm text-gray-500 cursor-pointer hover:text-coral truncate mt-1"
-                                                    >
-                                                        <MapPinIcon className="w-3.5 h-3.5 shrink-0 text-coral" />
-                                                        {item.location}
-                                                    </div>
-                                                    {item.notes && !isMinimalist && <p className="text-sm text-gray-600 mt-3 pt-3 border-t border-gray-50 leading-relaxed">{item.notes}</p>}
                                                 </div>
                                             </div>
+
+                                            {/* Travel Segment (Rendered AFTER the item if it exists) */}
+                                            {item.travelToNext && !isMinimalist && (
+                                                <div className="pl-8 pb-10 relative">
+                                                    {/* Dotted Line */}
+                                                    <div className="absolute left-[0px] top-0 bottom-0 w-0.5 border-l-2 border-dotted border-gray-300 -ml-[1px]"></div>
+
+                                                    <div className="flex items-center gap-3 bg-gray-50 border border-sand rounded-xl p-3 w-fit max-w-[80%]">
+                                                        <div className="w-8 h-8 rounded-full bg-white border border-sand flex items-center justify-center text-gray-500 shadow-sm shrink-0">
+                                                            {getTravelIcon(item.travelToNext.mode)}
+                                                        </div>
+                                                        <div>
+                                                            <div className="text-xs font-bold text-gray-500 flex items-center gap-1">
+                                                                {item.travelToNext.duration}
+                                                                {item.travelToNext.details && <span className="font-normal text-gray-400">• {item.travelToNext.details}</span>}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
@@ -446,7 +539,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
                 {/* Add/Edit Activity Modal */}
                 {isAddingActivity && (
                     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 animate-fade-in" onClick={() => setIsAddingActivity(false)}>
-                        <div className="bg-paper w-full max-w-sm rounded-3xl shadow-2xl p-6 animate-slide-up" onClick={e => e.stopPropagation()}>
+                        <div className="bg-paper w-full max-w-sm rounded-3xl shadow-2xl p-6 animate-slide-up max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
                             <h3 className="text-xl font-bold text-ink mb-6 text-center">{editingItemId ? t.edit_activity : t.add_activity}</h3>
                             <div className="space-y-4">
                                 <div className="grid grid-cols-2 gap-3">
@@ -507,6 +600,44 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
                                         rows={2}
                                         className="w-full bg-white p-4 rounded-xl text-sm font-medium border-none shadow-sm outline-none resize-none placeholder:text-gray-300"
                                     />
+                                </div>
+
+                                {/* Travel Info Section */}
+                                <div className="pt-4 border-t border-sand mt-4">
+                                    <h4 className="text-xs font-bold text-gray-400 mb-3 uppercase tracking-wider ml-1">{t.travel_time || "Travel to Next"}</h4>
+
+                                    <div className="flex gap-2 mb-3 overflow-x-auto no-scrollbar pb-1">
+                                        {['WALK', 'TRAIN', 'BUS', 'CAR', 'FLIGHT'].map(mode => (
+                                            <button
+                                                key={mode}
+                                                onClick={() => setNewTravelMode(mode as any)}
+                                                className={`flex-shrink-0 p-2 rounded-xl border transition-all ${newTravelMode === mode ? 'bg-coral text-white border-coral shadow-md' : 'bg-white border-sand text-gray-400 hover:border-coral'}`}
+                                            >
+                                                {getTravelIcon(mode)}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-bold text-gray-400 ml-1">{t.duration || "Duration"}</label>
+                                            <input
+                                                value={newTravelDuration}
+                                                onChange={(e) => setNewTravelDuration(e.target.value)}
+                                                placeholder="e.g. 15 min"
+                                                className="w-full bg-white p-3 rounded-xl text-sm font-bold border-none shadow-sm outline-none"
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-bold text-gray-400 ml-1">{t.details || "Details"}</label>
+                                            <input
+                                                value={newTravelDetails}
+                                                onChange={(e) => setNewTravelDetails(e.target.value)}
+                                                placeholder="e.g. JR Line"
+                                                className="w-full bg-white p-3 rounded-xl text-sm font-medium border-none shadow-sm outline-none"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <button

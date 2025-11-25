@@ -205,7 +205,8 @@ export const generateTripPlan = async (userPrompt: string, language: string = 'z
         throw new Error("Empty response from AI");
     } catch (error) {
         console.error("Error generating trip plan:", error);
-        throw error;
+        // Throw a user-friendly error
+        throw new Error("AI Generation Failed. Please check your API key or try again later.");
     }
 }
 
@@ -335,18 +336,15 @@ export const optimizeRoute = async (items: any[], language: string = 'zh-TW') =>
 };
 
 export const getTranslation = async (text: string, targetLang: string, userLang: string = 'zh-TW'): Promise<string | null> => {
-    const ai = await getAiClient();
-    if (!ai) return null;
-    const model = ai.getGenerativeModel({ model: "gemini-pro" });
-    const prompt = `Translate the following text to ${targetLang}.
-    Text: "${text}"
-    
-    Only provide the translated text.`;
-
     try {
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        return response.text();
+        const response = await getAiClient().models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: `Translate the following text to ${targetLang}.
+            Text: "${text}"
+            
+            Only provide the translated text.`
+        });
+        return response.text;
     } catch (error) {
         console.error("Translation Error:", error);
         return null;
