@@ -143,11 +143,13 @@ export const generateTripPlan = async (userPrompt: string, language: string = 'z
                 2. **Feasibility**: Ensure the schedule is realistic.
                 3. **Language**: All content MUST be in ${targetLang}.
                 4. **Travel Info**: You MUST estimate the travel mode and duration to the NEXT activity.
+                5. **Completeness**: You MUST generate a FULL itinerary with at least 3 activities per day. Do not leave the itinerary empty.
                 
                 FORMAT REQUIREMENTS:
                 Return response in JSON format matching the schema.
                 Ensure 'itinerary' items include the 'day' field.
                 Include 'travelToNext' for each item (except the last one of the day) describing how to get to the next spot.
+                Fill ALL fields: title, startDate, endDate, itinerary, budget, packingList, weather.
                 `,
                 responseMimeType: "application/json",
                 responseSchema: {

@@ -177,9 +177,13 @@ const App: React.FC = () => {
           coverImage = await generateCoverImage(imagePrompt);
         } catch (imgError) {
           console.error("Failed to generate cover image:", imgError);
-          // Fallback to Unsplash if AI image generation fails
-          coverImage = `https://source.unsplash.com/800x600/?travel,${tripPlan.title.split(' ')[0]}`;
+          // Fallback to placeholder if AI image generation fails
+          coverImage = `https://placehold.co/800x600/e2e8f0/475569?text=${encodeURIComponent(tripPlan.title.split(' ')[0] || 'Travel')}`;
         }
+      }
+
+      if (!tripPlan.itinerary || tripPlan.itinerary.length === 0) {
+        console.warn("AI returned empty itinerary:", tripPlan);
       }
 
       const newTrip: Trip = {
