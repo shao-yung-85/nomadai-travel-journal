@@ -48,9 +48,25 @@ const AddTripForm: React.FC<AddTripFormProps> = ({ onSave, onCancel, settings })
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !startDate) return;
+
+    let finalCoverImage = coverImage;
+
+    // If no cover image selected, generate one using Pollinations
+    if (!finalCoverImage) {
+      try {
+        // Use Pollinations directly for instant result without awaiting API
+        const prompt = `Cinematic travel photography of ${title}, 4k, high quality, sunny day`;
+        const encoded = encodeURIComponent(prompt);
+        const seed = Math.floor(Math.random() * 1000000);
+        finalCoverImage = `https://image.pollinations.ai/prompt/${encoded}?width=1600&height=900&nologo=true&seed=${seed}&model=flux`;
+      } catch (e) {
+        console.error("Failed to generate default cover", e);
+        finalCoverImage = `https://via.placeholder.com/1600x900/D4A574/FFFFFF?text=${encodeURIComponent(title)}`;
+      }
+    }
 
     const newTrip: Trip = {
       id: Date.now().toString(),
@@ -58,7 +74,7 @@ const AddTripForm: React.FC<AddTripFormProps> = ({ onSave, onCancel, settings })
       startDate,
       endDate,
       itinerary: [],
-      coverImage: coverImage || `https://source.unsplash.com/800x600/?travel,${title.split(' ')[0]}` // Fallback
+      coverImage: finalCoverImage
     };
 
     onSave(newTrip);

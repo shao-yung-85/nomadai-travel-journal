@@ -118,13 +118,16 @@ export const editTravelPhoto = async (
 
 export const generateCoverImage = async (location: string): Promise<string> => {
     try {
-        // Use Unsplash API for travel photos
-        // Format: https://source.unsplash.com/1600x900/?travel,{location}
-        const query = encodeURIComponent(location);
-        const unsplashUrl = `https://source.unsplash.com/1600x900/?travel,${query},destination`;
+        // Use Pollinations.ai for real AI image generation (Free, No API Key required)
+        // Format: https://image.pollinations.ai/prompt/{prompt}
+        const prompt = `Cinematic travel photography of ${location}, 4k, high quality, sunny day, vibrant colors, wide angle`;
+        const encodedPrompt = encodeURIComponent(prompt);
+        // Add random seed to ensure fresh images
+        const seed = Math.floor(Math.random() * 1000000);
+        const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1600&height=900&nologo=true&seed=${seed}&model=flux`;
 
-        // Return the Unsplash URL directly
-        return unsplashUrl;
+        // Return the URL directly
+        return imageUrl;
     } catch (error) {
         console.error('Failed to generate cover image:', error);
         // Fallback to placeholder

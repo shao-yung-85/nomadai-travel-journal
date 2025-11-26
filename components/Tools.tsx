@@ -336,68 +336,17 @@ const ScratchMap = ({ onBack, trips, t }: { onBack: () => void, trips?: Trip[], 
 }
 
 
+import VoiceTranslator from './VoiceTranslator';
+
 const TranslationTool = ({ onBack, t, language }: { onBack: () => void, t: any, language: string }) => {
-    const [text, setText] = useState('');
-    const [targetLang, setTargetLang] = useState('Japanese');
-    const [result, setResult] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
-
-    const handleTranslate = async () => {
-        if (!text) return;
-        setLoading(true);
-        try {
-            const res = await getTranslation(text, targetLang, language);
-            setResult(res);
-        } catch (e) {
-            setResult("Error");
-        } finally {
-            setLoading(false);
-        }
-    };
-
     return (
         <div className="flex flex-col h-full bg-paper">
             <div className="bg-paper p-4 flex items-center gap-2 sticky top-0 z-10">
                 <button onClick={onBack}><ChevronLeftIcon className="w-6 h-6 text-gray-500" /></button>
                 <h3 className="font-bold text-lg text-ink">{t.tool_translation || "Translation"}</h3>
             </div>
-            <div className="p-5 flex-1 overflow-y-auto pb-32">
-                <div className="space-y-4">
-                    <div>
-                        <label className="text-xs font-bold text-gray-400 uppercase">{t.translate_to}</label>
-                        <select value={targetLang} onChange={e => setTargetLang(e.target.value)} className="w-full mt-2 p-3 bg-white rounded-xl text-ink font-medium border border-sand outline-none">
-                            <option value="Japanese">{t.lang_ja}</option>
-                            <option value="English">{t.lang_en}</option>
-                            <option value="Traditional Chinese">{t.lang_zh}</option>
-                            <option value="Korean">{t.lang_ko}</option>
-                            <option value="Thai">{t.lang_th}</option>
-                            <option value="French">{t.lang_fr}</option>
-                            <option value="Spanish">{t.lang_es}</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label className="text-xs font-bold text-gray-400 uppercase">{t.enter_text}</label>
-                        <textarea
-                            value={text}
-                            onChange={e => setText(e.target.value)}
-                            placeholder={t.enter_text}
-                            rows={4}
-                            className="w-full mt-2 p-4 bg-white rounded-2xl border border-sand shadow-sm outline-none resize-none"
-                        />
-                    </div>
-                    <button onClick={handleTranslate} disabled={loading || !text} className="w-full bg-purple-500 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-purple-200 disabled:opacity-50">
-                        {loading ? t.loading : t.confirm}
-                    </button>
-                </div>
-
-                {result && (
-                    <div className="mt-6 bg-white p-6 rounded-3xl shadow-card border border-sand animate-fade-in">
-                        <div className="text-xs font-bold text-gray-400 uppercase mb-2">{t.translate_result}</div>
-                        <div className="text-lg font-medium text-ink leading-relaxed whitespace-pre-line">
-                            {result}
-                        </div>
-                    </div>
-                )}
+            <div className="flex-1 overflow-y-auto pb-32">
+                <VoiceTranslator defaultSourceLang={language} />
             </div>
         </div>
     )

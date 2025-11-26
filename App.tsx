@@ -145,6 +145,39 @@ const App: React.FC = () => {
     }
   }, [settings]);
 
+  // Migration Effect: Fix broken Unsplash URLs
+  useEffect(() => {
+    const migrateImages = () => {
+      let hasChanges = false;
+      const newTrips = trips.map(trip => {
+        // Check for deprecated Unsplash Source URLs
+        if (trip.coverImage && (trip.coverImage.includes('source.unsplash.com') || trip.coverImage.includes('images.unsplash.com/photo-'))) {
+          hasChanges = true;
+          // Generate new static Pollinations URL
+          const prompt = `Cinematic travel photography of ${trip.title}, 4k, high quality, sunny day`;
+          const encoded = encodeURIComponent(prompt);
+          const seed = Math.floor(Math.random() * 1000000);
+          const newUrl = `https://image.pollinations.ai/prompt/${encoded}?width=1600&height=900&nologo=true&seed=${seed}&model=flux`;
+          console.log(`Migrating cover image for ${trip.title} to Pollinations`);
+          return {
+            ...trip,
+            coverImage: newUrl
+          };
+        }
+        return trip;
+      });
+
+      if (hasChanges) {
+        setTrips(newTrips);
+      }
+    };
+
+    // Run migration with a small delay to ensure hydration
+    const timer = setTimeout(migrateImages, 1000);
+    return () => clearTimeout(timer);
+  }, []); // Run once on mount
+
+
   const handleAddTrip = (newTrip: Trip) => {
     setTrips([newTrip, ...trips]);
     if (viewState === ViewState.AI_PLANNER) {

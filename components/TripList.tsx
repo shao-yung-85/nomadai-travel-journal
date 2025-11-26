@@ -14,6 +14,7 @@ interface TripListProps {
 
 const TripList: React.FC<TripListProps> = ({ trips, onSelectTrip, onAddTrip, onOpenSettings, settings }) => {
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
   const t = translations[settings.language] || translations['zh-TW'];
 
   const handleImageError = (id: string) => {
@@ -57,20 +58,27 @@ const TripList: React.FC<TripListProps> = ({ trips, onSelectTrip, onAddTrip, onO
               className={`group cursor-pointer active:scale-[0.98] transition-all transform bg-white rounded-3xl shadow-card hover:shadow-soft overflow-hidden ${settings.minimalistMode ? 'p-5 border border-sand' : 'p-3'}`}
             >
               {!settings.minimalistMode && (
-                <div className="aspect-[2/1] w-full relative overflow-hidden rounded-2xl bg-gray-100 mb-4 shadow-inner">
+                <div className="aspect-[2/1] w-full relative overflow-hidden rounded-2xl bg-gray-100 mb-4 shadow-inner group">
                   {trip.coverImage && !failedImages.has(trip.id) ? (
-                    <img
-                      src={trip.coverImage}
-                      alt={trip.title}
-                      onError={() => handleImageError(trip.id)}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                    />
+                    <>
+                      {/* Loading Skeleton */}
+                      <div className={`absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center transition-opacity duration-500 ${loadedImages.has(trip.id) ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                        <MapPinIcon className="w-8 h-8 text-gray-300 animate-bounce" />
+                      </div>
+                      <img
+                        src={trip.coverImage}
+                        alt={trip.title}
+                        onLoad={() => setLoadedImages(prev => new Set(prev).add(trip.id))}
+                        onError={() => handleImageError(trip.id)}
+                        className={`w-full h-full object-cover transition-all duration-700 ${loadedImages.has(trip.id) ? 'opacity-100 group-hover:scale-105' : 'opacity-0'}`}
+                      />
+                    </>
                   ) : (
                     <div className="w-full h-full bg-sand/30 flex items-center justify-center">
                       <MapPinIcon className="w-12 h-12 text-gray-300" />
                     </div>
                   )}
-                  <div className="absolute top-3 right-3 bg-white/90 backdrop-blur text-ink text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">
+                  <div className="absolute top-3 right-3 bg-white/90 backdrop-blur text-ink text-xs font-bold px-3 py-1.5 rounded-full shadow-sm z-10">
                     {trip.itinerary?.length || 0} {t.trips_count}
                   </div>
                 </div>

@@ -163,8 +163,8 @@ const VoiceTranslator: React.FC<VoiceTranslatorProps> = ({
                     onClick={handleVoiceTranslate}
                     disabled={isListening || isSpeaking}
                     className={`flex-1 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 transition-all ${isListening
-                            ? 'bg-red-500 text-white animate-pulse'
-                            : 'bg-coral text-white hover:bg-coralDark active:scale-95'
+                        ? 'bg-red-500 text-white animate-pulse'
+                        : 'bg-coral text-white hover:bg-coralDark active:scale-95'
                         }`}
                 >
                     <MicrophoneIcon className="w-6 h-6" />
