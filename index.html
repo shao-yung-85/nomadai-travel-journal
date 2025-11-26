@@ -28,8 +28,8 @@
         extend: {
           colors: {
             paper: '#F9F7F2', // Warm beige/cream background
-            coral: '#C5A059', // Earth Yellow / Gold (Replacing original Coral)
-            coralDark: '#B08D48',
+            coral: 'var(--color-coral, #C5A059)', // Dynamic color with fallback
+            coralDark: 'color-mix(in srgb, var(--color-coral, #C5A059), black 10%)', // Dynamic dark shade
             sand: '#E8E4D9',  // Darker beige for borders
             ink: '#2D2D2D',   // Softer black for text
             surface: '#FFFFFF'

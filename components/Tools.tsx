@@ -34,10 +34,10 @@ const ExpenseSplitter = ({ onBack }: { onBack: () => void }) => {
         <div className="flex flex-col h-full bg-paper">
             <div className="bg-paper p-4 flex items-center gap-2 sticky top-0 z-10">
                 <button onClick={onBack}><ChevronLeftIcon className="w-6 h-6 text-gray-500" /></button>
-                <h3 className="font-bold text-lg text-ink">Splitter</h3>
+                <h3 className="font-bold text-lg text-ink">分帳工具</h3>
             </div>
             <div className="p-5 flex items-center justify-center h-full text-gray-400 text-center font-medium">
-                <p>Use the "Budget" tab in Trip Details to record expenses.</p>
+                <p>請使用行程詳情中的「預算」分頁來記錄支出。</p>
             </div>
         </div>
     )
@@ -54,9 +54,9 @@ const VisaCheck = ({ onBack, t, language }: { onBack: () => void, t: any, langua
         setLoading(true);
         try {
             const info = await getVisaRequirements(passport, dest, language);
-            setResult(info || "Error");
+            setResult(info || "錯誤");
         } catch (e) {
-            setResult("Error");
+            setResult("錯誤");
         } finally {
             setLoading(false);
         }
@@ -71,17 +71,17 @@ const VisaCheck = ({ onBack, t, language }: { onBack: () => void, t: any, langua
             <div className="p-5 space-y-4 overflow-y-auto flex-1 pb-32">
                 <div className="bg-white p-6 rounded-3xl shadow-card space-y-5 border border-sand">
                     <div>
-                        <label className="text-xs font-bold text-gray-400 uppercase">Passport</label>
+                        <label className="text-xs font-bold text-gray-400 uppercase">護照持有國</label>
                         <select value={passport} onChange={e => setPassport(e.target.value)} className="w-full mt-2 p-3 bg-paper rounded-xl text-ink font-medium border-none outline-none">
-                            <option value="Taiwan (ROC)">Taiwan (ROC)</option>
-                            <option value="Japan">Japan</option>
-                            <option value="USA">USA</option>
-                            <option value="Hong Kong">Hong Kong</option>
+                            <option value="Taiwan (ROC)">台灣 (Taiwan)</option>
+                            <option value="Japan">日本 (Japan)</option>
+                            <option value="USA">美國 (USA)</option>
+                            <option value="Hong Kong">香港 (Hong Kong)</option>
                         </select>
                     </div>
                     <div>
-                        <label className="text-xs font-bold text-gray-400 uppercase">Destination</label>
-                        <input value={dest} onChange={e => setDest(e.target.value)} placeholder="e.g., Vietnam" className="w-full mt-2 p-3 bg-paper rounded-xl text-ink font-medium border-none outline-none" />
+                        <label className="text-xs font-bold text-gray-400 uppercase">目的地</label>
+                        <input value={dest} onChange={e => setDest(e.target.value)} placeholder="例如：越南、日本..." className="w-full mt-2 p-3 bg-paper rounded-xl text-ink font-medium border-none outline-none" />
                     </div>
                     <button onClick={check} disabled={loading || !dest} className="w-full bg-coral text-white py-3.5 rounded-xl font-bold shadow-lg shadow-coral/30 disabled:opacity-50">
                         {loading ? t.loading : t.confirm}
@@ -109,9 +109,9 @@ const CultureGuide = ({ onBack, t, language }: { onBack: () => void, t: any, lan
         try {
             const loc = location || "Kyoto, Japan";
             const info = await getCulturalEtiquette(loc, language);
-            setAdvice(info || "Error");
+            setAdvice(info || "錯誤");
         } catch (e) {
-            setAdvice("Error");
+            setAdvice("錯誤");
         } finally {
             setLoading(false);
         }
@@ -125,7 +125,7 @@ const CultureGuide = ({ onBack, t, language }: { onBack: () => void, t: any, lan
             </div>
             <div className="p-5 flex-1 overflow-y-auto pb-32">
                 <div className="mb-4">
-                    <input value={location} onChange={e => setLocation(e.target.value)} placeholder="Location (e.g. Bangkok)..." className="w-full p-4 bg-white rounded-2xl shadow-sm border border-sand font-medium text-ink outline-none" />
+                    <input value={location} onChange={e => setLocation(e.target.value)} placeholder="地點 (例如：曼谷、巴黎)..." className="w-full p-4 bg-white rounded-2xl shadow-sm border border-sand font-medium text-ink outline-none" />
                 </div>
                 <button onClick={getAdvice} disabled={loading} className="w-full bg-orange-400 text-white px-4 py-3.5 rounded-2xl font-bold text-sm shadow-md mb-6">
                     {loading ? t.loading : t.confirm}
@@ -175,7 +175,7 @@ const EmergencyHelper = ({ onBack, t, language }: { onBack: () => void, t: any, 
         try {
             const res = await getEmergencyInfo(country, language);
             setInfo(res);
-        } catch (e) { setInfo("Error"); }
+        } catch (e) { setInfo("錯誤"); }
         finally { setLoading(false); }
     }
 
@@ -188,12 +188,12 @@ const EmergencyHelper = ({ onBack, t, language }: { onBack: () => void, t: any, 
             <div className="p-5 flex-1 overflow-y-auto pb-32">
                 <div className="bg-red-500 text-white p-6 rounded-3xl shadow-lg shadow-red-500/20 mb-6">
                     <h2 className="text-xl font-bold mb-2">SOS?</h2>
-                    <p className="opacity-90 text-sm">Global Emergency: <span className="font-black text-2xl ml-1">112</span></p>
+                    <p className="opacity-90 text-sm">全球通用緊急電話: <span className="font-black text-2xl ml-1">112</span></p>
                 </div>
 
                 <div className="space-y-3">
-                    <label className="text-xs font-bold text-gray-400 uppercase ml-1">Local Info</label>
-                    <input value={country} onChange={e => setCountry(e.target.value)} placeholder="Country (e.g. Japan)" className="w-full p-4 bg-white rounded-2xl border border-sand shadow-sm outline-none" />
+                    <label className="text-xs font-bold text-gray-400 uppercase ml-1">當地資訊查詢</label>
+                    <input value={country} onChange={e => setCountry(e.target.value)} placeholder="國家 (例如：日本)..." className="w-full p-4 bg-white rounded-2xl border border-sand shadow-sm outline-none" />
                     <button onClick={getInfo} disabled={loading || !country} className="w-full py-3.5 bg-ink text-white rounded-2xl font-bold shadow-lg">
                         {loading ? t.loading : t.confirm}
                     </button>
@@ -220,7 +220,7 @@ const CardAdvice = ({ onBack, t, language }: { onBack: () => void, t: any, langu
         try {
             const res = await getCreditCardAdvice(dest, language);
             setInfo(res);
-        } catch (e) { setInfo("Error"); }
+        } catch (e) { setInfo("錯誤"); }
         finally { setLoading(false); }
     }
 
@@ -232,8 +232,8 @@ const CardAdvice = ({ onBack, t, language }: { onBack: () => void, t: any, langu
             </div>
             <div className="p-5 flex-1 overflow-y-auto pb-32">
                 <div className="space-y-3">
-                    <label className="text-xs font-bold text-gray-400 uppercase ml-1">Destination</label>
-                    <input value={dest} onChange={e => setDest(e.target.value)} placeholder="Country (e.g. Korea)" className="w-full p-4 bg-white rounded-2xl border border-sand shadow-sm outline-none" />
+                    <label className="text-xs font-bold text-gray-400 uppercase ml-1">目的地</label>
+                    <input value={dest} onChange={e => setDest(e.target.value)} placeholder="國家 (例如：韓國)..." className="w-full p-4 bg-white rounded-2xl border border-sand shadow-sm outline-none" />
                     <button onClick={getInfo} disabled={loading || !dest} className="w-full py-3.5 bg-indigo-500 text-white rounded-2xl font-bold shadow-lg shadow-indigo-200">
                         {loading ? t.loading : t.confirm}
                     </button>
@@ -300,17 +300,17 @@ const ScratchMap = ({ onBack, trips, t }: { onBack: () => void, trips?: Trip[], 
                         </svg>
                     </div>
                     <h1 className="relative text-5xl font-black text-coral tracking-tighter opacity-80 mix-blend-overlay">WORLD</h1>
-                    <div className="absolute bottom-4 text-xs text-gray-500 font-mono tracking-widest">[ Interactive Visualization ]</div>
+                    <div className="absolute bottom-4 text-xs text-gray-500 font-mono tracking-widest">[ 互動式地圖 ]</div>
                 </div>
 
                 <div className="bg-[#1F2937] rounded-3xl p-6 shadow-lg border border-gray-700 mb-6">
                     <div className="flex justify-between items-center mb-5">
-                        <h4 className="font-bold text-gray-200">Unlocked ({visited.size})</h4>
+                        <h4 className="font-bold text-gray-200">已解鎖 ({visited.size})</h4>
                         <div className="flex gap-2">
                             <input
                                 value={newCountry}
                                 onChange={e => setNewCountry(e.target.value)}
-                                placeholder="Add..."
+                                placeholder="新增..."
                                 className="bg-gray-800 border border-gray-600 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-coral w-32"
                             />
                             <button onClick={handleAdd} className="bg-coral p-1.5 rounded-lg text-white hover:bg-coralDark">
