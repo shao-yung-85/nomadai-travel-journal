@@ -123,6 +123,7 @@ const App: React.FC = () => {
   const [viewState, setViewState] = useState<ViewState>(ViewState.HOME);
   const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
   const [backgroundTasks, setBackgroundTasks] = useState<string[]>([]);
+  const [aiMessages, setAiMessages] = useState<{ role: 'user' | 'ai', content: string }[]>([]);
 
   // Persistence Effects
   useEffect(() => {
@@ -200,6 +201,7 @@ const App: React.FC = () => {
 
     try {
       const tripPlan = await generateTripPlan(userPrompt, settings.language);
+      console.log("Raw AI Response:", tripPlan);
 
       // Generate cover image
       let coverImage = tripPlan.coverImage;
@@ -211,22 +213,43 @@ const App: React.FC = () => {
         } catch (imgError) {
           console.error("Failed to generate cover image:", imgError);
           // Fallback to placeholder if AI image generation fails
-          coverImage = `https://placehold.co/800x600/e2e8f0/475569?text=${encodeURIComponent(tripPlan.title.split(' ')[0] || 'Travel')}`;
+          coverImage = `https://placehold.co/800x600/e2e8f0/475569?text=${encodeURIComponent(tripPlan.title?.split(' ')[0] || 'Travel')}`;
         }
       }
 
       if (!tripPlan.itinerary || tripPlan.itinerary.length === 0) {
         console.warn("AI returned empty itinerary:", tripPlan);
+        // Attempt to recover or notify?
+        // For now, we just log it. The user will see an empty trip.
+      } else {
+        // Sanitize itinerary
+        tripPlan.itinerary = tripPlan.itinerary.map((item: any) => ({
+          ...item,
+          day: Number(item.day) || 1,
+          id: item.id || Math.random().toString(36).substr(2, 9),
+          time: item.time || '09:00',
+          activity: item.activity || 'New Activity',
+          location: item.location || '',
+          notes: item.notes || ''
+        }));
       }
 
       const newTrip: Trip = {
         ...tripPlan,
         id: tempId,
         coverImage: coverImage,
+        // Ensure other arrays are initialized
+        bookings: [],
+        budget: tripPlan.budget || { total: 0, currency: 'TWD', expenses: [] },
+        weather: tripPlan.weather || []
       };
 
       setTrips(prev => [newTrip, ...prev]);
       setBackgroundTasks(prev => prev.filter(id => id !== tempId));
+
+      // Auto-navigate to the new trip
+      setSelectedTrip(newTrip);
+      setViewState(ViewState.TRIP_DETAILS);
 
     } catch (error) {
       console.error("Background generation failed", error);
@@ -285,6 +308,8 @@ const App: React.FC = () => {
             onStartGeneration={handleStartBackgroundGeneration}
             onCancel={() => setViewState(ViewState.HOME)}
             settings={settings}
+            messages={aiMessages}
+            setMessages={setAiMessages}
           />
         );
       case ViewState.TOOLS:

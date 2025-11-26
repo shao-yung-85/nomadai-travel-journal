@@ -8,13 +8,13 @@ interface AIPlannerProps {
   onStartGeneration: (prompt: string) => Promise<void>;
   onCancel: () => void;
   settings: AppSettings;
+  messages: { role: 'user' | 'ai', content: string }[];
+  setMessages: React.Dispatch<React.SetStateAction<{ role: 'user' | 'ai', content: string }[]>>;
 }
 
-const AIPlanner: React.FC<AIPlannerProps> = ({ onStartGeneration, onCancel, settings }) => {
+const AIPlanner: React.FC<AIPlannerProps> = ({ onStartGeneration, onCancel, settings, messages, setMessages }) => {
   const t = translations[settings.language] || translations['zh-TW'];
-  const [messages, setMessages] = useState<{ role: 'user' | 'ai', content: string }[]>([
-    { role: 'ai', content: t.ai_planner_intro }
-  ]);
+  // const [messages, setMessages] = useState... (Removed, using props)
   const [input, setInput] = useState('');
   // Determine if we are in "processing" state to disable input, but not blocking the user
   const [isRequestSent, setIsRequestSent] = useState(false);
@@ -26,10 +26,18 @@ const AIPlanner: React.FC<AIPlannerProps> = ({ onStartGeneration, onCancel, sett
 
   useEffect(scrollToBottom, [messages]);
 
-  // Reset initial message when language changes
+  // Initialize welcome message if empty
   useEffect(() => {
-    setMessages([{ role: 'ai', content: t.ai_planner_intro }]);
-  }, [settings.language]);
+    if (messages.length === 0) {
+      setMessages([{ role: 'ai', content: t.ai_planner_intro }]);
+    }
+  }, [settings.language, messages.length, setMessages, t.ai_planner_intro]);
+
+  const handleNewChat = () => {
+    if (window.confirm(settings.language === 'zh-TW' ? '確定要開始新對話嗎？目前的紀錄將被清除。' : 'Start a new chat? Current history will be cleared.')) {
+      setMessages([{ role: 'ai', content: t.ai_planner_intro }]);
+    }
+  };
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -58,14 +66,19 @@ const AIPlanner: React.FC<AIPlannerProps> = ({ onStartGeneration, onCancel, sett
 
   return (
     <div className="flex flex-col h-full bg-paper pt-safe pt-12">
-      <div className="px-4 py-3 border-b border-sand/50 flex items-center bg-paper sticky top-0 z-10">
-        <button onClick={onCancel} className="p-2 -ml-2 rounded-full hover:bg-white text-gray-500 transition-colors">
-          <ChevronLeftIcon className="w-6 h-6" />
+      <div className="px-4 py-3 border-b border-sand/50 flex items-center justify-between bg-paper sticky top-0 z-10">
+        <div className="flex items-center">
+          <button onClick={onCancel} className="p-2 -ml-2 rounded-full hover:bg-white text-gray-500 transition-colors">
+            <ChevronLeftIcon className="w-6 h-6" />
+          </button>
+          <h2 className="text-lg font-bold text-ink ml-2 flex items-center gap-2">
+            <ChatBubbleIcon className="w-5 h-5 text-coral" />
+            {t.ai_planner_title}
+          </h2>
+        </div>
+        <button onClick={handleNewChat} className="text-xs font-bold text-coral border border-coral/30 px-3 py-1.5 rounded-full hover:bg-coral/10 transition-colors">
+          {settings.language === 'zh-TW' ? '新對話' : 'New Chat'}
         </button>
-        <h2 className="text-lg font-bold text-ink ml-2 flex items-center gap-2">
-          <ChatBubbleIcon className="w-5 h-5 text-coral" />
-          {t.ai_planner_title}
-        </h2>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-6 pb-24">
