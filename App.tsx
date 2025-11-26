@@ -103,9 +103,12 @@ const App: React.FC = () => {
   // Load initial state from LocalStorage based on current user
   const [trips, setTrips] = useState<Trip[]>([]);
   const [settings, setSettings] = useState<AppSettings>({ language: 'zh-TW', minimalistMode: false });
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   // Load data when user changes
   useEffect(() => {
+    setIsDataLoaded(false); // Reset loading state
+
     if (!user) {
       setTrips([]);
       return;
@@ -138,9 +141,14 @@ const App: React.FC = () => {
       } else {
         setSettings({ language: 'zh-TW', minimalistMode: false });
       }
+
+      // Mark data as loaded after setting state
+      setIsDataLoaded(true);
+
     } catch (e) {
       console.error("Failed to load user data", e);
       setTrips([]);
+      setIsDataLoaded(true); // Even on error, we mark as loaded to allow future saves
     }
   }, [user]);
 
@@ -151,13 +159,13 @@ const App: React.FC = () => {
 
   // Persistence Effects
   useEffect(() => {
-    if (user) {
+    if (user && isDataLoaded) {
       localStorage.setItem(STORAGE_KEYS.getTripsKey(user.id), JSON.stringify(trips));
     }
-  }, [trips, user]);
+  }, [trips, user, isDataLoaded]);
 
   useEffect(() => {
-    if (user) {
+    if (user && isDataLoaded) {
       localStorage.setItem(STORAGE_KEYS.getSettingsKey(user.id), JSON.stringify(settings));
     }
     if (settings.themeColor) {
