@@ -1208,14 +1208,23 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
                             </svg>
                         </button>
                     ) : (
-                        <button
-                            onClick={() => setIsEditMode(true)}
-                            className="p-2.5 bg-white shadow-card text-gray-400 rounded-full hover:text-coral active:scale-95 transition-all"
-                        >
-                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                        </button>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={handleDeleteClick}
+                                className="p-2.5 bg-white shadow-card text-red-400 rounded-full hover:bg-red-50 hover:text-red-600 active:scale-95 transition-all border border-transparent hover:border-red-200"
+                                title={t.delete_trip_title || "Delete Trip"}
+                            >
+                                <TrashIcon className="w-5 h-5" />
+                            </button>
+                            <button
+                                onClick={() => setIsEditMode(true)}
+                                className="p-2.5 bg-white shadow-card text-gray-400 rounded-full hover:text-coral active:scale-95 transition-all"
+                            >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                            </button>
+                        </div>
                     )}
                 </div>
             </div>
