@@ -122,14 +122,23 @@ export interface TimeCapsule {
   isLocked: boolean;
 }
 
+export interface Memory {
+  id: string;
+  userId: string;
+  imageUrl: string;
+  caption: string;
+  date: string;
+}
+
 export enum ViewState {
   HOME = 'HOME',
   ADD_TRIP = 'ADD_TRIP',
   TRIP_DETAILS = 'TRIP_DETAILS',
+  SETTINGS = 'SETTINGS',
   MAGIC_EDITOR = 'MAGIC_EDITOR',
   AI_PLANNER = 'AI_PLANNER',
   TOOLS = 'TOOLS',
-  SETTINGS = 'SETTINGS'
+  TRIP_MEMORY = 'TRIP_MEMORY'
 }
 
 export interface MagicEditorState {

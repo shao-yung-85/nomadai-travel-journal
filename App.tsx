@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Trip, ViewState, AppSettings, User } from './types';
+import { Trip, ViewState, AppSettings, User, Memory } from './types';
 import TripList from './components/TripList';
 import AddTripForm from './components/AddTripForm';
 import MagicEditor from './components/MagicEditor';
@@ -9,7 +9,8 @@ import AIPlanner from './components/AIPlanner';
 import Tools from './components/Tools';
 import Settings from './components/Settings';
 import Auth from './components/Auth';
-import { HomeIcon, SparklesIcon, SquaresPlusIcon, ChatBubbleIcon } from './components/Icons';
+import TripMemory from './components/TripMemory';
+import { HomeIcon, SparklesIcon, SquaresPlusIcon, ChatBubbleIcon, CameraIcon } from './components/Icons';
 import { generateTripPlan, generateCoverImage } from './services/gemini';
 
 // Mock initial data - used only if local storage is empty
@@ -87,7 +88,8 @@ const STORAGE_KEYS = {
   CURRENT_USER: 'nomad_app_current_user_v1',
   // Dynamic keys based on user ID
   getTripsKey: (userId: string) => `nomad_app_trips_${userId}`,
-  getSettingsKey: (userId: string) => `nomad_app_settings_${userId}`
+  getSettingsKey: (userId: string) => `nomad_app_settings_${userId}`,
+  getMemoriesKey: (userId: string) => `nomad_app_memories_${userId}`
 };
 
 const App: React.FC = () => {
@@ -102,6 +104,7 @@ const App: React.FC = () => {
 
   // Load initial state from LocalStorage based on current user
   const [trips, setTrips] = useState<Trip[]>([]);
+  const [memories, setMemories] = useState<Memory[]>([]);
   const [settings, setSettings] = useState<AppSettings>({ language: 'zh-TW', minimalistMode: false });
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
@@ -111,6 +114,7 @@ const App: React.FC = () => {
 
     if (!user) {
       setTrips([]);
+      setMemories([]);
       return;
     }
 
@@ -134,6 +138,15 @@ const App: React.FC = () => {
         setTrips([]);
       }
 
+      const memoriesKey = STORAGE_KEYS.getMemoriesKey(user.id);
+      const savedMemories = localStorage.getItem(memoriesKey);
+      if (savedMemories) {
+        const parsed = JSON.parse(savedMemories);
+        setMemories(Array.isArray(parsed) ? parsed : []);
+      } else {
+        setMemories([]);
+      }
+
       const settingsKey = STORAGE_KEYS.getSettingsKey(user.id);
       const savedSettings = localStorage.getItem(settingsKey);
       if (savedSettings) {
@@ -148,6 +161,7 @@ const App: React.FC = () => {
     } catch (e) {
       console.error("Failed to load user data", e);
       setTrips([]);
+      setMemories([]);
       setIsDataLoaded(true); // Even on error, we mark as loaded to allow future saves
     }
   }, [user]);
@@ -163,6 +177,12 @@ const App: React.FC = () => {
       localStorage.setItem(STORAGE_KEYS.getTripsKey(user.id), JSON.stringify(trips));
     }
   }, [trips, user, isDataLoaded]);
+
+  useEffect(() => {
+    if (user && isDataLoaded) {
+      localStorage.setItem(STORAGE_KEYS.getMemoriesKey(user.id), JSON.stringify(memories));
+    }
+  }, [memories, user, isDataLoaded]);
 
   useEffect(() => {
     if (user && isDataLoaded) {
@@ -307,7 +327,9 @@ const App: React.FC = () => {
   const handleResetApp = () => {
     if (!user) return;
     setTrips([]);
+    setMemories([]);
     localStorage.removeItem(STORAGE_KEYS.getTripsKey(user.id));
+    localStorage.removeItem(STORAGE_KEYS.getMemoriesKey(user.id));
     localStorage.removeItem(STORAGE_KEYS.getSettingsKey(user.id));
     setSelectedTrip(null);
     setViewState(ViewState.HOME);
@@ -347,6 +369,7 @@ const App: React.FC = () => {
       setUser(newUser);
       localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(newUser));
       setTrips([]); // New user starts with empty trips
+      setMemories([]);
     } catch (e) {
       console.error("Registration failed", e);
       alert('註冊失敗');
@@ -357,8 +380,17 @@ const App: React.FC = () => {
     setUser(null);
     localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
     setTrips([]);
+    setMemories([]);
     setViewState(ViewState.HOME);
     setSelectedTrip(null);
+  };
+
+  const handleAddMemory = (memory: Memory) => {
+    setMemories([memory, ...memories]);
+  };
+
+  const handleDeleteMemory = (id: string) => {
+    setMemories(memories.filter(m => m.id !== id));
   };
 
   if (!user) {
@@ -390,6 +422,15 @@ const App: React.FC = () => {
         );
       case ViewState.MAGIC_EDITOR:
         return <MagicEditor settings={settings} />;
+      case ViewState.TRIP_MEMORY:
+        return (
+          <TripMemory
+            memories={memories}
+            onAddMemory={handleAddMemory}
+            onDeleteMemory={handleDeleteMemory}
+            settings={settings}
+          />
+        );
       case ViewState.AI_PLANNER:
         return (
           <AIPlanner
@@ -401,7 +442,14 @@ const App: React.FC = () => {
           />
         );
       case ViewState.TOOLS:
-        return <Tools onBack={() => setViewState(ViewState.HOME)} trips={trips} settings={settings} />;
+        return (
+          <Tools
+            onBack={() => setViewState(ViewState.HOME)}
+            trips={trips}
+            settings={settings}
+            onMagicEditor={() => setViewState(ViewState.MAGIC_EDITOR)}
+          />
+        );
       case ViewState.TRIP_DETAILS:
         return selectedTrip ? (
           <TripDetail
@@ -430,7 +478,7 @@ const App: React.FC = () => {
 
   const showBottomNav = [
     ViewState.HOME,
-    ViewState.MAGIC_EDITOR,
+    ViewState.TRIP_MEMORY,
     ViewState.TOOLS,
     ViewState.AI_PLANNER
   ].includes(viewState);
@@ -469,11 +517,11 @@ const App: React.FC = () => {
             </button>
 
             <button
-              onClick={() => setViewState(ViewState.MAGIC_EDITOR)}
-              className={`flex flex-col items-center gap-1 p-2 rounded-2xl transition-all w-16 ${viewState === ViewState.MAGIC_EDITOR ? 'text-coral scale-105' : 'text-gray-400 hover:text-gray-600'}`}
+              onClick={() => setViewState(ViewState.TRIP_MEMORY)}
+              className={`flex flex-col items-center gap-1 p-2 rounded-2xl transition-all w-16 ${viewState === ViewState.TRIP_MEMORY ? 'text-coral scale-105' : 'text-gray-400 hover:text-gray-600'}`}
             >
-              <SparklesIcon className={`w-6 h-6 ${viewState === ViewState.MAGIC_EDITOR ? 'stroke-2' : 'stroke-[1.5]'}`} />
-              {viewState === ViewState.MAGIC_EDITOR && <span className="w-1 h-1 bg-coral rounded-full mt-1"></span>}
+              <CameraIcon className={`w-6 h-6 ${viewState === ViewState.TRIP_MEMORY ? 'stroke-2' : 'stroke-[1.5]'}`} />
+              {viewState === ViewState.TRIP_MEMORY && <span className="w-1 h-1 bg-coral rounded-full mt-1"></span>}
             </button>
 
             <button

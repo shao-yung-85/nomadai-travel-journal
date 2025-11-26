@@ -13,7 +13,8 @@ import {
     PlusIcon,
     TrashIcon,
     SquaresPlusIcon,
-    TranslateIcon
+    TranslateIcon,
+    SparklesIcon
 } from './Icons';
 import { getVisaRequirements, getCulturalEtiquette, getEmergencyInfo, getCreditCardAdvice, getTranslation } from '../services/gemini';
 import { Expense, TimeCapsule, Trip, AppSettings } from '../types';
@@ -23,6 +24,7 @@ interface ToolsProps {
     onBack: () => void;
     trips?: Trip[];
     settings: AppSettings;
+    onMagicEditor: () => void;
 }
 
 type ToolView = 'MENU' | 'EXPENSE' | 'VISA' | 'CULTURE' | 'RESTROOM' | 'SCRATCH_MAP' | 'TIME_CAPSULE' | 'EMERGENCY' | 'CARD_ADVICE' | 'TRANSLATION';
@@ -354,7 +356,7 @@ const TranslationTool = ({ onBack, t, language }: { onBack: () => void, t: any, 
 
 // --- Main Tools Container ---
 
-const Tools: React.FC<ToolsProps> = ({ onBack, trips, settings }) => {
+const Tools: React.FC<ToolsProps> = ({ onBack, trips, settings, onMagicEditor }) => {
     const [activeTool, setActiveTool] = useState<ToolView>('MENU');
     const t = translations[settings.language] || translations['zh-TW'];
 
@@ -370,6 +372,7 @@ const Tools: React.FC<ToolsProps> = ({ onBack, trips, settings }) => {
     if (activeTool === 'TRANSLATION') return <TranslationTool onBack={() => setActiveTool('MENU')} t={t} language={settings.language} />;
 
     const tools = [
+        { id: 'MAGIC_EDITOR', name: '魔法修圖室', icon: SparklesIcon, color: 'text-pink-500', bg: 'bg-pink-50', desc: 'AI 智能修圖與濾鏡', action: onMagicEditor },
         { id: 'TRANSLATION', name: t.tool_translation, icon: TranslateIcon, color: 'text-purple-500', bg: 'bg-purple-50', desc: t.desc_translator },
         { id: 'EMERGENCY', name: t.tool_emergency, icon: FirstAidIcon, color: 'text-red-500', bg: 'bg-red-50', desc: t.desc_emergency },
         { id: 'CARD_ADVICE', name: t.tool_card, icon: CreditCardIcon, color: 'text-indigo-500', bg: 'bg-indigo-50', desc: t.desc_card },
@@ -392,7 +395,7 @@ const Tools: React.FC<ToolsProps> = ({ onBack, trips, settings }) => {
                 {tools.map((tool) => (
                     <div
                         key={tool.id}
-                        onClick={() => setActiveTool(tool.id as ToolView)}
+                        onClick={() => tool.action ? tool.action() : setActiveTool(tool.id as ToolView)}
                         className="bg-white p-5 rounded-3xl shadow-card border border-sand active:scale-95 transition-all cursor-pointer hover:shadow-soft hover:border-coral group"
                     >
                         <div className={`w-12 h-12 ${tool.bg} ${tool.color} rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110`}>
