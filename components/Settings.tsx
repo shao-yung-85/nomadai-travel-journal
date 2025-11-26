@@ -1,126 +1,145 @@
-
-import React from 'react';
-import { AppSettings } from '../types';
-import { ChevronLeftIcon, LanguageIcon, ArrowPathIcon, TrashIcon, SparklesIcon } from './Icons';
-import { translations } from '../utils/translations';
+import React, { useState } from 'react';
+import { AppSettings, User } from '../types';
+import { ChevronLeftIcon, TrashIcon, LogOutIcon } from './Icons';
 
 interface SettingsProps {
     onBack: () => void;
     settings: AppSettings;
-    onUpdateSettings: (newSettings: Partial<AppSettings>) => void;
+    onUpdateSettings: (settings: Partial<AppSettings>) => void;
     onResetApp: () => void;
+    user: User | null;
+    onLogout: () => void;
 }
 
-const Settings: React.FC<SettingsProps> = ({ onBack, settings, onUpdateSettings, onResetApp }) => {
-    const t = translations[settings.language] || translations['zh-TW'];
+const Settings: React.FC<SettingsProps> = ({ onBack, settings, onUpdateSettings, onResetApp, user, onLogout }) => {
+    const [showResetConfirm, setShowResetConfirm] = useState(false);
 
-    const handleReset = () => {
-        if (confirm(t.reset_confirm)) {
-            onResetApp();
-        }
-    };
+    const colors = [
+        { name: '珊瑚紅', value: '#FF6B6B' },
+        { name: '海洋藍', value: '#4ECDC4' },
+        { name: '陽光黃', value: '#FFE66D' },
+        { name: '薰衣草紫', value: '#A06CD5' },
+        { name: '薄荷綠', value: '#6BCB77' },
+    ];
 
     return (
-        <div className="flex flex-col h-full bg-paper pt-safe">
-            <div className="px-4 py-3 flex items-center gap-2 bg-paper sticky top-0 z-10 border-b border-sand/50">
-                <button onClick={onBack} className="p-2 -ml-2 rounded-full hover:bg-white text-gray-500 active:scale-90 transition-transform">
-                    <ChevronLeftIcon className="w-6 h-6" />
+        <div className="h-full flex flex-col bg-paper animate-slide-in">
+            {/* Header */}
+            <div className="px-6 py-6 flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-10 border-b border-sand">
+                <button
+                    onClick={onBack}
+                    className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors"
+                >
+                    <ChevronLeftIcon className="w-6 h-6 text-ink" />
                 </button>
-                <h2 className="text-lg font-bold text-ink">{t.settings_title}</h2>
+                <h1 className="text-xl font-bold text-ink">設定</h1>
+                <div className="w-10" />
             </div>
 
-            <div className="flex-1 overflow-y-auto p-5 space-y-8 pb-32">
-
-                {/* General Settings */}
-                <div className="space-y-3">
-                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">{t.general}</h3>
-                    <div className="bg-white rounded-3xl overflow-hidden shadow-card border border-sand divide-y divide-gray-50">
-                        {/* Language */}
-                        <div className="p-5 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2.5 bg-blue-50 text-blue-500 rounded-xl">
-                                    <LanguageIcon className="w-5 h-5" />
-                                </div>
-                                <span className="font-bold text-ink">{t.language}</span>
-                            </div>
-                            <select
-                                value={settings.language}
-                                onChange={(e) => onUpdateSettings({ language: e.target.value as any })}
-                                className="bg-transparent text-gray-500 font-medium outline-none text-right cursor-pointer"
-                            >
-                                <option value="zh-TW">繁體中文</option>
-                                <option value="en-US">English</option>
-                                <option value="ja-JP">日本語</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Appearance Settings */}
-                <div className="space-y-3">
-                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">{t.appearance}</h3>
-                    <div className="bg-white rounded-3xl overflow-hidden shadow-card border border-sand divide-y divide-gray-50">
-                        {/* Theme Color */}
-                        <div className="p-5 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2.5 bg-pink-50 text-pink-500 rounded-xl">
-                                    <div className="w-5 h-5 rounded-full bg-current"></div>
-                                </div>
-                                <span className="font-bold text-ink">{t.theme_color}</span>
-                            </div>
-                            <div className="flex gap-2">
-                                {['#D65A5A', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6'].map(color => (
-                                    <button
-                                        key={color}
-                                        onClick={() => onUpdateSettings({ themeColor: color })}
-                                        className={`w-8 h-8 rounded-full border-2 transition-all ${settings.themeColor === color ? 'border-gray-400 scale-110' : 'border-transparent hover:scale-105'}`}
-                                        style={{ backgroundColor: color }}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Minimalist Mode Toggle */}
-                        <div className="p-5 flex items-center justify-between cursor-pointer" onClick={() => onUpdateSettings({ minimalistMode: !settings.minimalistMode })}>
-                            <div className="flex items-center gap-3">
-                                <div className="p-2.5 bg-purple-50 text-purple-500 rounded-xl">
-                                    <SparklesIcon className="w-5 h-5" />
-                                </div>
-                                <div>
-                                    <div className="font-bold text-ink">{t.minimalist_mode}</div>
-                                    <div className="text-xs text-gray-400 mt-0.5 font-medium">{t.minimalist_desc}</div>
-                                </div>
+            <div className="flex-1 overflow-y-auto p-6 space-y-8">
+                {/* User Profile */}
+                {user && (
+                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-sand">
+                        <h2 className="text-sm font-bold text-gray-400 uppercase mb-4 tracking-wider">帳號資訊</h2>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-lg font-bold text-ink">{user.username}</p>
+                                <p className="text-xs text-gray-400">ID: {user.id}</p>
                             </div>
                             <button
-                                className={`w-14 h-8 rounded-full transition-all relative ${settings.minimalistMode ? 'bg-coral' : 'bg-gray-200'}`}
+                                onClick={onLogout}
+                                className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl transition-colors text-sm font-medium"
                             >
-                                <div className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-sm transition-all duration-300 ${settings.minimalistMode ? 'left-7' : 'left-1'}`}></div>
+                                <LogOutIcon className="w-4 h-4" />
+                                登出
                             </button>
                         </div>
                     </div>
-                </div>
+                )}
 
-                {/* Data Management */}
-                <div className="space-y-3">
-                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">{t.data_mgmt}</h3>
-                    <div className="bg-white rounded-3xl overflow-hidden shadow-card border border-sand divide-y divide-gray-50">
-                        {/* Reset App */}
-                        <button onClick={handleReset} className="w-full p-5 flex items-center justify-between hover:bg-red-50 transition-colors group">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2.5 bg-red-50 text-red-500 rounded-xl group-hover:bg-red-100">
-                                    <TrashIcon className="w-5 h-5" />
-                                </div>
-                                <span className="font-bold text-red-500">{t.reset_all}</span>
-                            </div>
-                            <ArrowPathIcon className="w-4 h-4 text-red-300 group-hover:text-red-500" />
+                {/* Theme Settings */}
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-sand">
+                    <h2 className="text-sm font-bold text-gray-400 uppercase mb-4 tracking-wider">主題顏色</h2>
+                    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                        {colors.map((color) => (
+                            <button
+                                key={color.value}
+                                onClick={() => onUpdateSettings({ themeColor: color.value })}
+                                className={`w-10 h-10 rounded-full flex-shrink-0 transition-transform ${settings.themeColor === color.value ? 'scale-110 ring-2 ring-offset-2 ring-gray-300' : 'hover:scale-105'}`}
+                                style={{ backgroundColor: color.value }}
+                                aria-label={color.name}
+                            />
+                        ))}
+                        <button
+                            onClick={() => onUpdateSettings({ themeColor: undefined })}
+                            className={`w-10 h-10 rounded-full flex-shrink-0 bg-coral flex items-center justify-center text-white text-xs font-bold transition-transform ${!settings.themeColor ? 'scale-110 ring-2 ring-offset-2 ring-gray-300' : 'hover:scale-105'}`}
+                        >
+                            預設
                         </button>
                     </div>
                 </div>
 
-                <div className="text-center text-xs text-gray-400 py-4 font-medium">
-                    NomadAI Travel Journal v2.0
+                {/* Language Settings */}
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-sand">
+                    <h2 className="text-sm font-bold text-gray-400 uppercase mb-4 tracking-wider">語言</h2>
+                    <div className="space-y-2">
+                        {[
+                            { code: 'zh-TW', label: '繁體中文' },
+                            { code: 'en-US', label: 'English' },
+                            { code: 'ja-JP', label: '日本語' }
+                        ].map((lang) => (
+                            <button
+                                key={lang.code}
+                                onClick={() => onUpdateSettings({ language: lang.code })}
+                                className={`w-full flex items-center justify-between p-3 rounded-xl transition-colors ${settings.language === lang.code ? 'bg-coral/10 text-coral font-bold' : 'hover:bg-gray-50 text-ink'}`}
+                            >
+                                <span>{lang.label}</span>
+                                {settings.language === lang.code && <div className="w-2 h-2 rounded-full bg-coral" />}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
+                {/* Data Management */}
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-sand">
+                    <h2 className="text-sm font-bold text-gray-400 uppercase mb-4 tracking-wider">資料管理</h2>
+
+                    {!showResetConfirm ? (
+                        <button
+                            onClick={() => setShowResetConfirm(true)}
+                            className="w-full flex items-center justify-center gap-2 p-4 border-2 border-red-100 text-red-500 rounded-xl hover:bg-red-50 transition-colors font-bold"
+                        >
+                            <TrashIcon className="w-5 h-5" />
+                            清空所有資料
+                        </button>
+                    ) : (
+                        <div className="space-y-3 animate-fade-in">
+                            <p className="text-center text-sm text-red-500 font-medium">確定要刪除所有行程嗎？此操作無法復原。</p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowResetConfirm(false)}
+                                    className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold"
+                                >
+                                    取消
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        onResetApp();
+                                        setShowResetConfirm(false);
+                                    }}
+                                    className="flex-1 py-3 bg-red-500 text-white rounded-xl font-bold shadow-lg shadow-red-500/30"
+                                >
+                                    確認刪除
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                <div className="text-center text-xs text-gray-400 py-4">
+                    <p>NomadAI Travel Journal v1.0.0</p>
+                    <p className="mt-1">Made with ❤️ by NomadAI Team</p>
+                </div>
             </div>
         </div>
     );

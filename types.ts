@@ -81,6 +81,13 @@ export interface WeatherForecast {
   icon: string;
 }
 
+export interface User {
+  id: string;
+  username: string;
+  password?: string; // In a real app, never store plain text passwords!
+  createdAt: string;
+}
+
 export interface Trip {
   id: string;
   title: string;

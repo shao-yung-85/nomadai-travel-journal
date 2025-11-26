@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Trip, ViewState, AppSettings } from './types';
+import { Trip, ViewState, AppSettings, User } from './types';
 import TripList from './components/TripList';
 import AddTripForm from './components/AddTripForm';
 import MagicEditor from './components/MagicEditor';
@@ -8,6 +8,7 @@ import TripDetail from './components/TripDetail';
 import AIPlanner from './components/AIPlanner';
 import Tools from './components/Tools';
 import Settings from './components/Settings';
+import Auth from './components/Auth';
 import { HomeIcon, SparklesIcon, SquaresPlusIcon, ChatBubbleIcon } from './components/Icons';
 import { generateTripPlan, generateCoverImage } from './services/gemini';
 
@@ -82,43 +83,66 @@ const INITIAL_TRIPS: Trip[] = [
 ];
 
 const STORAGE_KEYS = {
-  TRIPS: 'nomad_app_trips_v3',
-  SETTINGS: 'nomad_app_settings_v3'
+  USERS: 'nomad_app_users_v1',
+  CURRENT_USER: 'nomad_app_current_user_v1',
+  // Dynamic keys based on user ID
+  getTripsKey: (userId: string) => `nomad_app_trips_${userId}`,
+  getSettingsKey: (userId: string) => `nomad_app_settings_${userId}`
 };
 
 const App: React.FC = () => {
-  // Load initial state from LocalStorage
-  const [trips, setTrips] = useState<Trip[]>(() => {
+  const [user, setUser] = useState<User | null>(() => {
     try {
-      const savedTrips = localStorage.getItem(STORAGE_KEYS.TRIPS);
-      if (!savedTrips) return INITIAL_TRIPS;
-      const parsed = JSON.parse(savedTrips);
-      // Ensure parsed data is actually an array and sanitize items
-      if (!Array.isArray(parsed)) return INITIAL_TRIPS;
-
-      return parsed.map(trip => ({
-        ...trip,
-        itinerary: Array.isArray(trip.itinerary) ? trip.itinerary : [],
-        bookings: Array.isArray(trip.bookings) ? trip.bookings : [],
-        weather: Array.isArray(trip.weather) ? trip.weather : [],
-        budget: trip.budget || { total: 0, currency: 'TWD', expenses: [] }
-      }));
+      const savedUser = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
+      return savedUser ? JSON.parse(savedUser) : null;
     } catch (e) {
-      console.error("Failed to load trips", e);
-      return INITIAL_TRIPS;
+      return null;
     }
   });
 
-  const [settings, setSettings] = useState<AppSettings>(() => {
-    try {
-      const savedSettings = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-      if (!savedSettings) return { language: 'zh-TW', minimalistMode: false };
-      const parsed = JSON.parse(savedSettings);
-      return parsed && typeof parsed === 'object' ? parsed : { language: 'zh-TW', minimalistMode: false };
-    } catch (e) {
-      return { language: 'zh-TW', minimalistMode: false };
+  // Load initial state from LocalStorage based on current user
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [settings, setSettings] = useState<AppSettings>({ language: 'zh-TW', minimalistMode: false });
+
+  // Load data when user changes
+  useEffect(() => {
+    if (!user) {
+      setTrips([]);
+      return;
     }
-  });
+
+    try {
+      const tripsKey = STORAGE_KEYS.getTripsKey(user.id);
+      const savedTrips = localStorage.getItem(tripsKey);
+      if (savedTrips) {
+        const parsed = JSON.parse(savedTrips);
+        if (Array.isArray(parsed)) {
+          setTrips(parsed.map(trip => ({
+            ...trip,
+            itinerary: Array.isArray(trip.itinerary) ? trip.itinerary : [],
+            bookings: Array.isArray(trip.bookings) ? trip.bookings : [],
+            weather: Array.isArray(trip.weather) ? trip.weather : [],
+            budget: trip.budget || { total: 0, currency: 'TWD', expenses: [] }
+          })));
+        } else {
+          setTrips([]);
+        }
+      } else {
+        setTrips([]);
+      }
+
+      const settingsKey = STORAGE_KEYS.getSettingsKey(user.id);
+      const savedSettings = localStorage.getItem(settingsKey);
+      if (savedSettings) {
+        setSettings(JSON.parse(savedSettings));
+      } else {
+        setSettings({ language: 'zh-TW', minimalistMode: false });
+      }
+    } catch (e) {
+      console.error("Failed to load user data", e);
+      setTrips([]);
+    }
+  }, [user]);
 
   const [viewState, setViewState] = useState<ViewState>(ViewState.HOME);
   const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
@@ -127,11 +151,15 @@ const App: React.FC = () => {
 
   // Persistence Effects
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.TRIPS, JSON.stringify(trips));
-  }, [trips]);
+    if (user) {
+      localStorage.setItem(STORAGE_KEYS.getTripsKey(user.id), JSON.stringify(trips));
+    }
+  }, [trips, user]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+    if (user) {
+      localStorage.setItem(STORAGE_KEYS.getSettingsKey(user.id), JSON.stringify(settings));
+    }
     if (settings.themeColor) {
       document.documentElement.style.setProperty('--color-coral', settings.themeColor);
     } else {
@@ -269,13 +297,65 @@ const App: React.FC = () => {
   };
 
   const handleResetApp = () => {
+    if (!user) return;
     setTrips([]);
-    localStorage.removeItem(STORAGE_KEYS.TRIPS);
-    localStorage.removeItem(STORAGE_KEYS.SETTINGS);
+    localStorage.removeItem(STORAGE_KEYS.getTripsKey(user.id));
+    localStorage.removeItem(STORAGE_KEYS.getSettingsKey(user.id));
     setSelectedTrip(null);
     setViewState(ViewState.HOME);
-    setTrips(INITIAL_TRIPS);
   };
+
+  const handleLogin = (userData: User) => {
+    try {
+      const usersJson = localStorage.getItem(STORAGE_KEYS.USERS);
+      const users: User[] = usersJson ? JSON.parse(usersJson) : [];
+      const foundUser = users.find(u => u.username === userData.username && u.password === userData.password);
+
+      if (foundUser) {
+        setUser(foundUser);
+        localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(foundUser));
+      } else {
+        alert('使用者名稱或密碼錯誤');
+      }
+    } catch (e) {
+      console.error("Login failed", e);
+      alert('登入失敗');
+    }
+  };
+
+  const handleRegister = (newUser: User) => {
+    try {
+      const usersJson = localStorage.getItem(STORAGE_KEYS.USERS);
+      const users: User[] = usersJson ? JSON.parse(usersJson) : [];
+
+      if (users.some(u => u.username === newUser.username)) {
+        alert('使用者名稱已存在');
+        return;
+      }
+
+      const updatedUsers = [...users, newUser];
+      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(updatedUsers));
+
+      setUser(newUser);
+      localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(newUser));
+      setTrips([]); // New user starts with empty trips
+    } catch (e) {
+      console.error("Registration failed", e);
+      alert('註冊失敗');
+    }
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+    setTrips([]);
+    setViewState(ViewState.HOME);
+    setSelectedTrip(null);
+  };
+
+  if (!user) {
+    return <Auth onLogin={handleLogin} onRegister={handleRegister} />;
+  }
 
   const renderContent = () => {
     switch (viewState) {
@@ -331,6 +411,8 @@ const App: React.FC = () => {
             settings={settings}
             onUpdateSettings={handleUpdateSettings}
             onResetApp={handleResetApp}
+            user={user}
+            onLogout={handleLogout}
           />
         );
       default:
