@@ -611,7 +611,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
                                                                     e.stopPropagation();
                                                                     handleDeleteItem(item.id);
                                                                 }}
-                                                                className="p-1.5 bg-white text-gray-400 rounded-full border border-sand hover:text-red-500 hover:border-red-500 shadow-sm"
+                                                                className="p-1.5 bg-white text-red-400 rounded-full border border-red-200 hover:bg-red-50 hover:text-red-600 hover:border-red-500 shadow-sm transition-colors"
                                                                 title="刪除"
                                                             >
                                                                 <TrashIcon className="w-3 h-3" />
