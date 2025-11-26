@@ -58,11 +58,20 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
     const [isAddingBooking, setIsAddingBooking] = useState(false);
     const [newBookingType, setNewBookingType] = useState<'FLIGHT' | 'HOTEL' | 'TRAIN'>('FLIGHT');
     const [newBookingProvider, setNewBookingProvider] = useState('');
+
     const [newBookingRef, setNewBookingRef] = useState('');
     const [newBookingOrigin, setNewBookingOrigin] = useState('');
     const [newBookingDest, setNewBookingDest] = useState('');
     const [newBookingDate, setNewBookingDate] = useState('');
     const [newBookingTime, setNewBookingTime] = useState('');
+
+    // Quick Expense State
+    const [isAddingQuickExpense, setIsAddingQuickExpense] = useState(false);
+    const [quickExpenseItem, setQuickExpenseItem] = useState<ItineraryItem | null>(null);
+    const [quickExpenseAmount, setQuickExpenseAmount] = useState('');
+    const [quickExpenseNote, setQuickExpenseNote] = useState('');
+    const [quickExpenseItems, setQuickExpenseItems] = useState<{ name: string, price: string }[]>([{ name: '', price: '' }]);
+
 
     // Trip Editing State
     const [isEditMode, setIsEditMode] = useState(false);
@@ -424,6 +433,67 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
         setIsAddingBooking(false);
     };
 
+    const handleOpenQuickExpense = (item: ItineraryItem) => {
+        setQuickExpenseItem(item);
+        setQuickExpenseAmount('');
+        setQuickExpenseNote('');
+        setQuickExpenseItems([{ name: '', price: '' }]);
+        setIsAddingQuickExpense(true);
+    };
+
+    const handleSaveQuickExpense = () => {
+        if (!quickExpenseItem || !quickExpenseAmount) return;
+
+        const totalAmount = parseInt(quickExpenseAmount);
+        const note = quickExpenseItems
+            .filter(i => i.name && i.price)
+            .map(i => `${i.name}: ¥${i.price}`)
+            .join(', ');
+
+        const finalNote = quickExpenseNote ? (note ? `${quickExpenseNote} (${note})` : quickExpenseNote) : note;
+
+        const newExpense: ExpenseItem = {
+            id: Date.now().toString(),
+            title: quickExpenseItem.activity,
+            amount: totalAmount,
+            category: 'Shopping', // Default to Shopping or Food
+            date: trip.startDate ? new Date(trip.startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0], // Approximate date
+            payer: 'ME',
+            paymentMethod: 'Cash',
+            note: finalNote
+        };
+
+        const currentExpenses = trip.budget?.expenses || [];
+        const updatedTrip = {
+            ...trip,
+            budget: {
+                ...trip.budget,
+                total: trip.budget?.total || 0,
+                currency: trip.budget?.currency || 'TWD',
+                expenses: [newExpense, ...currentExpenses]
+            }
+        };
+
+        onUpdateTrip?.(updatedTrip);
+        setIsAddingQuickExpense(false);
+    };
+
+    const updateQuickExpenseItem = (index: number, field: 'name' | 'price', value: string) => {
+        const newItems = [...quickExpenseItems];
+        newItems[index][field] = value;
+        setQuickExpenseItems(newItems);
+
+        // Auto calculate total if prices are entered
+        if (field === 'price') {
+            const total = newItems.reduce((sum, item) => sum + (parseInt(item.price) || 0), 0);
+            if (total > 0) setQuickExpenseAmount(total.toString());
+        }
+    };
+
+    const addQuickExpenseItemRow = () => {
+        setQuickExpenseItems([...quickExpenseItems, { name: '', price: '' }]);
+    };
+
     const renderWeather = () => {
         if (!trip.weather || trip.weather?.length === 0) return null;
         return (
@@ -515,13 +585,24 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
                                                         <div className="flex items-center gap-2">
                                                             <span className="text-xs font-bold font-mono text-coral bg-coral/10 px-2 py-1 rounded-lg">{item.time}</span>
                                                         </div>
-                                                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <div className="flex gap-2">
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleOpenQuickExpense(item);
+                                                                }}
+                                                                className="p-1.5 bg-white text-gray-400 rounded-full border border-sand hover:text-green-600 hover:border-green-600 shadow-sm"
+                                                                title="快速記帳"
+                                                            >
+                                                                <WalletIcon className="w-3 h-3" />
+                                                            </button>
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
                                                                     handleOpenEditModal(item);
                                                                 }}
-                                                                className="p-1.5 bg-white text-gray-400 rounded-full border border-sand hover:text-coral hover:border-coral"
+                                                                className="p-1.5 bg-white text-gray-400 rounded-full border border-sand hover:text-coral hover:border-coral shadow-sm"
+                                                                title="編輯"
                                                             >
                                                                 <PencilIcon className="w-3 h-3" />
                                                             </button>
@@ -530,7 +611,8 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
                                                                     e.stopPropagation();
                                                                     handleDeleteItem(item.id);
                                                                 }}
-                                                                className="p-1.5 bg-white text-gray-400 rounded-full border border-sand hover:text-red-500 hover:border-red-500"
+                                                                className="p-1.5 bg-white text-gray-400 rounded-full border border-sand hover:text-red-500 hover:border-red-500 shadow-sm"
+                                                                title="刪除"
                                                             >
                                                                 <TrashIcon className="w-3 h-3" />
                                                             </button>
@@ -1342,6 +1424,85 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
                                 className="w-full py-3 bg-gray-100 rounded-xl font-bold text-gray-600 active:scale-95 transition-all"
                             >
                                 取消
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Quick Expense Modal */}
+            {isAddingQuickExpense && quickExpenseItem && (
+                <div className="fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onClick={() => setIsAddingQuickExpense(false)}>
+                    <div className="bg-paper w-full max-w-sm rounded-3xl shadow-2xl p-6 animate-slide-up relative overflow-hidden" onClick={e => e.stopPropagation()}>
+                        <div className="text-center mb-6">
+                            <h3 className="text-xl font-bold text-ink border-b-2 border-coral inline-block pb-1">快速記帳</h3>
+                            <p className="text-xs text-gray-400 mt-2">{quickExpenseItem.activity}</p>
+                        </div>
+
+                        <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+                            {/* Itemized List */}
+                            <div className="space-y-2">
+                                {quickExpenseItems.map((item, idx) => (
+                                    <div key={idx} className="flex gap-2 items-center">
+                                        <input
+                                            placeholder="項目 (如: 和牛套餐)"
+                                            value={item.name}
+                                            onChange={(e) => updateQuickExpenseItem(idx, 'name', e.target.value)}
+                                            className="flex-1 bg-white p-3 rounded-xl text-sm font-medium border-none shadow-sm outline-none"
+                                        />
+                                        <div className="flex items-center bg-white rounded-xl px-3 w-24 shrink-0 shadow-sm">
+                                            <span className="text-gray-400 text-xs mr-1">¥</span>
+                                            <input
+                                                type="number"
+                                                placeholder="0"
+                                                value={item.price}
+                                                onChange={(e) => updateQuickExpenseItem(idx, 'price', e.target.value)}
+                                                className="w-full bg-transparent py-3 text-sm font-bold border-none outline-none text-right"
+                                            />
+                                        </div>
+                                    </div>
+                                ))}
+                                <button
+                                    onClick={addQuickExpenseItemRow}
+                                    className="w-full py-2 border-2 border-dashed border-sand rounded-xl text-gray-400 text-xs font-bold hover:border-coral hover:text-coral transition-colors"
+                                >
+                                    + 新增細項
+                                </button>
+                            </div>
+
+                            <div className="h-px bg-sand my-4"></div>
+
+                            {/* Total Amount */}
+                            <div className="space-y-1">
+                                <label className="text-xs font-bold text-gray-400 ml-1">總金額 (Total)</label>
+                                <div className="flex items-center bg-white rounded-xl border-none shadow-sm px-4 border-2 border-transparent focus-within:border-coral transition-all">
+                                    <span className="text-gray-400 font-bold mr-2 text-lg">¥</span>
+                                    <input
+                                        value={quickExpenseAmount}
+                                        onChange={(e) => setQuickExpenseAmount(e.target.value)}
+                                        type="number"
+                                        placeholder="0"
+                                        className="w-full bg-transparent py-4 text-2xl font-black text-ink border-none outline-none placeholder:font-normal"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-xs font-bold text-gray-400 ml-1">備註</label>
+                                <input
+                                    value={quickExpenseNote}
+                                    onChange={(e) => setQuickExpenseNote(e.target.value)}
+                                    placeholder="..."
+                                    className="w-full bg-white p-3 rounded-xl text-sm font-medium border-none shadow-sm outline-none"
+                                />
+                            </div>
+
+                            <button
+                                onClick={handleSaveQuickExpense}
+                                disabled={!quickExpenseAmount}
+                                className="w-full bg-coral text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-coral/30 mt-4 active:scale-95 transition-all disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-2"
+                            >
+                                <WalletIcon className="w-5 h-5" />
+                                入帳
                             </button>
                         </div>
                     </div>

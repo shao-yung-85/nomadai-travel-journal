@@ -20,6 +20,7 @@ export interface ItineraryItem {
     mode: 'WALK' | 'TRAIN' | 'BUS' | 'CAR' | 'FLIGHT';
     duration: string;
     details?: string;
+    note?: string; // Optional note for quick expense details
   };
 }
 

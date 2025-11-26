@@ -150,13 +150,14 @@ export const generateTripPlan = async (userPrompt: string, language: string = 'z
                 1. **Distance & Logic**: Group attractions that are geographically close to each other on the same day.
                 2. **Feasibility**: Ensure the schedule is realistic.
                 3. **Language**: All content MUST be in ${targetLang}.
-                4. **Travel Info**: You MUST estimate the travel mode and duration to the NEXT activity.
+                4. **Travel Info**: You MUST estimate the travel mode and duration to the NEXT activity. This is mandatory for all items except the last one of the day.
                 5. **Completeness**: You MUST generate a FULL itinerary with at least 3 activities per day. Do not leave the itinerary empty.
                 
                 FORMAT REQUIREMENTS:
                 Return response in JSON format matching the schema.
                 Ensure 'itinerary' items include the 'day' field.
                 Include 'travelToNext' for each item (except the last one of the day) describing how to get to the next spot.
+                If the distance is short, use 'WALK'. If long, use 'TRAIN', 'BUS', or 'CAR'.
                 Fill ALL fields: title, startDate, endDate, itinerary, budget, packingList, weather.
                 `,
                 responseMimeType: "application/json",
