@@ -154,94 +154,45 @@ export const generateTripPlan = async (userPrompt: string, language: string = 'z
                 5. **Completeness**: You MUST generate a FULL itinerary with at least 3 activities per day. Do not leave the itinerary empty.
                 
                 FORMAT REQUIREMENTS:
-                Return response in JSON format matching the schema.
-                Ensure 'itinerary' items include the 'day' field.
-                Include 'travelToNext' for each item (except the last one of the day) describing how to get to the next spot.
-                If the distance is short, use 'WALK'. If long, use 'TRAIN', 'BUS', or 'CAR'.
-                Fill ALL fields: title, startDate, endDate, itinerary, budget, packingList, weather.
-                `,
-                responseMimeType: "application/json",
-                responseSchema: {
-                    type: Type.OBJECT,
-                    properties: {
-                        title: { type: Type.STRING },
-                        startDate: { type: Type.STRING },
-                        endDate: { type: Type.STRING },
-                        itinerary: {
-                            type: Type.ARRAY,
-                            items: {
-                                type: Type.OBJECT,
-                                properties: {
-                                    id: { type: Type.STRING },
-                                    day: { type: Type.INTEGER },
-                                    time: { type: Type.STRING },
-                                    activity: { type: Type.STRING },
-                                    location: { type: Type.STRING },
-                                    notes: { type: Type.STRING },
-                                    travelToNext: {
-                                        type: Type.OBJECT,
-                                        properties: {
-                                            mode: { type: Type.STRING, enum: ['WALK', 'TRAIN', 'BUS', 'CAR', 'FLIGHT'] },
-                                            duration: { type: Type.STRING, description: "e.g. 15 min" },
-                                            details: { type: Type.STRING, description: "e.g. JR Yamanote Line" }
-                                        },
-                                        nullable: true
-                                    }
-                                }
-                            }
-                        },
-                        budget: {
-                            type: Type.OBJECT,
-                            properties: {
-                                total: { type: Type.NUMBER },
-                                currency: { type: Type.STRING },
-                                spent: { type: Type.NUMBER },
-                                categories: {
-                                    type: Type.ARRAY,
-                                    items: {
-                                        type: Type.OBJECT,
-                                        properties: {
-                                            name: { type: Type.STRING },
-                                            amount: { type: Type.NUMBER },
-                                            color: { type: Type.STRING }
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        packingList: {
-                            type: Type.ARRAY,
-                            items: {
-                                type: Type.OBJECT,
-                                properties: {
-                                    id: { type: Type.STRING },
-                                    item: { type: Type.STRING },
-                                    category: { type: Type.STRING },
-                                    checked: { type: Type.BOOLEAN }
-                                }
-                            }
-                        },
-                        weather: {
-                            type: Type.ARRAY,
-                            items: {
-                                type: Type.OBJECT,
-                                properties: {
-                                    date: { type: Type.STRING },
-                                    tempHigh: { type: Type.NUMBER },
-                                    tempLow: { type: Type.NUMBER },
-                                    condition: { type: Type.STRING },
-                                    icon: { type: Type.STRING }
-                                }
+                Return response in valid JSON format. Do not use Markdown code blocks.
+                The JSON must strictly follow this structure:
+                {
+                    "title": "Trip Title",
+                    "startDate": "YYYY-MM-DD",
+                    "endDate": "YYYY-MM-DD",
+                    "itinerary": [
+                        {
+                            "id": "unique_id",
+                            "day": 1,
+                            "time": "09:00",
+                            "activity": "Activity Name",
+                            "location": "Location Address",
+                            "notes": "Tips",
+                            "travelToNext": {
+                                "mode": "WALK/TRAIN/BUS/CAR",
+                                "duration": "15 min",
+                                "details": "Route details"
                             }
                         }
-                    }
+                    ],
+                    "budget": {
+                        "total": 10000,
+                        "currency": "TWD",
+                        "expenses": []
+                    },
+                    "packingList": [],
+                    "weather": []
                 }
+                `,
+                responseMimeType: "application/json"
             }
         });
 
         const text = getResponseText(response);
         if (text) {
-            return JSON.parse(text);
+            // Clean markdown code blocks if present (though we asked not to use them)
+            const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+            return JSON.parse(cleanText);
         }
         throw new Error("Empty response from AI");
     });
