@@ -190,7 +190,15 @@ export const generateTripPlan = async (userPrompt: string, language: string = 'z
                         "expenses": []
                     },
                     "packingList": [],
-                    "weather": []
+                    "weather": [
+                        {
+                            "date": "YYYY-MM-DD",
+                            "condition": "Sunny",
+                            "tempLow": 20,
+                            "tempHigh": 30,
+                            "icon": "☀️"
+                        }
+                    ]
                 }
                 `,
                 responseMimeType: "application/json"
