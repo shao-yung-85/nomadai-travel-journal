@@ -307,10 +307,12 @@ const App: React.FC = () => {
       setSelectedTrip(newTrip);
       setViewState(ViewState.TRIP_DETAILS);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Background generation failed", error);
       setBackgroundTasks(prev => prev.filter(id => id !== tempId));
-      alert("AI Generation Failed.");
+      // Show detailed error message for debugging
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      alert(`AI Generation Failed: ${errorMessage}`);
     }
   };
 

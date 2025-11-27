@@ -32,9 +32,14 @@ const callAiWithFallback = async (apiCall: (client: GoogleGenAI) => Promise<any>
     try {
         const client = new GoogleGenAI({ apiKey: backupKey });
         return await apiCall(client);
-    } catch (backupError) {
+    } catch (backupError: any) {
         console.error("Backup API Key also failed:", backupError);
-        throw backupError;
+        // Throw a more descriptive error
+        const msg = backupError.message || String(backupError);
+        if (msg.includes('429')) {
+            throw new Error("API Quota Exceeded (429). Please try again later.");
+        }
+        throw new Error(`AI Service Error: ${msg}`);
     }
 };
 
