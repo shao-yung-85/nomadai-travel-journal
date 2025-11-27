@@ -228,7 +228,15 @@ Error generating stack: `+s.message+`
                         "expenses": []
                     },
                     "packingList": [],
-                    "weather": []
+                    "weather": [
+                        {
+                            "date": "YYYY-MM-DD",
+                            "condition": "Sunny",
+                            "tempLow": 20,
+                            "tempHigh": 30,
+                            "icon": "☀️"
+                        }
+                    ]
                 }
                 `,responseMimeType:"application/json"}}),d=Pn(u);if(d){const p=d.replace(/```json/g,"").replace(/```/g,"").trim();return JSON.parse(p)}throw new Error("Empty response from AI")})},vg=async(l,t,o="zh-TW")=>{const a=wt[o]||wt["zh-TW"];return zn(async u=>{const d=await u.models.generateContent({model:Vn,contents:`I hold a ${l} passport and want to travel to ${t}. 
             What are the visa requirements, entry rules, and any vaccination requirements? 
