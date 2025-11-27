@@ -18,36 +18,31 @@ const getApiKey = () => {
     return '';
 };
 
-const apiKey = getApiKey();
-// Backup key removed to prevent leakage. User must provide key if env is missing.
-const backupKey = '';
-
 // Helper to wrap API calls with fallback
 const callAiWithFallback = async (apiCall: (client: GoogleGenAI) => Promise<any>) => {
-    // 1. Try Primary Key (if exists and different from backup)
-    if (apiKey && apiKey !== backupKey) {
+    // Always get the latest key from storage/env
+    const currentKey = getApiKey();
+
+    // 1. Try Primary Key
+    if (currentKey) {
         try {
-            const client = new GoogleGenAI({ apiKey: apiKey });
+            const client = new GoogleGenAI({ apiKey: currentKey });
             return await apiCall(client);
         } catch (error: any) {
-            console.warn("Primary API Key failed, switching to backup...", error);
+            console.warn("Primary API Key failed", error);
+            // If it's a permission error (403), throw immediately to let user know key is invalid
+            if (error.message?.includes('403') || error.toString().includes('403')) {
+                throw new Error("Invalid API Key (403). Please check your key in Settings.");
+            }
         }
+    } else {
+        throw new Error("API key is missing. Please provide a valid API key in Settings.");
     }
 
-    // 2. Use Backup Key (as fallback or primary if no user key)
-    try {
-        const client = new GoogleGenAI({ apiKey: backupKey });
-        return await apiCall(client);
-    } catch (backupError: any) {
-        console.error("Backup API Key also failed:", backupError);
-        // Throw a more descriptive error
-        const msg = backupError.message || String(backupError);
-        if (msg.includes('429')) {
-            throw new Error("API Quota Exceeded (429). Please try again later.");
-        }
-        throw new Error(`AI Service Error: ${msg}`);
-    }
+    throw new Error("AI Service Failed. Please check your API Key.");
 };
+
+
 
 // Helper to strip data:image/png;base64, prefix
 const cleanBase64 = (base64Data: string) => {
