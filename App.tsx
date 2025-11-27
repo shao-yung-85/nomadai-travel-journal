@@ -67,10 +67,10 @@ const INITIAL_TRIPS: Trip[] = [
       ]
     },
     weather: [
-      { date: '11/10', tempHigh: 18, tempLow: 10, condition: 'Sunny', icon: '☀️' },
-      { date: '11/11', tempHigh: 17, tempLow: 9, condition: 'Cloudy', icon: '☁️' },
-      { date: '11/12', tempHigh: 16, tempLow: 8, condition: 'Rain', icon: '🌧️' }
-    ]
+      { date: '2023-11-10', tempHigh: 25, tempLow: 18, condition: 'Sunny', icon: '☀️' },
+      { date: '2023-11-20', tempHigh: 22, tempLow: 17, condition: 'Cloudy', icon: '☁️' }
+    ],
+    notes: ''
   },
   {
     id: '2',

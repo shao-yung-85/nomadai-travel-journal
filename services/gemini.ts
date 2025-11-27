@@ -349,15 +349,9 @@ export const getClothingAdvice = async (weather: any[], location: string, langua
                 contents: `I am travelling to ${location}. Here is the weather forecast:
                 ${weatherSummary}
                 
-                Based on this weather, suggest what clothes to pack and wear.
-                Give advice for:
-                1. Tops
-                2. Bottoms
-                3. Outerwear
-                4. Shoes
-                5. Accessories (e.g. umbrella, hat)
-                
-                Format as a concise Markdown list.
+                Based on this weather, give me a VERY SHORT, ONE-LINE clothing advice summary.
+                Example: "It's rainy and cold, so bring a heavy coat and umbrella."
+                Keep it under 20 words.
                 Response MUST be in ${targetLang}.`
             });
             return getResponseText(response);
