@@ -18,20 +18,23 @@ const backupKey = 'AIzaSyA3h4lemaasrlqkoUeSwm24vs5Pp92EmXw';
 
 // Helper to wrap API calls with fallback
 const callAiWithFallback = async (apiCall: (client: GoogleGenAI) => Promise<any>) => {
-    try {
-        // Try primary key (or backup if primary is missing)
-        const client = new GoogleGenAI({ apiKey: apiKey || backupKey });
-        return await apiCall(client);
-    } catch (error: any) {
-        console.warn("Primary API Key failed, trying backup...", error);
-        // If primary failed, try backup explicitly
+    // 1. Try Primary Key (if exists and different from backup)
+    if (apiKey && apiKey !== backupKey) {
         try {
-            const client = new GoogleGenAI({ apiKey: backupKey });
+            const client = new GoogleGenAI({ apiKey: apiKey });
             return await apiCall(client);
-        } catch (backupError) {
-            console.error("Backup API Key also failed:", backupError);
-            throw backupError;
+        } catch (error: any) {
+            console.warn("Primary API Key failed, switching to backup...", error);
         }
+    }
+
+    // 2. Use Backup Key (as fallback or primary if no user key)
+    try {
+        const client = new GoogleGenAI({ apiKey: backupKey });
+        return await apiCall(client);
+    } catch (backupError) {
+        console.error("Backup API Key also failed:", backupError);
+        throw backupError;
     }
 };
 
