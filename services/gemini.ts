@@ -4,17 +4,23 @@ import { GoogleGenAI, Type } from "@google/genai";
 // Safe API key retrieval for Vite environment
 const getApiKey = () => {
     try {
+        // 1. Check LocalStorage (User entered key)
+        const storedKey = localStorage.getItem('nomad_user_api_key');
+        if (storedKey) return storedKey;
+
+        // 2. Check Environment Variable
         if (typeof import.meta !== 'undefined' && import.meta.env) {
             return import.meta.env.VITE_API_KEY || '';
         }
     } catch (e) {
-        console.warn("Failed to access import.meta.env", e);
+        console.warn("Failed to access API key", e);
     }
     return '';
 };
 
 const apiKey = getApiKey();
-const backupKey = 'AIzaSyA3h4lemaasrlqkoUeSwm24vs5Pp92EmXw';
+// Backup key removed to prevent leakage. User must provide key if env is missing.
+const backupKey = '';
 
 // Helper to wrap API calls with fallback
 const callAiWithFallback = async (apiCall: (client: GoogleGenAI) => Promise<any>) => {

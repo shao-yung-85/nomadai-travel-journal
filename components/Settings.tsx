@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppSettings, User } from '../types';
-import { ChevronLeftIcon, TrashIcon, LogOutIcon } from './Icons';
+import { ChevronLeftIcon, TrashIcon, LogOutIcon, KeyIcon } from './Icons';
+import { translations } from '../utils/translations';
 
 interface SettingsProps {
     onBack: () => void;
@@ -13,6 +14,23 @@ interface SettingsProps {
 
 const Settings: React.FC<SettingsProps> = ({ onBack, settings, onUpdateSettings, onResetApp, user, onLogout }) => {
     const [showResetConfirm, setShowResetConfirm] = useState(false);
+    const [apiKey, setApiKey] = useState('');
+    const [showSaved, setShowSaved] = useState(false);
+    const t = translations[settings.language] || translations['zh-TW'];
+
+    useEffect(() => {
+        const storedKey = localStorage.getItem('nomad_user_api_key');
+        if (storedKey) setApiKey(storedKey);
+    }, []);
+
+    const handleSaveApiKey = (value: string) => {
+        setApiKey(value);
+        localStorage.setItem('nomad_user_api_key', value);
+        if (value) {
+            setShowSaved(true);
+            setTimeout(() => setShowSaved(false), 2000);
+        }
+    };
 
     const colors = [
         { name: '珊瑚紅', value: '#FF6B6B' },
@@ -56,6 +74,37 @@ const Settings: React.FC<SettingsProps> = ({ onBack, settings, onUpdateSettings,
                         </div>
                     </div>
                 )}
+
+                {/* API Key Settings */}
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-sand">
+                    <h2 className="text-sm font-bold text-gray-400 uppercase mb-4 tracking-wider flex items-center gap-2">
+                        <KeyIcon className="w-4 h-4" />
+                        {t.api_settings || 'API 設定'}
+                    </h2>
+                    <div className="space-y-3">
+                        <label className="text-sm font-bold text-ink">{t.api_key_label || 'Gemini API Key'}</label>
+                        <div className="relative">
+                            <input
+                                type="password"
+                                value={apiKey}
+                                onChange={(e) => handleSaveApiKey(e.target.value)}
+                                placeholder={t.api_key_placeholder || '貼上您的 API Key'}
+                                className="w-full p-4 bg-gray-50 rounded-xl border border-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all font-mono text-sm"
+                            />
+                            {showSaved && (
+                                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-green-500 text-xs font-bold animate-fade-in">
+                                    {t.api_key_saved || '已儲存'}
+                                </span>
+                            )}
+                        </div>
+                        <p className="text-xs text-gray-400 leading-relaxed">
+                            {t.api_key_help || '您的 Key 僅會儲存在瀏覽器中，不會上傳伺服器。'}
+                            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-coral hover:underline ml-1">
+                                取得免費 Key
+                            </a>
+                        </p>
+                    </div>
+                </div>
 
                 {/* Theme Settings */}
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-sand">

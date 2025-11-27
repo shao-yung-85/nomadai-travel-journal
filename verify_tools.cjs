@@ -10,7 +10,7 @@ const puppeteer = require('puppeteer');
 
     try {
         // 1. Navigate to Home
-        await page.goto('http://localhost:5173/nomadai-travel-journal/', { waitUntil: 'networkidle0' });
+        await page.goto('http://localhost:5173/nomadai-travel-journal/', { waitUntil: 'domcontentloaded' });
         console.log("Navigated to Home");
 
         // 2. Click "Start" (Login)
@@ -157,6 +157,8 @@ const puppeteer = require('puppeteer');
 
     } catch (e) {
         console.error("Test failed:", e);
+        const fs = require('fs');
+        fs.writeFileSync('/Users/tese/.gemini/antigravity/brain/415d864a-fa4b-4921-b984-d2dda87dcdc3/error.log', e.stack || String(e));
         await page.screenshot({ path: '/Users/tese/.gemini/antigravity/brain/415d864a-fa4b-4921-b984-d2dda87dcdc3/tools_failed.png' });
     } finally {
         await browser.close();

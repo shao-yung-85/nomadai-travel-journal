@@ -96,6 +96,12 @@ export const translations = {
     tool_culture: '文化指南',
 
     // New Translations
+    api_settings: 'API 設定',
+    api_key_label: 'Gemini API Key',
+    api_key_placeholder: '貼上您的 API Key',
+    api_key_help: '您的 Key 僅會儲存在瀏覽器中，不會上傳伺服器。',
+    api_key_saved: 'API Key 已儲存',
+
     theme_color: '主題顏色',
     payer_me: '我付',
     payer_other: '他付',
@@ -222,6 +228,11 @@ export const translations = {
 
     // Settings
     settings_title: 'Settings',
+    api_settings: 'API Settings',
+    api_key_label: 'Gemini API Key',
+    api_key_placeholder: 'Paste your API Key here',
+    api_key_help: 'Your key is stored locally in your browser.',
+    api_key_saved: 'API Key Saved',
     general: 'General',
     language: 'Language',
     appearance: 'Appearance',
