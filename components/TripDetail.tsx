@@ -1,8 +1,8 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Trip, Flight, ExpenseItem, AppSettings, ItineraryItem } from '../types';
-import { getAttractionGuide, optimizeRoute } from '../services/gemini';
-import { ChevronLeftIcon, MapIcon, WalletIcon, TicketIcon, PlaneIcon, TrashIcon, RobotIcon, ListIcon, PlusIcon, SpeakerWaveIcon, StopIcon, CalendarIcon, MapPinIcon, ClockIcon, PencilIcon, ShoppingBagIcon, SparklesIcon, ShareIcon, TrainIcon, BusIcon, CarIcon, WalkIcon } from './Icons';
+import { getAttractionGuide, optimizeRoute, getClothingAdvice } from '../services/gemini';
+import { ChevronLeftIcon, MapIcon, WalletIcon, TicketIcon, PlaneIcon, TrashIcon, RobotIcon, ListIcon, PlusIcon, SpeakerWaveIcon, StopIcon, CalendarIcon, MapPinIcon, ClockIcon, PencilIcon, ShoppingBagIcon, SparklesIcon, ShareIcon, TrainIcon, BusIcon, CarIcon, WalkIcon, LightBulbIcon } from './Icons';
 import ShoppingList from './ShoppingList';
 import { translations } from '../utils/translations';
 
@@ -80,6 +80,10 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
     const [isEditingCover, setIsEditingCover] = useState(false);
     const [newCoverUrl, setNewCoverUrl] = useState('');
     const [isGeneratingCover, setIsGeneratingCover] = useState(false);
+
+    // Clothing Advice State
+    const [clothingAdvice, setClothingAdvice] = useState<string | null>(null);
+    const [isLoadingAdvice, setIsLoadingAdvice] = useState(false);
 
     // Share Function
     const handleShare = async () => {
@@ -494,11 +498,34 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
         setQuickExpenseItems([...quickExpenseItems, { name: '', price: '' }]);
     };
 
+    const handleGetClothingAdvice = async () => {
+        if (!trip.weather || trip.weather.length === 0) return;
+        setIsLoadingAdvice(true);
+        try {
+            const advice = await getClothingAdvice(trip.weather, trip.title, settings.language);
+            setClothingAdvice(advice);
+        } catch (e) {
+            setClothingAdvice("無法取得建議");
+        } finally {
+            setIsLoadingAdvice(false);
+        }
+    };
+
     const renderWeather = () => {
         if (!trip.weather || trip.weather?.length === 0) return null;
         return (
             <div className="mb-6">
-                <h4 className="text-xs font-bold text-gray-400 mb-3 uppercase tracking-wider ml-1">{t.weather}</h4>
+                <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">{t.weather}</h4>
+                    <button
+                        onClick={handleGetClothingAdvice}
+                        disabled={isLoadingAdvice}
+                        className="text-xs font-bold text-coral flex items-center gap-1 hover:bg-coral/10 px-2 py-1 rounded-lg transition-colors"
+                    >
+                        <LightBulbIcon className="w-3 h-3" />
+                        {isLoadingAdvice ? "分析中..." : "穿搭建議"}
+                    </button>
+                </div>
                 <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
                     {trip.weather?.map((w, idx) => (
                         <div key={idx} className="flex-shrink-0 flex flex-col items-center justify-center gap-1 bg-white border border-sand p-3 rounded-2xl min-w-[70px] shadow-sm">
@@ -508,6 +535,28 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
                         </div>
                     ))}
                 </div>
+
+                {clothingAdvice && (
+                    <div className="mt-4 bg-white p-5 rounded-3xl shadow-card border border-sand animate-fade-in relative">
+                        <button
+                            onClick={() => setClothingAdvice(null)}
+                            className="absolute top-3 right-3 text-gray-300 hover:text-gray-500"
+                        >
+                            <TrashIcon className="w-4 h-4" />
+                        </button>
+                        <div className="flex items-start gap-3">
+                            <div className="bg-orange-100 p-2 rounded-full text-orange-500 shrink-0">
+                                <LightBulbIcon className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h5 className="font-bold text-ink mb-2">AI 穿搭助手</h5>
+                                <div className="prose prose-sm text-gray-600 leading-relaxed whitespace-pre-line">
+                                    {clothingAdvice}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         )
     }

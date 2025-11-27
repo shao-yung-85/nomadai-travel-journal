@@ -338,3 +338,32 @@ export const getTranslation = async (text: string, targetLang: string, userLang:
         }
     });
 };
+
+export const getClothingAdvice = async (weather: any[], location: string, language: string = 'zh-TW') => {
+    const targetLang = langMap[language] || langMap['zh-TW'];
+    return callAiWithFallback(async (ai) => {
+        try {
+            const weatherSummary = weather.map(w => `${w.date}: ${w.condition}, ${w.tempLow}°C - ${w.tempHigh}°C`).join('\n');
+            const response = await ai.models.generateContent({
+                model: MODEL_NAME,
+                contents: `I am travelling to ${location}. Here is the weather forecast:
+                ${weatherSummary}
+                
+                Based on this weather, suggest what clothes to pack and wear.
+                Give advice for:
+                1. Tops
+                2. Bottoms
+                3. Outerwear
+                4. Shoes
+                5. Accessories (e.g. umbrella, hat)
+                
+                Format as a concise Markdown list.
+                Response MUST be in ${targetLang}.`
+            });
+            return getResponseText(response);
+        } catch (error) {
+            console.error("Clothing Advice Error:", error);
+            return "暫時無法取得穿搭建議。";
+        }
+    });
+};

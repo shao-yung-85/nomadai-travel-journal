@@ -51,6 +51,7 @@ export interface ExpenseItem {
   splits?: { person: string; amount: number }[]; // Custom split amounts
   originalCurrency?: string; // e.g. 'JPY', 'KRW'
   exchangeRate?: number; // Rate to TWD
+  note?: string;
 }
 
 export interface Budget {
