@@ -17,8 +17,10 @@ import {
     SparklesIcon
 } from './Icons';
 import { getVisaRequirements, getCulturalEtiquette, getEmergencyInfo, getCreditCardAdvice, getTranslation } from '../services/gemini';
+import { convertToTWD, formatCurrency } from '../services/currency';
 import { Expense, TimeCapsule, Trip, AppSettings } from '../types';
 import { translations } from '../utils/translations';
+import VoiceTranslator from './VoiceTranslator';
 
 interface ToolsProps {
     onBack: () => void;
@@ -27,7 +29,7 @@ interface ToolsProps {
     onMagicEditor: () => void;
 }
 
-type ToolView = 'MENU' | 'EXPENSE' | 'VISA' | 'CULTURE' | 'RESTROOM' | 'SCRATCH_MAP' | 'TIME_CAPSULE' | 'EMERGENCY' | 'CARD_ADVICE' | 'TRANSLATION';
+type ToolView = 'MENU' | 'EXPENSE' | 'VISA' | 'CULTURE' | 'RESTROOM' | 'SCRATCH_MAP' | 'TIME_CAPSULE' | 'EMERGENCY' | 'CARD_ADVICE' | 'TRANSLATION' | 'CURRENCY';
 
 // --- Sub-Components ---
 
@@ -322,7 +324,7 @@ const ScratchMap = ({ onBack, trips, t }: { onBack: () => void, trips?: Trip[], 
                     </div>
 
                     <div className="flex flex-wrap gap-3">
-                        {Array.from(visited).map(country => (
+                        {Array.from(visited).map((country: string) => (
                             <div key={country} className="group relative px-4 py-2 bg-coral/10 text-coral rounded-xl text-sm font-bold border border-coral/20 flex items-center gap-2">
                                 {country} 📍
                                 <button onClick={() => handleRemove(country)} className="opacity-0 group-hover:opacity-100 absolute -top-2 -right-2 bg-white text-coral rounded-full p-0.5 transition-opacity">
@@ -337,8 +339,85 @@ const ScratchMap = ({ onBack, trips, t }: { onBack: () => void, trips?: Trip[], 
     )
 }
 
+const CurrencyConverter = ({ onBack, t }: { onBack: () => void, t: any }) => {
+    const [amount, setAmount] = useState('');
+    const [currency, setCurrency] = useState('USD');
+    const [result, setResult] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
 
-import VoiceTranslator from './VoiceTranslator';
+    const currencies = [
+        { code: 'USD', name: '美金 (USD)' },
+        { code: 'JPY', name: '日圓 (JPY)' },
+        { code: 'KRW', name: '韓元 (KRW)' },
+        { code: 'EUR', name: '歐元 (EUR)' },
+        { code: 'CNY', name: '人民幣 (CNY)' },
+        { code: 'THB', name: '泰銖 (THB)' },
+        { code: 'VND', name: '越南盾 (VND)' }
+    ];
+
+    const handleConvert = async () => {
+        if (!amount) return;
+        setLoading(true);
+        try {
+            const val = parseFloat(amount);
+            const twd = await convertToTWD(val, currency);
+            setResult(formatCurrency(twd));
+        } catch (e) {
+            setResult("錯誤");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="flex flex-col h-full bg-paper">
+            <div className="bg-paper p-4 flex items-center gap-2 sticky top-0 z-10">
+                <button onClick={onBack}><ChevronLeftIcon className="w-6 h-6 text-gray-500" /></button>
+                <h3 className="font-bold text-lg text-ink">匯率計算</h3>
+            </div>
+            <div className="p-5 flex-1 overflow-y-auto pb-32">
+                <div className="bg-white p-6 rounded-3xl shadow-card border border-sand space-y-5">
+                    <div>
+                        <label className="text-xs font-bold text-gray-400 uppercase">金額</label>
+                        <input
+                            type="number"
+                            value={amount}
+                            onChange={e => setAmount(e.target.value)}
+                            placeholder="輸入金額..."
+                            className="w-full mt-2 p-4 bg-paper rounded-2xl text-xl font-bold text-ink border-none outline-none"
+                        />
+                    </div>
+                    <div>
+                        <label className="text-xs font-bold text-gray-400 uppercase">幣別</label>
+                        <select
+                            value={currency}
+                            onChange={e => setCurrency(e.target.value)}
+                            className="w-full mt-2 p-4 bg-paper rounded-2xl text-ink font-medium border-none outline-none"
+                        >
+                            {currencies.map(c => (
+                                <option key={c.code} value={c.code}>{c.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <button
+                        onClick={handleConvert}
+                        disabled={loading || !amount}
+                        className="w-full bg-green-500 text-white py-4 rounded-2xl font-bold shadow-lg shadow-green-500/30 disabled:opacity-50 active:scale-95 transition-all"
+                    >
+                        {loading ? '計算中...' : '轉換為台幣 (TWD)'}
+                    </button>
+                </div>
+
+                {result && (
+                    <div className="mt-6 bg-white p-6 rounded-3xl shadow-card border border-sand text-center animate-fade-in">
+                        <p className="text-gray-400 text-sm font-medium mb-1">約等於</p>
+                        <p className="text-3xl font-black text-ink">{result}</p>
+                    </div>
+                )}
+            </div>
+        </div>
+    )
+}
 
 const TranslationTool = ({ onBack, t, language }: { onBack: () => void, t: any, language: string }) => {
     return (
@@ -370,9 +449,11 @@ const Tools: React.FC<ToolsProps> = ({ onBack, trips, settings, onMagicEditor })
     if (activeTool === 'TIME_CAPSULE') return <div onClick={() => setActiveTool('MENU')}>Coming Soon</div>;
 
     if (activeTool === 'TRANSLATION') return <TranslationTool onBack={() => setActiveTool('MENU')} t={t} language={settings.language} />;
+    if (activeTool === 'CURRENCY') return <CurrencyConverter onBack={() => setActiveTool('MENU')} t={t} />;
 
     const tools = [
         { id: 'MAGIC_EDITOR', name: '魔法修圖室', icon: SparklesIcon, color: 'text-pink-500', bg: 'bg-pink-50', desc: 'AI 智能修圖與濾鏡', action: onMagicEditor },
+        { id: 'CURRENCY', name: '匯率計算', icon: CurrencyDollarIcon, color: 'text-green-500', bg: 'bg-green-50', desc: '即時匯率換算' },
         { id: 'TRANSLATION', name: t.tool_translation, icon: TranslateIcon, color: 'text-purple-500', bg: 'bg-purple-50', desc: t.desc_translator },
         { id: 'EMERGENCY', name: t.tool_emergency, icon: FirstAidIcon, color: 'text-red-500', bg: 'bg-red-50', desc: t.desc_emergency },
         { id: 'CARD_ADVICE', name: t.tool_card, icon: CreditCardIcon, color: 'text-indigo-500', bg: 'bg-indigo-50', desc: t.desc_card },

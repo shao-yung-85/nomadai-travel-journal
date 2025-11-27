@@ -118,9 +118,9 @@ const VoiceTranslator: React.FC<VoiceTranslatorProps> = ({
             {/* Translation Display */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 {/* Source Text */}
-                <div className="bg-white p-4 rounded-2xl border border-sand min-h-[120px]">
+                <div className="bg-white p-4 rounded-2xl border border-sand min-h-[120px] flex flex-col">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-bold text-gray-400 uppercase">原文</span>
+                        <span className="text-xs font-bold text-gray-400 uppercase">原文 (可輸入)</span>
                         {sourceText && (
                             <button
                                 onClick={() => handleSpeak(sourceText, sourceLang)}
@@ -130,7 +130,12 @@ const VoiceTranslator: React.FC<VoiceTranslatorProps> = ({
                             </button>
                         )}
                     </div>
-                    <p className="text-ink">{sourceText || '按下麥克風開始說話...'}</p>
+                    <textarea
+                        value={sourceText}
+                        onChange={(e) => setSourceText(e.target.value)}
+                        placeholder="按下麥克風說話，或直接在此輸入文字..."
+                        className="w-full flex-1 resize-none outline-none text-ink bg-transparent placeholder:text-gray-300"
+                    />
                 </div>
 
                 {/* Translated Text */}
@@ -146,7 +151,7 @@ const VoiceTranslator: React.FC<VoiceTranslatorProps> = ({
                             </button>
                         )}
                     </div>
-                    <p className="text-ink">{translatedText || '翻譯結果將顯示在這裡...'}</p>
+                    <p className="text-ink whitespace-pre-wrap">{translatedText || '翻譯結果將顯示在這裡...'}</p>
                 </div>
             </div>
 
