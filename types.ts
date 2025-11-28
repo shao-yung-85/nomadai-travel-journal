@@ -103,6 +103,7 @@ export interface Trip {
   weather?: WeatherForecast[];
   notes?: string;
   isGenerating?: boolean; // New flag for loading state in list
+  createdAt?: any;
 }
 
 export interface Expense {

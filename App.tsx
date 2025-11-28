@@ -128,10 +128,10 @@ const App: React.FC = () => {
 
         // Listen to Trips
         console.log("Listening to trips for user:", firebaseUser.uid);
+        // Removed orderBy to avoid index requirement. Sorting client-side instead.
         const q = query(
           collection(db, "itineraries"),
-          where("uid", "==", firebaseUser.uid),
-          orderBy("createdAt", "desc")
+          where("uid", "==", firebaseUser.uid)
         );
 
         const unsubscribeTrips = onSnapshot(q, (snapshot) => {
@@ -145,8 +145,15 @@ const App: React.FC = () => {
               ...data
             } as any);
           });
+          // Client-side sort
+          loadedTrips.sort((a, b) => {
+            const timeA = a.createdAt ? (typeof a.createdAt === 'string' ? new Date(a.createdAt).getTime() : (a.createdAt as any).toMillis ? (a.createdAt as any).toMillis() : 0) : 0;
+            const timeB = b.createdAt ? (typeof b.createdAt === 'string' ? new Date(b.createdAt).getTime() : (b.createdAt as any).toMillis ? (b.createdAt as any).toMillis() : 0) : 0;
+            return timeB - timeA; // Descending
+          });
           setTrips(loadedTrips);
           setIsDataLoaded(true);
+          setLastError(null); // Clear error on success
         }, (error) => {
           console.error("Error fetching trips:", error);
           setLastError(`Fetch Trips Error: ${error.message}`);
