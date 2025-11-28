@@ -52,7 +52,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onRegister }) => {
                     <div className="w-16 h-16 bg-coral rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-coral/30">
                         <SparklesIcon className="w-8 h-8 text-white" />
                     </div>
-                    <h1 className="text-2xl font-bold text-ink">NomadAI 旅遊手札</h1>
+                    <h1 className="text-2xl font-bold text-ink">Ques-trip</h1>
                     <p className="text-gray-400 text-sm mt-2">
                         {isLogin ? '歡迎回來，請登入您的帳號' : '建立您的專屬旅遊帳號'}
                     </p>

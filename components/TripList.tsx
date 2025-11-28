@@ -29,10 +29,8 @@ const TripList: React.FC<TripListProps> = ({ trips, onSelectTrip, onAddTrip, onO
     <div className="flex flex-col h-full bg-paper pt-safe">
       <div className="px-6 py-5 sticky top-0 z-10 flex justify-between items-center bg-paper/90 backdrop-blur-sm">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-coral rounded-xl shadow-soft flex items-center justify-center text-white">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" className="w-6 h-6 fill-current">
-              <path d="M444.6 15.6c11.8-6.6 26.5-3.3 34.6 7.7 8.1 11 6.6 26.4-3.6 35.7L190.5 352.1l-65.7-27.1L444.6 15.6zM130.3 308.1l231.5-231.5L50.7 201.8l79.6 106.3zM164.2 376.8l23.5 86.8c2.9 10.7 15.7 15.1 24.5 8.4l62.6-47.8-86.8-49.9-23.8 2.5zM461.3 54.9L221.7 363.6l176.4 72.8c12.3 5.1 26.1-2.2 28.5-15.3l52-282.6c2.3-12.7-7.4-24.2-19.9-20.9z" />
-            </svg>
+          <div className="w-14 h-14 flex items-center justify-center overflow-hidden">
+            <img src="/nomadai-travel-journal/nomadai-travel-journal_app_icon.png" alt="Icon" className="w-full h-full object-cover" />
           </div>
           <h1 className="text-3xl font-extrabold text-ink tracking-tight">{t.my_trips}</h1>
         </div>

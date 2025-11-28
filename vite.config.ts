@@ -17,17 +17,17 @@ export default defineConfig(({ mode }) => {
         registerType: 'autoUpdate',
         includeAssets: ['*.png', '*.jpg', '*.svg'],
         manifest: {
-          name: 'NomadAI 旅遊手札',
-          short_name: 'NomadAI',
+          name: 'Ques-trip',
+          short_name: 'Ques-trip',
           description: '智能旅遊規劃助手',
           theme_color: '#D4A574',
           background_color: '#FAF8F5',
           display: 'standalone',
           icons: [
             {
-              src: '/nomadai-travel-journal/vite.svg',
-              sizes: '192x192',
-              type: 'image/svg+xml'
+              src: '/nomadai-travel-journal/nomadai-travel-journal_app_icon.png',
+              sizes: '1024x1024',
+              type: 'image/png'
             }
           ]
         },

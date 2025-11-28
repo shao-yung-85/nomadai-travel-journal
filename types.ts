@@ -154,3 +154,17 @@ export interface AppSettings {
   minimalistMode: boolean;
   themeColor?: string;
 }
+
+export interface AIChatMessage {
+  role: 'user' | 'ai';
+  content: string;
+  timestamp: number;
+}
+
+export interface AIChatSession {
+  id: string;
+  title: string;
+  messages: AIChatMessage[];
+  createdAt: number;
+  updatedAt: number;
+}

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Trip, ViewState, AppSettings, User, Memory } from './types';
+import { Trip, ViewState, AppSettings, User, Memory, AIChatSession, AIChatMessage } from './types';
 import TripList from './components/TripList';
 import AddTripForm from './components/AddTripForm';
 import MagicEditor from './components/MagicEditor';
@@ -89,7 +89,8 @@ const STORAGE_KEYS = {
   // Dynamic keys based on user ID
   getTripsKey: (userId: string) => `nomad_app_trips_${userId}`,
   getSettingsKey: (userId: string) => `nomad_app_settings_${userId}`,
-  getMemoriesKey: (userId: string) => `nomad_app_memories_${userId}`
+  getMemoriesKey: (userId: string) => `nomad_app_memories_${userId}`,
+  getChatSessionsKey: (userId: string) => `nomad_app_chat_sessions_${userId}`
 };
 
 const App: React.FC = () => {
@@ -105,6 +106,8 @@ const App: React.FC = () => {
   // Load initial state from LocalStorage based on current user
   const [trips, setTrips] = useState<Trip[]>([]);
   const [memories, setMemories] = useState<Memory[]>([]);
+  const [chatSessions, setChatSessions] = useState<AIChatSession[]>([]);
+  const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [settings, setSettings] = useState<AppSettings>({ language: 'zh-TW', minimalistMode: false });
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
@@ -115,6 +118,8 @@ const App: React.FC = () => {
     if (!user) {
       setTrips([]);
       setMemories([]);
+      setChatSessions([]);
+      setCurrentChatId(null);
       return;
     }
 
@@ -155,6 +160,15 @@ const App: React.FC = () => {
         setSettings({ language: 'zh-TW', minimalistMode: false });
       }
 
+      const chatSessionsKey = STORAGE_KEYS.getChatSessionsKey(user.id);
+      const savedSessions = localStorage.getItem(chatSessionsKey);
+      if (savedSessions) {
+        const parsed = JSON.parse(savedSessions);
+        setChatSessions(Array.isArray(parsed) ? parsed : []);
+      } else {
+        setChatSessions([]);
+      }
+
       // Mark data as loaded after setting state
       setIsDataLoaded(true);
 
@@ -162,6 +176,7 @@ const App: React.FC = () => {
       console.error("Failed to load user data", e);
       setTrips([]);
       setMemories([]);
+      setChatSessions([]);
       setIsDataLoaded(true); // Even on error, we mark as loaded to allow future saves
     }
   }, [user]);
@@ -169,7 +184,7 @@ const App: React.FC = () => {
   const [viewState, setViewState] = useState<ViewState>(ViewState.HOME);
   const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
   const [backgroundTasks, setBackgroundTasks] = useState<string[]>([]);
-  const [aiMessages, setAiMessages] = useState<{ role: 'user' | 'ai', content: string }[]>([]);
+  // const [aiMessages, setAiMessages] = useState<{ role: 'user' | 'ai', content: string }[]>([]); // Removed, managed by chatSessions
 
   // Persistence Effects
   useEffect(() => {
@@ -183,6 +198,12 @@ const App: React.FC = () => {
       localStorage.setItem(STORAGE_KEYS.getMemoriesKey(user.id), JSON.stringify(memories));
     }
   }, [memories, user, isDataLoaded]);
+
+  useEffect(() => {
+    if (user && isDataLoaded) {
+      localStorage.setItem(STORAGE_KEYS.getChatSessionsKey(user.id), JSON.stringify(chatSessions));
+    }
+  }, [chatSessions, user, isDataLoaded]);
 
   useEffect(() => {
     if (user && isDataLoaded) {
@@ -330,8 +351,10 @@ const App: React.FC = () => {
     if (!user) return;
     setTrips([]);
     setMemories([]);
+    setChatSessions([]);
     localStorage.removeItem(STORAGE_KEYS.getTripsKey(user.id));
     localStorage.removeItem(STORAGE_KEYS.getMemoriesKey(user.id));
+    localStorage.removeItem(STORAGE_KEYS.getChatSessionsKey(user.id));
     localStorage.removeItem(STORAGE_KEYS.getSettingsKey(user.id));
     setSelectedTrip(null);
     setViewState(ViewState.HOME);
@@ -372,6 +395,7 @@ const App: React.FC = () => {
       localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(newUser));
       setTrips([]); // New user starts with empty trips
       setMemories([]);
+      setChatSessions([]);
     } catch (e) {
       console.error("Registration failed", e);
       alert('註冊失敗');
@@ -383,6 +407,8 @@ const App: React.FC = () => {
     localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
     setTrips([]);
     setMemories([]);
+    setChatSessions([]);
+    setCurrentChatId(null);
     setViewState(ViewState.HOME);
     setSelectedTrip(null);
   };
@@ -393,6 +419,53 @@ const App: React.FC = () => {
 
   const handleDeleteMemory = (id: string) => {
     setMemories(memories.filter(m => m.id !== id));
+  };
+
+  const handleCreateChatSession = () => {
+    const newSession: AIChatSession = {
+      id: Date.now().toString(),
+      title: settings.language === 'zh-TW' ? '新對話' : 'New Chat',
+      messages: [],
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    };
+    setChatSessions(prev => [newSession, ...prev]);
+    setCurrentChatId(newSession.id);
+    return newSession.id;
+  };
+
+  const handleUpdateChatSession = (sessionId: string, messages: AIChatMessage[]) => {
+    setChatSessions(prev => prev.map(session => {
+      if (session.id === sessionId) {
+        // Update title if it's the first user message and title is default
+        let title = session.title;
+        if (session.messages.length === 0 && messages.length > 0) {
+          const firstUserMsg = messages.find(m => m.role === 'user');
+          if (firstUserMsg) {
+            title = firstUserMsg.content.slice(0, 20) + (firstUserMsg.content.length > 20 ? '...' : '');
+          }
+        }
+
+        return {
+          ...session,
+          messages,
+          title,
+          updatedAt: Date.now()
+        };
+      }
+      return session;
+    }));
+  };
+
+  const handleDeleteChatSession = (sessionId: string) => {
+    setChatSessions(prev => prev.filter(s => s.id !== sessionId));
+    if (currentChatId === sessionId) {
+      setCurrentChatId(null);
+    }
+  };
+
+  const handleSelectChatSession = (sessionId: string) => {
+    setCurrentChatId(sessionId);
   };
 
   if (!user) {
@@ -439,8 +512,12 @@ const App: React.FC = () => {
             onStartGeneration={handleStartBackgroundGeneration}
             onCancel={() => setViewState(ViewState.HOME)}
             settings={settings}
-            messages={aiMessages}
-            setMessages={setAiMessages}
+            sessions={chatSessions}
+            currentSessionId={currentChatId}
+            onCreateSession={handleCreateChatSession}
+            onUpdateSession={handleUpdateChatSession}
+            onDeleteSession={handleDeleteChatSession}
+            onSelectSession={handleSelectChatSession}
           />
         );
       case ViewState.TOOLS:
