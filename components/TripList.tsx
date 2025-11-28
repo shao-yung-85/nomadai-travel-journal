@@ -59,9 +59,8 @@ const TripList: React.FC<TripListProps> = ({ trips, onSelectTrip, onAddTrip, onO
                 <div className="aspect-[2/1] w-full relative overflow-hidden rounded-2xl bg-gray-100 mb-4 shadow-inner group">
                   {trip.coverImage && !failedImages.has(trip.id) ? (
                     <>
-                      {/* Loading Skeleton */}
-                      <div className={`absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center transition-opacity duration-500 ${loadedImages.has(trip.id) ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-                        <MapPinIcon className="w-8 h-8 text-gray-300 animate-bounce" />
+                      {/* Loading Skeleton Removed to prevent flickering */}
+                      <div className={`absolute inset-0 bg-gray-200 transition-opacity duration-500 ${loadedImages.has(trip.id) ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                       </div>
                       <img
                         src={trip.coverImage}

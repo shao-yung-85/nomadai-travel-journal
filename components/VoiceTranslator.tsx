@@ -82,7 +82,7 @@ const VoiceTranslator: React.FC<VoiceTranslatorProps> = ({
     };
 
     return (
-        <div className="max-w-4xl mx-auto p-6 bg-paper rounded-3xl shadow-float">
+        <div className="max-w-4xl mx-auto p-6 pt-12 bg-paper rounded-3xl shadow-float">
             <h2 className="text-2xl font-bold text-ink mb-6 text-center">🎤 語音即時翻譯</h2>
 
             {/* Language Selection */}

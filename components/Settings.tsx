@@ -89,12 +89,14 @@ const Settings: React.FC<SettingsProps> = ({ onBack, settings, onUpdateSettings,
                                 value={apiKey}
                                 onChange={(e) => handleSaveApiKey(e.target.value)}
                                 placeholder={t.api_key_placeholder || '貼上您的 API Key'}
-                                className="w-full p-4 bg-gray-50 rounded-xl border border-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all font-mono text-sm"
+                                className="w-full p-4 pr-20 bg-gray-50 rounded-xl border border-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all font-mono text-sm"
                             />
                             {showSaved && (
-                                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-green-500 text-xs font-bold animate-fade-in">
-                                    {t.api_key_saved || '已儲存'}
-                                </span>
+                                <div className="text-right mt-1">
+                                    <span className="text-green-500 text-xs font-bold animate-fade-in">
+                                        {t.api_key_saved || '已儲存'}
+                                    </span>
+                                </div>
                             )}
                         </div>
                         <p className="text-xs text-gray-400 leading-relaxed">

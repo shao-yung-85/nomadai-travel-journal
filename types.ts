@@ -164,6 +164,7 @@ export interface AIChatMessage {
 export interface AIChatSession {
   id: string;
   title: string;
+  tripId?: string;
   messages: AIChatMessage[];
   createdAt: number;
   updatedAt: number;

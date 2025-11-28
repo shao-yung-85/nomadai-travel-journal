@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Trip, ViewState, AppSettings, User, Memory, AIChatSession, AIChatMessage } from './types';
 import TripList from './components/TripList';
 import AddTripForm from './components/AddTripForm';
@@ -11,7 +10,11 @@ import Settings from './components/Settings';
 import Auth from './components/Auth';
 import TripMemory from './components/TripMemory';
 import { HomeIcon, SparklesIcon, SquaresPlusIcon, ChatBubbleIcon, CameraIcon } from './components/Icons';
-import { generateTripPlan, generateCoverImage } from './services/gemini';
+import { generateTripPlan, generateCoverImage, updateTripPlan } from './services/gemini';
+import ReloadPrompt from './components/ReloadPrompt';
+import { auth, db } from './services/firebase';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { collection, query, where, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, orderBy } from 'firebase/firestore';
 
 // Mock initial data - used only if local storage is empty
 const INITIAL_TRIPS: Trip[] = [
@@ -87,239 +90,176 @@ const STORAGE_KEYS = {
   USERS: 'nomad_app_users_v1',
   CURRENT_USER: 'nomad_app_current_user_v1',
   // Dynamic keys based on user ID
-  getTripsKey: (userId: string) => `nomad_app_trips_${userId}`,
-  getSettingsKey: (userId: string) => `nomad_app_settings_${userId}`,
-  getMemoriesKey: (userId: string) => `nomad_app_memories_${userId}`,
-  getChatSessionsKey: (userId: string) => `nomad_app_chat_sessions_${userId}`
+  getTripsKey: (userId: string) => `nomad_app_trips_${userId} `,
+  getSettingsKey: (userId: string) => `nomad_app_settings_${userId} `,
+  getMemoriesKey: (userId: string) => `nomad_app_memories_${userId} `,
+  getChatSessionsKey: (userId: string) => `nomad_app_chat_sessions_${userId} `
 };
 
 const App: React.FC = () => {
-  const [user, setUser] = useState<User | null>(() => {
-    try {
-      const savedUser = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
-      return savedUser ? JSON.parse(savedUser) : null;
-    } catch (e) {
-      return null;
-    }
-  });
-
-  // Load initial state from LocalStorage based on current user
+  console.log("App Component Rendering...");
+  const [user, setUser] = useState<User | null>(null);
   const [trips, setTrips] = useState<Trip[]>([]);
   const [memories, setMemories] = useState<Memory[]>([]);
   const [chatSessions, setChatSessions] = useState<AIChatSession[]>([]);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [settings, setSettings] = useState<AppSettings>({ language: 'zh-TW', minimalistMode: false });
   const [isDataLoaded, setIsDataLoaded] = useState(false);
-
-  // Load data when user changes
-  useEffect(() => {
-    setIsDataLoaded(false); // Reset loading state
-
-    if (!user) {
-      setTrips([]);
-      setMemories([]);
-      setChatSessions([]);
-      setCurrentChatId(null);
-      return;
-    }
-
-    try {
-      const tripsKey = STORAGE_KEYS.getTripsKey(user.id);
-      const savedTrips = localStorage.getItem(tripsKey);
-      if (savedTrips) {
-        const parsed = JSON.parse(savedTrips);
-        if (Array.isArray(parsed)) {
-          setTrips(parsed.map(trip => ({
-            ...trip,
-            itinerary: Array.isArray(trip.itinerary) ? trip.itinerary : [],
-            bookings: Array.isArray(trip.bookings) ? trip.bookings : [],
-            weather: Array.isArray(trip.weather) ? trip.weather : [],
-            budget: trip.budget || { total: 0, currency: 'TWD', expenses: [] }
-          })));
-        } else {
-          setTrips([]);
-        }
-      } else {
-        setTrips([]);
-      }
-
-      const memoriesKey = STORAGE_KEYS.getMemoriesKey(user.id);
-      const savedMemories = localStorage.getItem(memoriesKey);
-      if (savedMemories) {
-        const parsed = JSON.parse(savedMemories);
-        setMemories(Array.isArray(parsed) ? parsed : []);
-      } else {
-        setMemories([]);
-      }
-
-      const settingsKey = STORAGE_KEYS.getSettingsKey(user.id);
-      const savedSettings = localStorage.getItem(settingsKey);
-      if (savedSettings) {
-        setSettings(JSON.parse(savedSettings));
-      } else {
-        setSettings({ language: 'zh-TW', minimalistMode: false });
-      }
-
-      const chatSessionsKey = STORAGE_KEYS.getChatSessionsKey(user.id);
-      const savedSessions = localStorage.getItem(chatSessionsKey);
-      if (savedSessions) {
-        const parsed = JSON.parse(savedSessions);
-        setChatSessions(Array.isArray(parsed) ? parsed : []);
-      } else {
-        setChatSessions([]);
-      }
-
-      // Mark data as loaded after setting state
-      setIsDataLoaded(true);
-
-    } catch (e) {
-      console.error("Failed to load user data", e);
-      setTrips([]);
-      setMemories([]);
-      setChatSessions([]);
-      setIsDataLoaded(true); // Even on error, we mark as loaded to allow future saves
-    }
-  }, [user]);
+  const [lastError, setLastError] = useState<string | null>(null); // New error state
 
   const [viewState, setViewState] = useState<ViewState>(ViewState.HOME);
   const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
   const [backgroundTasks, setBackgroundTasks] = useState<string[]>([]);
-  // const [aiMessages, setAiMessages] = useState<{ role: 'user' | 'ai', content: string }[]>([]); // Removed, managed by chatSessions
 
-  // Persistence Effects
+  // Auth & Data Listener
   useEffect(() => {
-    if (user && isDataLoaded) {
-      try {
-        localStorage.setItem(STORAGE_KEYS.getTripsKey(user.id), JSON.stringify(trips));
-      } catch (e) {
-        console.error('Failed to save trip update', e);
-        alert('儲存失敗：空間不足。請嘗試刪除一些舊的行程或照片。');
+    console.log("Setting up Auth Listener...");
+    const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
+      console.log("Auth State Changed:", firebaseUser ? "User Logged In" : "User Logged Out", firebaseUser?.uid);
+      if (firebaseUser) {
+        // User is signed in
+        const newUser: User = {
+          id: firebaseUser.uid,
+          username: firebaseUser.displayName || 'Traveler',
+          password: '', // Not needed
+          createdAt: firebaseUser.metadata.creationTime || new Date().toISOString()
+        };
+        setUser(newUser);
+
+        // Listen to Trips
+        console.log("Listening to trips for user:", firebaseUser.uid);
+        const q = query(
+          collection(db, "itineraries"),
+          where("uid", "==", firebaseUser.uid),
+          orderBy("createdAt", "desc")
+        );
+
+        const unsubscribeTrips = onSnapshot(q, (snapshot) => {
+          const loadedTrips: Trip[] = [];
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            // Map Firestore data to Trip type
+            // Assuming data structure matches Trip type, but we need to handle dates/timestamps if needed
+            loadedTrips.push({
+              id: doc.id,
+              ...data
+            } as any);
+          });
+          setTrips(loadedTrips);
+          setIsDataLoaded(true);
+        }, (error) => {
+          console.error("Error fetching trips:", error);
+          setLastError(`Fetch Trips Error: ${error.message}`);
+          setIsDataLoaded(true);
+        });
+
+        return () => unsubscribeTrips();
+      } else {
+        // User is signed out
+        setUser(null);
+        setTrips([]);
+        setIsDataLoaded(true);
       }
-    }
-  }, [trips, user, isDataLoaded]);
+    });
 
-  useEffect(() => {
-    if (user && isDataLoaded) {
-      try {
-        localStorage.setItem(STORAGE_KEYS.getMemoriesKey(user.id), JSON.stringify(memories));
-      } catch (e) {
-        console.error('Failed to save memories', e);
-        alert('儲存回憶失敗：空間不足。請嘗試刪除一些舊的照片。');
-      }
-    }
-  }, [memories, user, isDataLoaded]);
+    return () => unsubscribeAuth();
+  }, []);
 
-  useEffect(() => {
-    if (user && isDataLoaded) {
-      try {
-        localStorage.setItem(STORAGE_KEYS.getChatSessionsKey(user.id), JSON.stringify(chatSessions));
-      } catch (e) {
-        console.error('Failed to save chat sessions', e);
-        // Chat history is less critical, maybe just console error
-      }
-    }
-  }, [chatSessions, user, isDataLoaded]);
+  // ... (keep other effects for settings/memories if they are still local, or move them later)
+  // For now, let's disable the local storage sync for trips to avoid conflicts
 
-  useEffect(() => {
-    if (user && isDataLoaded) {
-      try {
-        localStorage.setItem(STORAGE_KEYS.getSettingsKey(user.id), JSON.stringify(settings));
-      } catch (e) {
-        console.error('Failed to save settings', e);
-        // Silent fail for settings is acceptable, or show toast
-      }
-    }
-    if (settings.themeColor) {
-      document.documentElement.style.setProperty('--color-coral', settings.themeColor);
-    } else {
-      document.documentElement.style.removeProperty('--color-coral');
-    }
-
-    // Hide loading screen when app is mounted
-    const loader = document.getElementById('loading-screen');
-    if (loader) {
-      loader.style.opacity = '0';
-      setTimeout(() => loader.remove(), 500);
-    }
-  }, [settings]);
-
-  // Migration Effect: Fix broken Unsplash URLs
-  useEffect(() => {
-    const migrateImages = () => {
-      let hasChanges = false;
-      const newTrips = trips.map(trip => {
-        // Check for deprecated Unsplash Source URLs
-        if (trip.coverImage && (trip.coverImage.includes('source.unsplash.com') || trip.coverImage.includes('images.unsplash.com/photo-'))) {
-          hasChanges = true;
-          // Generate new static Pollinations URL
-          const prompt = `Cinematic travel photography of ${trip.title}, 4k, high quality, sunny day`;
-          const encoded = encodeURIComponent(prompt);
-          const seed = Math.floor(Math.random() * 1000000);
-          const newUrl = `https://image.pollinations.ai/prompt/${encoded}?width=1600&height=900&nologo=true&seed=${seed}&model=flux`;
-          console.log(`Migrating cover image for ${trip.title} to Pollinations`);
-          return {
-            ...trip,
-            coverImage: newUrl
-          };
-        }
-        return trip;
+  const handleAddTrip = async (newTrip: Trip) => {
+    if (!user) return;
+    try {
+      // Remove id (let Firestore generate it) or use it as doc id? 
+      // Firestore addDoc generates ID. Let's use that.
+      const { id, ...tripData } = newTrip;
+      await addDoc(collection(db, "itineraries"), {
+        ...tripData,
+        uid: user.id,
+        createdAt: serverTimestamp()
       });
-
-      if (hasChanges) {
-        setTrips(newTrips);
+      // State update is handled by onSnapshot
+      if (viewState === ViewState.AI_PLANNER) {
+        setViewState(ViewState.HOME); // Go home to see the new trip, or we need to wait for ID to select it
       }
-    };
-
-    // Run migration with a small delay to ensure hydration
-    const timer = setTimeout(migrateImages, 1000);
-    return () => clearTimeout(timer);
-  }, []); // Run once on mount
-
-
-  const handleAddTrip = (newTrip: Trip) => {
-    setTrips([newTrip, ...trips]);
-    if (viewState === ViewState.AI_PLANNER) {
-      setSelectedTrip(newTrip);
-      setViewState(ViewState.TRIP_DETAILS);
+    } catch (e: any) {
+      console.error("Error adding trip", e);
+      setLastError(`Add Trip Error: ${e.message}`);
+      alert("新增失敗: " + e.message);
     }
   };
 
-  const handleUpdateTrip = (updatedTrip: Trip) => {
-    setTrips(trips?.map(t => t.id === updatedTrip.id ? updatedTrip : t));
-    // Important: Update selectedTrip reference so Detail view re-renders immediately
-    if (selectedTrip?.id === updatedTrip.id) {
-      setSelectedTrip(updatedTrip);
+  const handleUpdateTrip = async (updatedTrip: Trip) => {
+    if (!user || !updatedTrip.id) return;
+    try {
+      const tripRef = doc(db, "itineraries", updatedTrip.id);
+      // Exclude id from data
+      const { id, ...data } = updatedTrip;
+      await updateDoc(tripRef, data);
+
+      if (selectedTrip?.id === updatedTrip.id) {
+        setSelectedTrip(updatedTrip);
+      }
+    } catch (e) {
+      console.error("Error updating trip", e);
+      alert("更新失敗");
     }
   };
 
-  const handleStartBackgroundGeneration = async (userPrompt: string) => {
+  const handleDeleteTrip = async (tripId: string) => {
+    try {
+      await deleteDoc(doc(db, "itineraries", tripId));
+      if (selectedTrip?.id === tripId) {
+        setSelectedTrip(null);
+        setViewState(ViewState.HOME);
+      }
+    } catch (e) {
+      console.error("Error deleting trip", e);
+      alert("刪除失敗");
+    }
+  };
+
+  const handleStartBackgroundGeneration = useCallback(async (userPrompt: string, tripId?: string): Promise<{ title: string; tripId: string } | null> => {
+    console.log("Starting background generation...", { userPrompt, tripId });
     const tempId = Date.now().toString();
     setBackgroundTasks(prev => [...prev, tempId]);
 
     try {
-      const tripPlan = await generateTripPlan(userPrompt, settings.language);
-      console.log("Raw AI Response:", tripPlan);
+      let tripPlan;
+      let currentTrip = null;
 
-      // Generate cover image
-      let coverImage = tripPlan.coverImage;
+      if (tripId) {
+        currentTrip = trips.find(t => t.id === tripId);
+      }
+
+      if (currentTrip) {
+        // Update existing trip
+        console.log("Updating existing trip:", currentTrip.title);
+        tripPlan = await updateTripPlan(currentTrip, userPrompt, settings.language);
+        console.log("Updated Trip Plan:", tripPlan);
+      } else {
+        // Generate new trip
+        console.log("Generating new trip...");
+        tripPlan = await generateTripPlan(userPrompt, settings.language);
+        console.log("New Trip Plan:", tripPlan);
+      }
+
+      // Generate cover image if needed (only for new trips or if missing)
+      let coverImage = tripPlan.coverImage || currentTrip?.coverImage;
       if (!coverImage) {
         try {
-          // Use the trip title or first location as the prompt for the image
           const imagePrompt = tripPlan.title || userPrompt;
           coverImage = await generateCoverImage(imagePrompt);
         } catch (imgError) {
           console.error("Failed to generate cover image:", imgError);
-          // Fallback to placeholder if AI image generation fails
           coverImage = `https://placehold.co/800x600/e2e8f0/475569?text=${encodeURIComponent(tripPlan.title?.split(' ')[0] || 'Travel')}`;
         }
       }
 
       if (!tripPlan.itinerary || tripPlan.itinerary.length === 0) {
         console.warn("AI returned empty itinerary:", tripPlan);
-        // Attempt to recover or notify?
-        // For now, we just log it. The user will see an empty trip.
       } else {
-        // Sanitize itinerary
         tripPlan.itinerary = tripPlan.itinerary.map((item: any) => ({
           ...item,
           day: Number(item.day) || 1,
@@ -331,37 +271,39 @@ const App: React.FC = () => {
         }));
       }
 
-      const newTrip: Trip = {
-        ...tripPlan,
-        id: tempId,
-        coverImage: coverImage,
-        // Ensure other arrays are initialized
-        bookings: [],
-        budget: tripPlan.budget || { total: 0, currency: 'TWD', expenses: [] },
-        weather: tripPlan.weather || []
-      };
+      let finalTrip: Trip;
 
-      setTrips(prev => [newTrip, ...prev]);
+      if (currentTrip) {
+        finalTrip = {
+          ...currentTrip,
+          ...tripPlan,
+          id: currentTrip.id, // Keep original ID
+          coverImage: coverImage,
+        };
+        // Update via Firestore
+        handleUpdateTrip(finalTrip);
+      } else {
+        finalTrip = {
+          ...tripPlan,
+          id: tempId, // Temporary ID, Firestore will generate real one
+          coverImage: coverImage,
+          bookings: [],
+          budget: tripPlan.budget || { total: 0, currency: 'TWD', expenses: [] },
+          weather: tripPlan.weather || []
+        };
+        // Add via Firestore
+        handleAddTrip(finalTrip);
+      }
+
       setBackgroundTasks(prev => prev.filter(id => id !== tempId));
-
-      // Auto-navigate to the new trip
-      setSelectedTrip(newTrip);
-      setViewState(ViewState.TRIP_DETAILS);
+      return { title: finalTrip.title, tripId: finalTrip.id };
 
     } catch (error: any) {
       console.error("Background generation failed", error);
       setBackgroundTasks(prev => prev.filter(id => id !== tempId));
-      // Show detailed error message for debugging
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      alert(`AI Generation Failed: ${errorMessage}`);
+      return null;
     }
-  };
-
-  const handleDeleteTrip = (tripId: string) => {
-    setTrips(trips.filter(t => t.id !== tripId));
-    setSelectedTrip(null);
-    setViewState(ViewState.HOME);
-  };
+  }, [trips, settings.language]);
 
   const handleUpdateSettings = (newSettings: Partial<AppSettings>) => {
     setSettings(prev => ({ ...prev, ...newSettings }));
@@ -369,69 +311,29 @@ const App: React.FC = () => {
 
   const handleResetApp = () => {
     if (!user) return;
-    setTrips([]);
-    setMemories([]);
-    setChatSessions([]);
-    localStorage.removeItem(STORAGE_KEYS.getTripsKey(user.id));
-    localStorage.removeItem(STORAGE_KEYS.getMemoriesKey(user.id));
-    localStorage.removeItem(STORAGE_KEYS.getChatSessionsKey(user.id));
-    localStorage.removeItem(STORAGE_KEYS.getSettingsKey(user.id));
-    setSelectedTrip(null);
-    setViewState(ViewState.HOME);
+    // For Firestore, we might want to delete all trips? Or just clear local state?
+    // Let's just clear local state for now as "Reset App" usually implies local reset.
+    // But since we are synced, maybe we should warn user.
+    // For now, let's just sign out.
+    handleLogout();
   };
 
-  const handleLogin = (userData: User) => {
+  const handleLogout = async () => {
     try {
-      const usersJson = localStorage.getItem(STORAGE_KEYS.USERS);
-      const users: User[] = usersJson ? JSON.parse(usersJson) : [];
-      const foundUser = users.find(u => u.username === userData.username && u.password === userData.password);
-
-      if (foundUser) {
-        setUser(foundUser);
-        localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(foundUser));
-      } else {
-        alert('使用者名稱或密碼錯誤');
-      }
+      await signOut(auth);
+      // State clearing handled by onAuthStateChanged
+      setViewState(ViewState.HOME);
+      setSelectedTrip(null);
     } catch (e) {
-      console.error("Login failed", e);
-      alert('登入失敗');
+      console.error("Logout failed", e);
     }
   };
 
-  const handleRegister = (newUser: User) => {
-    try {
-      const usersJson = localStorage.getItem(STORAGE_KEYS.USERS);
-      const users: User[] = usersJson ? JSON.parse(usersJson) : [];
+  // Remove handleLogin/handleRegister as they are replaced by Auth component logic
+  const handleLogin = () => { };
+  const handleRegister = () => { };
 
-      if (users.some(u => u.username === newUser.username)) {
-        alert('使用者名稱已存在');
-        return;
-      }
-
-      const updatedUsers = [...users, newUser];
-      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(updatedUsers));
-
-      setUser(newUser);
-      localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(newUser));
-      setTrips([]); // New user starts with empty trips
-      setMemories([]);
-      setChatSessions([]);
-    } catch (e) {
-      console.error("Registration failed", e);
-      alert('註冊失敗');
-    }
-  };
-
-  const handleLogout = () => {
-    setUser(null);
-    localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
-    setTrips([]);
-    setMemories([]);
-    setChatSessions([]);
-    setCurrentChatId(null);
-    setViewState(ViewState.HOME);
-    setSelectedTrip(null);
-  };
+  // ...
 
   const handleAddMemory = (memory: Memory) => {
     setMemories([memory, ...memories]);
@@ -454,28 +356,37 @@ const App: React.FC = () => {
     return newSession.id;
   };
 
-  const handleUpdateChatSession = (sessionId: string, messages: AIChatMessage[]) => {
+  const handleUpdateChatSession = (sessionId: string, messages: AIChatMessage[], title?: string, tripId?: string) => {
     setChatSessions(prev => prev.map(session => {
       if (session.id === sessionId) {
-        // Update title if it's the first user message and title is default
-        let title = session.title;
-        if (session.messages.length === 0 && messages.length > 0) {
-          const firstUserMsg = messages.find(m => m.role === 'user');
-          if (firstUserMsg) {
-            title = firstUserMsg.content.slice(0, 20) + (firstUserMsg.content.length > 20 ? '...' : '');
+        // Update title if provided, OR if it's the first user message and title is default
+        let newTitle = session.title;
+
+        if (title) {
+          newTitle = title;
+        } else {
+          // Check if this is the first USER message
+          const hasUserMessage = session.messages.some(m => m.role === 'user');
+          if (!hasUserMessage) {
+            const firstUserMsg = messages.find(m => m.role === 'user');
+            if (firstUserMsg) {
+              newTitle = firstUserMsg.content.slice(0, 20) + (firstUserMsg.content.length > 20 ? '...' : '');
+            }
           }
         }
 
         return {
           ...session,
           messages,
-          title,
+          title: newTitle,
+          tripId: tripId || session.tripId, // Persist tripId
           updatedAt: Date.now()
         };
       }
       return session;
     }));
   };
+
 
   const handleDeleteChatSession = (sessionId: string) => {
     setChatSessions(prev => prev.filter(s => s.id !== sessionId));
@@ -488,9 +399,51 @@ const App: React.FC = () => {
     setCurrentChatId(sessionId);
   };
 
+  // Dedicated effect for removing loader
+  useEffect(() => {
+    const loader = document.getElementById('loading-screen');
+    if (loader) {
+      console.log("Removing loading screen...");
+      loader.style.opacity = '0';
+      setTimeout(() => loader.remove(), 500);
+    } else {
+      console.log("Loading screen not found (already removed?)");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (user && isDataLoaded) {
+      try {
+        localStorage.setItem(STORAGE_KEYS.getSettingsKey(user.id), JSON.stringify(settings));
+      } catch (e) {
+        console.error('Failed to save settings', e);
+        // Silent fail for settings is acceptable, or show toast
+      }
+    }
+    if (settings.themeColor) {
+      document.documentElement.style.setProperty('--color-coral', settings.themeColor);
+    } else {
+      document.documentElement.style.removeProperty('--color-coral');
+    }
+  }, [settings, user, isDataLoaded]);
+
   if (!user) {
     return <Auth onLogin={handleLogin} onRegister={handleRegister} />;
   }
+
+  const handleOpenAIForTrip = (tripId: string) => {
+    // Find existing session for this trip
+    const existingSession = chatSessions.find(s => s.tripId === tripId);
+    if (existingSession) {
+      setCurrentChatId(existingSession.id);
+    } else {
+      // Create new session linked to trip
+      const newSessionId = handleCreateChatSession();
+      // Update session to link to trip
+      setChatSessions(prev => prev.map(s => s.id === newSessionId ? { ...s, tripId, title: `${trips.find(t => t.id === tripId)?.title || 'Trip'} Planning` } : s));
+    }
+    setViewState(ViewState.AI_PLANNER);
+  };
 
   const renderContent = () => {
     switch (viewState) {
@@ -556,6 +509,7 @@ const App: React.FC = () => {
             onBack={() => setViewState(ViewState.HOME)}
             onDelete={handleDeleteTrip}
             onUpdateTrip={handleUpdateTrip}
+            onOpenAI={handleOpenAIForTrip}
             settings={settings}
           />
         ) : null;
@@ -584,6 +538,15 @@ const App: React.FC = () => {
 
   return (
     <div className="h-full w-full max-w-md mx-auto bg-paper shadow-2xl relative overflow-hidden flex flex-col font-sans text-ink">
+      {lastError && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 relative" role="alert">
+          <strong className="font-bold">Error: </strong>
+          <span className="block sm:inline">{lastError}</span>
+          <span className="absolute top-0 bottom-0 right-0 px-4 py-3" onClick={() => setLastError(null)}>
+            <svg className="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z" /></svg>
+          </span>
+        </div>
+      )}
       <div className="flex-1 overflow-hidden relative bg-paper">
         {renderContent()}
       </div>
@@ -633,6 +596,7 @@ const App: React.FC = () => {
           </div>
         </div>
       )}
+      <ReloadPrompt settings={settings} />
     </div>
   );
 };

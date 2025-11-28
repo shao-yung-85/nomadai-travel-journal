@@ -5,13 +5,13 @@ import { ChevronLeftIcon, ChatBubbleIcon, SquaresPlusIcon } from './Icons';
 import { translations } from '../utils/translations';
 
 interface AIPlannerProps {
-  onStartGeneration: (prompt: string) => Promise<void>;
+  onStartGeneration: (prompt: string, tripId?: string) => Promise<{ title: string; tripId: string } | null>;
   onCancel: () => void;
   settings: AppSettings;
   sessions: AIChatSession[];
   currentSessionId: string | null;
   onCreateSession: () => string;
-  onUpdateSession: (sessionId: string, messages: AIChatMessage[]) => void;
+  onUpdateSession: (sessionId: string, messages: AIChatMessage[], title?: string, tripId?: string) => void;
   onDeleteSession: (sessionId: string) => void;
   onSelectSession: (sessionId: string) => void;
 }
@@ -77,27 +77,21 @@ const AIPlanner: React.FC<AIPlannerProps> = ({
     onUpdateSession(currentSessionId, [...newMessages, thinkingMsg]);
 
     // Fire and forget
-    onStartGeneration(input).then(() => {
+    // Pass currentSession.tripId to allow updating existing trip
+    onStartGeneration(input, currentSession?.tripId).then((result) => {
       const doneMsg: AIChatMessage = { role: 'ai', content: t.ai_done, timestamp: Date.now() };
-      // Note: We need to fetch the latest messages from state/props in a real app, 
-      // but here we assume the parent updates the session. 
-      // However, since onUpdateSession replaces messages, we need to be careful.
-      // Ideally, we should append to the *latest* messages.
-      // For simplicity in this refactor, we'll just append to the messages we have + thinking msg.
-      // A better approach would be for onUpdateSession to accept a callback or for us to re-read props.
-      // But since this is a simple app, we'll just append.
 
-      // Actually, to be safe, let's just append the done message to the session in the parent context
-      // But we can't access parent state directly. 
-      // Let's rely on the fact that `messages` prop will update.
-      // But `handleSend` closure captures `messages`.
-      // We should use a functional update if possible, but `onUpdateSession` takes value.
+      if (result) {
+        // Update session with new messages, title, and tripId
+        onUpdateSession(currentSessionId, [...newMessages, doneMsg], result.title, result.tripId);
+      } else {
+        onUpdateSession(currentSessionId, [...newMessages, doneMsg]);
+      }
 
-      // Let's just append to the messages we created above + thinking msg
-      onUpdateSession(currentSessionId, [...newMessages, thinkingMsg, doneMsg]);
       setIsRequestSent(false);
     });
   };
+
 
   return (
     <div className="flex h-full bg-paper pt-safe relative overflow-hidden">
@@ -191,13 +185,19 @@ const AIPlanner: React.FC<AIPlannerProps> = ({
 
         <div className="p-4 bg-white/90 backdrop-blur border-t border-sand pb-32">
           <div className="flex gap-2">
-            <input
+            <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
               placeholder={t.input_placeholder}
-              className="flex-1 bg-paper rounded-2xl px-5 py-3.5 outline-none focus:ring-2 focus:ring-coral/50 transition-all font-medium text-ink placeholder:text-gray-400 border border-sand"
+              className="flex-1 bg-paper rounded-2xl px-5 py-3.5 outline-none focus:ring-2 focus:ring-coral/50 transition-all font-medium text-ink placeholder:text-gray-400 border border-sand resize-none min-h-[50px] max-h-[120px]"
               disabled={isRequestSent}
+              rows={1}
             />
             <button
               onClick={handleSend}

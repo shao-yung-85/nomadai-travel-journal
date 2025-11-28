@@ -14,14 +14,17 @@ const TripMemory: React.FC<TripMemoryProps> = ({ memories, onAddMemory, onDelete
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setSelectedImage(reader.result as string);
-            };
-            reader.readAsDataURL(file);
+            try {
+                const { compressImage } = await import('../utils/image');
+                const compressed = await compressImage(file);
+                setSelectedImage(compressed);
+            } catch (error) {
+                console.error("Image compression failed", error);
+                alert("圖片處理失敗");
+            }
         }
     };
 

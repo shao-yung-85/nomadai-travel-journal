@@ -1,114 +1,225 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import { ItineraryItem } from '../types';
+import { Trip, AppSettings, ItineraryItem } from '../types';
+import { translations } from '../utils/translations';
+import { geocodeAddress } from '../services/geocoding';
+import { MapPinIcon, SparklesIcon } from './Icons';
 
 // Fix Leaflet default icon issue
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+
+let DefaultIcon = L.icon({
+    iconUrl: icon,
+    shadowUrl: iconShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41]
 });
 
+L.Marker.prototype.options.icon = DefaultIcon;
+
 interface TripMapProps {
-    items: ItineraryItem[];
-    onMarkerClick?: (item: ItineraryItem) => void;
+    trip: Trip;
+    settings: AppSettings;
+    onUpdateTrip?: (trip: Trip) => void;
 }
 
-const TripMap: React.FC<TripMapProps> = ({ items, onMarkerClick }) => {
-    const mapRef = useRef<L.Map | null>(null);
-    const mapContainerRef = useRef<HTMLDivElement>(null);
-
+// Component to update map view bounds
+const MapUpdater = ({ bounds }: { bounds: L.LatLngBoundsExpression }) => {
+    const map = useMap();
     useEffect(() => {
-        if (!mapContainerRef.current) return;
-
-        // Initialize map
-        if (!mapRef.current) {
-            mapRef.current = L.map(mapContainerRef.current).setView([25.033, 121.5654], 13);
-
-            // Add tile layer
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors',
-                maxZoom: 19,
-            }).addTo(mapRef.current);
-        }
-
-        const map = mapRef.current;
-
-        // Clear existing layers
-        map.eachLayer((layer) => {
-            if (layer instanceof L.Marker || layer instanceof L.Polyline) {
-                map.removeLayer(layer);
-            }
-        });
-
-        // Filter items with coordinates
-        const itemsWithCoords = items.filter(item => item.coordinates);
-
-        if (itemsWithCoords.length === 0) return;
-
-        // Add markers
-        const markers: L.Marker[] = [];
-        const latLngs: L.LatLngExpression[] = [];
-
-        itemsWithCoords.forEach((item) => {
-            if (!item.coordinates) return;
-
-            const { lat, lng } = item.coordinates;
-            latLngs.push([lat, lng]);
-
-            const marker = L.marker([lat, lng])
-                .bindPopup(`
-                    <div style="font-family: sans-serif;">
-                        <strong>${item.activity}</strong><br/>
-                        <span style="color: #666; font-size: 0.9em;">${item.time}</span><br/>
-                        ${item.notes ? `<span style="font-size: 0.85em;">${item.notes}</span>` : ''}
-                    </div>
-                `)
-                .addTo(map);
-
-            if (onMarkerClick) {
-                marker.on('click', () => onMarkerClick(item));
-            }
-
-            markers.push(marker);
-        });
-
-        // Draw route
-        if (latLngs.length > 1) {
-            L.polyline(latLngs, {
-                color: '#D4A574',
-                weight: 3,
-                opacity: 0.8,
-                smoothFactor: 1
-            }).addTo(map);
-        }
-
-        // Fit bounds to show all markers
-        if (latLngs.length > 0) {
-            const bounds = L.latLngBounds(latLngs);
+        if (bounds && (bounds as any).length > 0) {
             map.fitBounds(bounds, { padding: [50, 50] });
         }
+    }, [bounds, map]);
+    return null;
+};
 
-        return () => {
-            // Cleanup on unmount
-            if (mapRef.current) {
-                mapRef.current.remove();
-                mapRef.current = null;
+const TripMap: React.FC<TripMapProps> = ({ trip, settings, onUpdateTrip }) => {
+    const t = translations[settings.language] || translations['zh-TW'];
+    const [isGeocoding, setIsGeocoding] = useState(false);
+    const [activeDay, setActiveDay] = useState<number | 'ALL'>('ALL');
+
+    // Filter items based on active day
+    const displayItems = useMemo(() => {
+        const items = trip.itinerary || [];
+        if (activeDay === 'ALL') return items;
+        return items.filter(item => item.day === activeDay);
+    }, [trip.itinerary, activeDay]);
+
+    // Group items by day for polylines
+    const itemsByDay = useMemo(() => {
+        const grouped: { [key: number]: ItineraryItem[] } = {};
+        (trip.itinerary || []).forEach(item => {
+            if (!grouped[item.day]) grouped[item.day] = [];
+            grouped[item.day].push(item);
+        });
+        // Sort by time
+        Object.keys(grouped).forEach(day => {
+            grouped[Number(day)].sort((a, b) => a.time.localeCompare(b.time));
+        });
+        return grouped;
+    }, [trip.itinerary]);
+
+    // Calculate bounds
+    const bounds = useMemo(() => {
+        const points = displayItems
+            .filter(i => i.coordinates || (i.lat && i.lng))
+            .map(i => [i.coordinates?.lat || i.lat!, i.coordinates?.lng || i.lng!] as [number, number]);
+
+        if (points.length === 0) return null;
+        return points;
+    }, [displayItems]);
+
+    // Handle Geocoding Missing Items
+    const handleGeocodeMissing = async () => {
+        setIsGeocoding(true);
+        const newItinerary = [...(trip.itinerary || [])];
+        let updated = false;
+
+        try {
+            for (let i = 0; i < newItinerary.length; i++) {
+                const item = newItinerary[i];
+                if (!item.coordinates && !item.lat) {
+                    // Try to geocode
+                    // Use location + destination title for better context
+                    const query = `${item.location}, ${trip.title}`;
+                    console.log(`Geocoding: ${query}`);
+                    const coords = await geocodeAddress(query);
+
+                    if (coords) {
+                        newItinerary[i] = {
+                            ...item,
+                            coordinates: coords,
+                            lat: coords.lat,
+                            lng: coords.lng
+                        };
+                        updated = true;
+                        // Small delay to avoid rate limits if any
+                        await new Promise(r => setTimeout(r, 500));
+                    }
+                }
             }
-        };
-    }, [items, onMarkerClick]);
+
+            if (updated && onUpdateTrip) {
+                onUpdateTrip({ ...trip, itinerary: newItinerary });
+                alert("Coordinates updated!");
+            } else {
+                alert("No new coordinates found.");
+            }
+        } catch (e) {
+            console.error("Geocoding error", e);
+            alert("Error updating coordinates.");
+        } finally {
+            setIsGeocoding(false);
+        }
+    };
+
+    const days = Object.keys(itemsByDay).map(Number).sort((a, b) => a - b);
+    const colors = ['#FF5733', '#33FF57', '#3357FF', '#FF33F5', '#33FFF5', '#F5FF33'];
 
     return (
-        <div
-            ref={mapContainerRef}
-            style={{
-                width: '100%',
-                height: '100%',
-                minHeight: '400px'
-            }}
-        />
+        <div className="h-full flex flex-col pb-24">
+            {/* Controls */}
+            <div className="mb-4 flex gap-2 overflow-x-auto no-scrollbar py-1">
+                <button
+                    onClick={() => setActiveDay('ALL')}
+                    className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${activeDay === 'ALL' ? 'bg-ink text-white' : 'bg-white text-gray-500 border border-sand'}`}
+                >
+                    ALL
+                </button>
+                {days.map(day => (
+                    <button
+                        key={day}
+                        onClick={() => setActiveDay(day)}
+                        className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${activeDay === day ? 'bg-coral text-white' : 'bg-white text-gray-500 border border-sand'}`}
+                    >
+                        Day {day}
+                    </button>
+                ))}
+                <button
+                    onClick={handleGeocodeMissing}
+                    disabled={isGeocoding}
+                    className="ml-auto px-3 py-1.5 bg-white border border-coral text-coral rounded-full text-xs font-bold flex items-center gap-1 hover:bg-coral hover:text-white transition-colors disabled:opacity-50"
+                >
+                    {isGeocoding ? (
+                        <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                        <SparklesIcon className="w-3 h-3" />
+                    )}
+                    Sync Map
+                </button>
+            </div>
+
+            {/* Map */}
+            <div className="flex-1 bg-gray-100 rounded-3xl overflow-hidden shadow-inner border border-sand relative z-0">
+                <MapContainer
+                    center={[25.0330, 121.5654]} // Default to Taipei
+                    zoom={13}
+                    style={{ height: '100%', width: '100%' }}
+                >
+                    <TileLayer
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+
+                    {bounds && <MapUpdater bounds={bounds} />}
+
+                    {/* Markers */}
+                    {displayItems.map((item, idx) => {
+                        const lat = item.coordinates?.lat || item.lat;
+                        const lng = item.coordinates?.lng || item.lng;
+                        if (!lat || !lng) return null;
+
+                        return (
+                            <Marker key={item.id || idx} position={[lat, lng]}>
+                                <Popup>
+                                    <div className="text-center">
+                                        <div className="font-bold text-ink">{item.activity}</div>
+                                        <div className="text-xs text-gray-500">{item.time}</div>
+                                        <div className="text-xs text-coral mt-1">Day {item.day}</div>
+                                    </div>
+                                </Popup>
+                            </Marker>
+                        );
+                    })}
+
+                    {/* Polylines */}
+                    {days.map((day, idx) => {
+                        if (activeDay !== 'ALL' && activeDay !== day) return null;
+
+                        const dayItems = itemsByDay[day];
+                        const positions = dayItems
+                            .filter(i => (i.coordinates?.lat || i.lat) && (i.coordinates?.lng || i.lng))
+                            .map(i => [i.coordinates?.lat || i.lat!, i.coordinates?.lng || i.lng!] as [number, number]);
+
+                        if (positions.length < 2) return null;
+
+                        return (
+                            <Polyline
+                                key={day}
+                                positions={positions}
+                                color={colors[idx % colors.length]}
+                                weight={4}
+                                opacity={0.7}
+                                dashArray="10, 10"
+                            />
+                        );
+                    })}
+                </MapContainer>
+
+                {(!bounds) && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/10 pointer-events-none z-[400]">
+                        <div className="bg-white p-4 rounded-2xl shadow-lg text-center pointer-events-auto">
+                            <MapPinIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                            <p className="text-sm font-bold text-gray-500">No coordinates found.</p>
+                            <p className="text-xs text-gray-400 mt-1">Click "Sync Map" to fetch locations.</p>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
     );
 };
 

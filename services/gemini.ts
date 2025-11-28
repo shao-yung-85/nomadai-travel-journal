@@ -9,9 +9,8 @@ const getApiKey = () => {
         if (storedKey) return storedKey;
 
         // 2. Check Environment Variable
-        if (typeof import.meta !== 'undefined' && import.meta.env) {
-            return import.meta.env.VITE_API_KEY || '';
-        }
+        // 2. Check Environment Variable
+        return import.meta.env.VITE_API_KEY || '';
     } catch (e) {
         console.warn("Failed to access API key", e);
     }
@@ -208,6 +207,41 @@ export const generateTripPlan = async (userPrompt: string, language: string = 'z
         const text = getResponseText(response);
         if (text) {
             // Clean markdown code blocks if present (though we asked not to use them)
+            const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+            return JSON.parse(cleanText);
+        }
+        throw new Error("Empty response from AI");
+    });
+}
+
+export const updateTripPlan = async (currentTrip: any, userPrompt: string, language: string = 'zh-TW') => {
+    const targetLang = langMap[language] || langMap['zh-TW'];
+
+    return callAiWithFallback(async (ai) => {
+        const response = await ai.models.generateContent({
+            model: MODEL_NAME,
+            contents: `Help me modify an existing trip plan.
+            
+            Current Trip JSON:
+            ${JSON.stringify(currentTrip)}
+            
+            User Request: "${userPrompt}"
+            
+            INSTRUCTIONS:
+            1. Modify the "Current Trip JSON" based on the "User Request".
+            2. Keep the same structure and fields.
+            3. Update the "itinerary", "bookings", "budget", etc. as needed.
+            4. Ensure the response is valid JSON matching the Trip structure.
+            5. All content MUST be in ${targetLang}.
+            6. Return ONLY the updated JSON.
+            `,
+            config: {
+                responseMimeType: "application/json"
+            }
+        });
+
+        const text = getResponseText(response);
+        if (text) {
             const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
             return JSON.parse(cleanText);
         }

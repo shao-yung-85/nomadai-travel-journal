@@ -91,7 +91,7 @@ const AddTripForm: React.FC<AddTripFormProps> = ({ onSave, onCancel, settings })
 
       <form onSubmit={handleSubmit} className="p-6 space-y-8 flex-1 overflow-y-auto no-scrollbar pb-32">
         <div className="space-y-3">
-          <label className="text-xs font-bold text-gray-400 ml-1 uppercase">{t.destination}</label>
+          <label className="text-xs font-bold text-gray-400 ml-1 uppercase">{t.trip_destination_title}</label>
           <div className="relative">
             <input
               type="text"
