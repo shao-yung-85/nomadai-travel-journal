@@ -905,7 +905,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
 
     const renderBudget = () => {
         const expenses = trip.budget?.expenses || [];
-        const totalSpent = expenses.reduce((acc, curr) => acc + curr.amount, 0);
+        const totalSpent = expenses.reduce((acc, curr) => acc + (curr.amount || 0), 0);
 
         return (
             <div className="space-y-6 pb-40">
@@ -942,7 +942,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <div className="font-bold text-ink text-lg">${ex.amount.toLocaleString()}</div>
+                                        <div className="font-bold text-ink text-lg">${(ex.amount || 0).toLocaleString()}</div>
                                     </div>
                                 </div>
                             ))}
