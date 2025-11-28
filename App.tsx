@@ -189,25 +189,45 @@ const App: React.FC = () => {
   // Persistence Effects
   useEffect(() => {
     if (user && isDataLoaded) {
-      localStorage.setItem(STORAGE_KEYS.getTripsKey(user.id), JSON.stringify(trips));
+      try {
+        localStorage.setItem(STORAGE_KEYS.getTripsKey(user.id), JSON.stringify(trips));
+      } catch (e) {
+        console.error('Failed to save trip update', e);
+        alert('儲存失敗：空間不足。請嘗試刪除一些舊的行程或照片。');
+      }
     }
   }, [trips, user, isDataLoaded]);
 
   useEffect(() => {
     if (user && isDataLoaded) {
-      localStorage.setItem(STORAGE_KEYS.getMemoriesKey(user.id), JSON.stringify(memories));
+      try {
+        localStorage.setItem(STORAGE_KEYS.getMemoriesKey(user.id), JSON.stringify(memories));
+      } catch (e) {
+        console.error('Failed to save memories', e);
+        alert('儲存回憶失敗：空間不足。請嘗試刪除一些舊的照片。');
+      }
     }
   }, [memories, user, isDataLoaded]);
 
   useEffect(() => {
     if (user && isDataLoaded) {
-      localStorage.setItem(STORAGE_KEYS.getChatSessionsKey(user.id), JSON.stringify(chatSessions));
+      try {
+        localStorage.setItem(STORAGE_KEYS.getChatSessionsKey(user.id), JSON.stringify(chatSessions));
+      } catch (e) {
+        console.error('Failed to save chat sessions', e);
+        // Chat history is less critical, maybe just console error
+      }
     }
   }, [chatSessions, user, isDataLoaded]);
 
   useEffect(() => {
     if (user && isDataLoaded) {
-      localStorage.setItem(STORAGE_KEYS.getSettingsKey(user.id), JSON.stringify(settings));
+      try {
+        localStorage.setItem(STORAGE_KEYS.getSettingsKey(user.id), JSON.stringify(settings));
+      } catch (e) {
+        console.error('Failed to save settings', e);
+        // Silent fail for settings is acceptable, or show toast
+      }
     }
     if (settings.themeColor) {
       document.documentElement.style.setProperty('--color-coral', settings.themeColor);
