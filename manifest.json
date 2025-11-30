@@ -1,15 +1,15 @@
 {
   "name": "Ques-trip",
   "short_name": "Ques-trip",
-  "start_url": "/nomadai-travel-journal/index.html",
-  "scope": "/nomadai-travel-journal/",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#F9F7F2",
   "theme_color": "#D65A5A",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "nomadai-travel-journal_app_icon.png",
+      "src": "/questrip_icon.png",
       "sizes": "1024x1024",
       "type": "image/png"
     }
