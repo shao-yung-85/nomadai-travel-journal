@@ -25,7 +25,7 @@ export default defineConfig(({ mode }) => {
           display: 'standalone',
           icons: [
             {
-              src: '/questrip_icon.png',
+              src: '/nomadai-travel-journal_app_icon.png',
               sizes: '1024x1024',
               type: 'image/png'
             }

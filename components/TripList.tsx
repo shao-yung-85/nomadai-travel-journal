@@ -30,7 +30,7 @@ const TripList: React.FC<TripListProps> = ({ trips, onSelectTrip, onAddTrip, onO
       <div className="px-6 py-5 sticky top-0 z-10 flex justify-between items-center bg-paper/90 backdrop-blur-sm">
         <div className="flex items-center gap-3">
           <div className="w-14 h-14 flex items-center justify-center overflow-hidden">
-            <img src="/questrip_icon.png" alt="Icon" className="w-full h-full object-cover" />
+            <img src="/nomadai-travel-journal_app_icon.png" alt="Icon" className="w-full h-full object-cover" />
           </div>
           <h1 className="text-3xl font-extrabold text-ink tracking-tight">{t.my_trips}</h1>
         </div>
