@@ -6,7 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
   return {
-    base: '/nomadai-travel-journal/',
+    base: '/',
     server: {
       port: 3000,
       host: '0.0.0.0',
@@ -25,7 +25,7 @@ export default defineConfig(({ mode }) => {
           display: 'standalone',
           icons: [
             {
-              src: '/nomadai-travel-journal/nomadai-travel-journal_app_icon.png',
+              src: '/nomadai-travel-journal_app_icon.png',
               sizes: '1024x1024',
               type: 'image/png'
             }
