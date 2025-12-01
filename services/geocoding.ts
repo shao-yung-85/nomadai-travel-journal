@@ -80,28 +80,28 @@ export const geocodeAddress = async (address: string, userApiKey?: string): Prom
         return null;
     };
 
-    // Helper to try OpenStreetMap (Nominatim)
-    const tryNominatimGeocode = async () => {
+    // Helper to try Open-Meteo Geocoding (More stable CORS)
+    const tryOpenMeteoGeocode = async () => {
         try {
-            console.log(`Trying OpenStreetMap (Nominatim)...`);
-            // Nominatim requires a unique User-Agent or Referer. Browser sends Referer.
-            const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=jsonv2&limit=1`;
+            console.log(`Trying Open-Meteo Geocoding...`);
+            // Open-Meteo Geocoding API
+            const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(address)}&count=1&language=zh&format=json`;
 
             const res = await fetch(url);
-            if (!res.ok) throw new Error(`Nominatim status: ${res.status}`);
+            if (!res.ok) throw new Error(`Open-Meteo status: ${res.status}`);
 
             const data = await res.json();
 
-            if (data && data.length > 0) {
-                const location = data[0];
-                return { lat: parseFloat(location.lat), lng: parseFloat(location.lon) };
+            if (data && data.results && data.results.length > 0) {
+                const location = data.results[0];
+                return { lat: location.latitude, lng: location.longitude };
             } else {
-                console.warn('Nominatim found no results.');
-                window.localStorage.setItem('last_geocode_error', 'Nominatim: No results found');
+                console.warn('Open-Meteo found no results.');
+                window.localStorage.setItem('last_geocode_error', 'Open-Meteo: No results found');
             }
         } catch (e) {
-            console.warn('Nominatim request failed:', e);
-            window.localStorage.setItem('last_geocode_error', `Nominatim Error: ${e}`);
+            console.warn('Open-Meteo request failed:', e);
+            window.localStorage.setItem('last_geocode_error', `Open-Meteo Error: ${e}`);
         }
         return null;
     };
@@ -140,9 +140,9 @@ export const geocodeAddress = async (address: string, userApiKey?: string): Prom
         if (result) return result;
     }
 
-    // 4. Final Fallback: OpenStreetMap (Nominatim) - No Key Required
-    console.log("All keys failed. Falling back to OpenStreetMap (Nominatim)...");
-    return await tryNominatimGeocode();
+    // 4. Final Fallback: Open-Meteo - No Key Required
+    console.log("All keys failed. Falling back to Open-Meteo...");
+    return await tryOpenMeteoGeocode();
 };
 
 /**
