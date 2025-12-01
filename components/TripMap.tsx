@@ -121,12 +121,17 @@ const TripMap: React.FC<TripMapProps> = ({ trip, settings, onUpdateTrip }) => {
 
     // Auto-sync on mount if items exist but coords are missing
     useEffect(() => {
-        const hasItems = trip.itinerary && trip.itinerary.length > 0;
-        const hasMissingCoords = trip.itinerary?.some(i => !i.coordinates && !i.lat);
+        // Clear stale errors on mount
+        window.localStorage.removeItem('last_geocode_error');
 
-        console.log("Auto-Sync Check:", { hasItems, hasMissingCoords, itinerary: trip.itinerary });
+        // Check if we have items with location but no coordinates
+        const missingCoords = trip.itinerary?.filter(
+            item => item.location && (!item.lat || !item.lng)
+        ) || [];
 
-        if (hasItems && hasMissingCoords) {
+        console.log("Auto-Sync Check:", { hasItems: trip.itinerary?.length > 0, hasMissingCoords: missingCoords.length > 0, itinerary: trip.itinerary });
+
+        if (missingCoords.length > 0) {
             console.log("Triggering auto-sync...");
             handleGeocodeMissing();
         }
