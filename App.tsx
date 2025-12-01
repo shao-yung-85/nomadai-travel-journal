@@ -98,18 +98,13 @@ const STORAGE_KEYS = {
 
 const App: React.FC = () => {
   console.log("App Component Rendering...");
-  const [user, setUser] = useState<User | null>({
-    id: 'test-user-id',
-    username: 'Test User',
-    password: '',
-    createdAt: new Date().toISOString()
-  });
+  const [user, setUser] = useState<User | null>(null);
   const [trips, setTrips] = useState<Trip[]>([]);
   const [memories, setMemories] = useState<Memory[]>([]);
   const [chatSessions, setChatSessions] = useState<AIChatSession[]>([]);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [settings, setSettings] = useState<AppSettings>({ language: 'zh-TW', minimalistMode: false });
-  const [isDataLoaded, setIsDataLoaded] = useState(true); // Force loaded
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [lastError, setLastError] = useState<string | null>(null);
 
   const [viewState, setViewState] = useState<ViewState>(ViewState.HOME);

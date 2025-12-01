@@ -130,8 +130,14 @@ export const geocodeAddress = async (address: string, userApiKey?: string): Prom
         console.log("Environment key failed, trying backup key...");
     }
 
-    // 3. (Removed Backup Key - User prefers no Google Cloud Console setup)
-    // The backup key was causing REQUEST_DENIED errors.
+    // 3. Try Backup Key (Gemini ONLY)
+    // We use the backup key for Gemini (AI) because it's smarter at finding POIs than Open-Meteo.
+    // We DO NOT use it for Google Maps Geocoding API to avoid REQUEST_DENIED errors.
+    if (backupKey) {
+        console.log("Trying Backup Key with Gemini...");
+        const result = await tryGeocode(backupKey);
+        if (result) return result;
+    }
 
     // 4. Final Fallback: Open-Meteo - No Key Required
     console.log("Falling back to Open-Meteo (Free Service)...");
