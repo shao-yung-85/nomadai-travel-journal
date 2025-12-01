@@ -86,7 +86,7 @@ const TripMap: React.FC<TripMapProps> = ({ trip, settings, onUpdateTrip }) => {
                     // Use location + destination title for better context
                     const query = `${item.location}, ${trip.title}`;
                     console.log(`Geocoding: ${query}`);
-                    const coords = await geocodeAddress(query);
+                    const coords = await geocodeAddress(query, settings.apiKey);
 
                     if (coords) {
                         newItinerary[i] = {
@@ -214,7 +214,13 @@ const TripMap: React.FC<TripMapProps> = ({ trip, settings, onUpdateTrip }) => {
                         <div className="bg-white p-4 rounded-2xl shadow-lg text-center pointer-events-auto">
                             <MapPinIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                             <p className="text-sm font-bold text-gray-500">No coordinates found.</p>
-                            <p className="text-xs text-gray-400 mt-1">Click "Sync Map" to fetch locations.</p>
+                            <button
+                                onClick={handleGeocodeMissing}
+                                disabled={isGeocoding}
+                                className="mt-3 px-4 py-2 bg-coral text-white rounded-xl text-xs font-bold shadow-lg shadow-coral/30 active:scale-95 transition-all disabled:opacity-50"
+                            >
+                                {isGeocoding ? 'Syncing...' : 'Sync Map Locations'}
+                            </button>
                         </div>
                     </div>
                 )}

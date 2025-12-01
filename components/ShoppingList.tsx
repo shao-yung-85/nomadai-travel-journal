@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
-import { Trip, ShoppingItem } from '../types';
+import { AppSettings, ShoppingItem } from '../types';
+import { translations } from '../utils/translations';
 import { TrashIcon, PlusIcon, ShoppingBagIcon } from './Icons';
 
 interface ShoppingListProps {
-    trip: Trip;
-    onUpdateTrip: (trip: Trip) => void;
-    t: any;
+    items: ShoppingItem[];
+    onUpdateItems: (items: ShoppingItem[]) => void;
+    settings: AppSettings;
 }
 
-const ShoppingList: React.FC<ShoppingListProps> = ({ trip, onUpdateTrip, t }) => {
+const ShoppingList: React.FC<ShoppingListProps> = ({ items, onUpdateItems, settings }) => {
+    const t = translations[settings.language] || translations['zh-TW'];
     const [newItemName, setNewItemName] = useState('');
     const [newItemNotes, setNewItemNotes] = useState('');
     const [isAdding, setIsAdding] = useState(false);
-
-    const items = trip.shoppingList || [];
 
     const handleAddItem = () => {
         if (!newItemName.trim()) return;
@@ -26,7 +26,7 @@ const ShoppingList: React.FC<ShoppingListProps> = ({ trip, onUpdateTrip, t }) =>
         };
 
         const updatedList = [...items, newItem];
-        onUpdateTrip({ ...trip, shoppingList: updatedList });
+        onUpdateItems(updatedList);
 
         setNewItemName('');
         setNewItemNotes('');
@@ -34,16 +34,16 @@ const ShoppingList: React.FC<ShoppingListProps> = ({ trip, onUpdateTrip, t }) =>
     };
 
     const handleToggleItem = (itemId: string) => {
-        const updatedList = items?.map(item =>
+        const updatedList = items.map(item =>
             item.id === itemId ? { ...item, bought: !item.bought } : item
         );
-        onUpdateTrip({ ...trip, shoppingList: updatedList });
+        onUpdateItems(updatedList);
     };
 
     const handleDeleteItem = (itemId: string) => {
         if (confirm(t.delete_trip_confirm.replace('{title}', t.shopping_list))) {
             const updatedList = items.filter(item => item.id !== itemId);
-            onUpdateTrip({ ...trip, shoppingList: updatedList });
+            onUpdateItems(updatedList);
         }
     };
 

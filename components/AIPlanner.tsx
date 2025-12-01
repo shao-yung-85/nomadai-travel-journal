@@ -139,7 +139,7 @@ const AIPlanner: React.FC<AIPlannerProps> = ({
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col h-full w-full">
-        <div className="px-4 py-3 border-b border-sand/50 flex items-center justify-between bg-paper sticky top-0 z-10 pt-12">
+        <div className="px-4 py-3 border-b border-sand/50 flex items-center justify-between bg-paper sticky top-0 z-10 pt-safe pt-4">
           <div className="flex items-center">
             <button onClick={onCancel} className="p-2 -ml-2 rounded-full hover:bg-white text-gray-500 transition-colors">
               <ChevronLeftIcon className="w-6 h-6" />

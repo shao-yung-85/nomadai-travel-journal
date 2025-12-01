@@ -7,3 +7,15 @@ body {
     padding: 0;
     font-family: 'Inter', sans-serif;
 }
+
+.pt-safe {
+    padding-top: env(safe-area-inset-top);
+}
+
+.pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+.mt-safe {
+    margin-top: env(safe-area-inset-top);
+}

@@ -14,18 +14,20 @@ interface SettingsProps {
 
 const Settings: React.FC<SettingsProps> = ({ onBack, settings, onUpdateSettings, onResetApp, user, onLogout }) => {
     const [showResetConfirm, setShowResetConfirm] = useState(false);
-    const [apiKey, setApiKey] = useState('');
     const [showSaved, setShowSaved] = useState(false);
     const t = translations[settings.language] || translations['zh-TW'];
 
     useEffect(() => {
+        // Migration: Check for old local storage key
         const storedKey = localStorage.getItem('nomad_user_api_key');
-        if (storedKey) setApiKey(storedKey);
+        if (storedKey && !settings.apiKey) {
+            onUpdateSettings({ apiKey: storedKey });
+            localStorage.removeItem('nomad_user_api_key'); // Clean up
+        }
     }, []);
 
     const handleSaveApiKey = (value: string) => {
-        setApiKey(value);
-        localStorage.setItem('nomad_user_api_key', value);
+        onUpdateSettings({ apiKey: value });
         if (value) {
             setShowSaved(true);
             setTimeout(() => setShowSaved(false), 2000);
@@ -86,7 +88,7 @@ const Settings: React.FC<SettingsProps> = ({ onBack, settings, onUpdateSettings,
                         <div className="relative">
                             <input
                                 type="password"
-                                value={apiKey}
+                                value={settings.apiKey || ''}
                                 onChange={(e) => handleSaveApiKey(e.target.value)}
                                 placeholder={t.api_key_placeholder || '貼上您的 API Key'}
                                 className="w-full p-4 pr-20 bg-gray-50 rounded-xl border border-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all font-mono text-sm"

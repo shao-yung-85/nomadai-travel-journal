@@ -25,9 +25,18 @@ const getResponseText = (response: any): string => {
 /**
  * 使用 Gemini AI 將地址轉換為經緯度座標
  */
-export const geocodeAddress = async (address: string): Promise<{ lat: number; lng: number } | null> => {
+/**
+ * 使用 Gemini AI 將地址轉換為經緯度座標
+ */
+export const geocodeAddress = async (address: string, userApiKey?: string): Promise<{ lat: number; lng: number } | null> => {
     try {
-        const client = new GoogleGenAI({ apiKey: apiKey || backupKey });
+        const keyToUse = userApiKey || apiKey || backupKey;
+        if (!keyToUse) {
+            console.error("No API Key available for geocoding");
+            return null;
+        }
+
+        const client = new GoogleGenAI({ apiKey: keyToUse });
 
         const response = await client.models.generateContent({
             model: 'gemini-2.0-flash-exp',

@@ -154,6 +154,7 @@ export interface AppSettings {
   language: 'zh-TW' | 'en-US' | 'ja-JP';
   minimalistMode: boolean;
   themeColor?: string;
+  apiKey?: string;
 }
 
 export interface AIChatMessage {

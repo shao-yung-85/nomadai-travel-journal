@@ -51,7 +51,7 @@ const TripMemory: React.FC<TripMemoryProps> = ({ memories, onAddMemory, onDelete
     return (
         <div className="h-full flex flex-col bg-paper animate-slide-in pb-24">
             {/* Header */}
-            <div className="px-6 py-6 bg-white/80 backdrop-blur-md sticky top-0 z-10 border-b border-sand">
+            <div className="px-6 py-6 bg-white/80 backdrop-blur-md sticky top-0 z-10 border-b border-sand pt-safe pt-12">
                 <h1 className="text-2xl font-bold text-ink flex items-center gap-2">
                     <CameraIcon className="w-8 h-8 text-coral" />
                     旅程回憶
