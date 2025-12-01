@@ -120,7 +120,7 @@ const TripMap: React.FC<TripMapProps> = ({ trip, settings, onUpdateTrip }) => {
     const colors = ['#FF5733', '#33FF57', '#3357FF', '#FF33F5', '#33FFF5', '#F5FF33'];
 
     return (
-        <div className="h-full flex flex-col pb-24">
+        <div className="h-[60vh] flex flex-col pb-24">
             {/* Controls */}
             <div className="mb-4 flex gap-2 overflow-x-auto no-scrollbar py-1">
                 <button
@@ -160,8 +160,8 @@ const TripMap: React.FC<TripMapProps> = ({ trip, settings, onUpdateTrip }) => {
                     style={{ height: '100%', width: '100%' }}
                 >
                     <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        attribution='&copy; <a href="https://www.google.com/maps">Google Maps</a>'
+                        url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
                     />
 
                     {bounds && <MapUpdater bounds={bounds} />}
