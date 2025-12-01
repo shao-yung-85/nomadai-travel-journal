@@ -80,6 +80,32 @@ export const geocodeAddress = async (address: string, userApiKey?: string): Prom
         return null;
     };
 
+    // Helper to try OpenStreetMap (Nominatim)
+    const tryNominatimGeocode = async () => {
+        try {
+            console.log(`Trying OpenStreetMap (Nominatim)...`);
+            // Nominatim requires a unique User-Agent or Referer. Browser sends Referer.
+            const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=jsonv2&limit=1`;
+
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`Nominatim status: ${res.status}`);
+
+            const data = await res.json();
+
+            if (data && data.length > 0) {
+                const location = data[0];
+                return { lat: parseFloat(location.lat), lng: parseFloat(location.lon) };
+            } else {
+                console.warn('Nominatim found no results.');
+                window.localStorage.setItem('last_geocode_error', 'Nominatim: No results found');
+            }
+        } catch (e) {
+            console.warn('Nominatim request failed:', e);
+            window.localStorage.setItem('last_geocode_error', `Nominatim Error: ${e}`);
+        }
+        return null;
+    };
+
     // 1. Try User Key (Gemini -> Maps)
     if (userApiKey) {
         let result = await tryGeocode(userApiKey);
@@ -110,11 +136,13 @@ export const geocodeAddress = async (address: string, userApiKey?: string): Prom
         if (result) return result;
 
         // Fallback to Maps API with backup key
-        return await tryGoogleMapsGeocode(backupKey);
+        result = await tryGoogleMapsGeocode(backupKey);
+        if (result) return result;
     }
 
-    console.error("No API Key available for geocoding after all attempts.");
-    return null;
+    // 4. Final Fallback: OpenStreetMap (Nominatim) - No Key Required
+    console.log("All keys failed. Falling back to OpenStreetMap (Nominatim)...");
+    return await tryNominatimGeocode();
 };
 
 /**
