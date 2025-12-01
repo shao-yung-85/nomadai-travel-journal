@@ -6,7 +6,7 @@ const getApiKey = () => {
 };
 
 const apiKey = getApiKey();
-const backupKey = 'AIzaSyAOtra718u35-8wCxRrdnq-Lh2P-Y39dow';
+const backupKey = 'AIzaSyBu2o-gj4Mo1qVg-I7lnsTqbymn49EQUEY';
 
 // Helper to extract text from response
 const getResponseText = (response: any): string => {
