@@ -581,13 +581,15 @@ const TripItinerary: React.FC<TripItineraryProps> = ({ trip, settings, onUpdateT
                                 </div>
                             </div>
 
-                            <button
-                                onClick={handleSaveActivity}
-                                disabled={!newActivityName}
-                                className="w-full bg-coral text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-coral/30 mt-4 active:scale-95 transition-all disabled:opacity-50 disabled:shadow-none"
-                            >
-                                {editingItemId ? t.confirm : t.add_activity}
-                            </button>
+                            <div className="sticky bottom-0 bg-paper pt-4 mt-4 border-t border-sand">
+                                <button
+                                    onClick={handleSaveActivity}
+                                    disabled={!newActivityName}
+                                    className="w-full bg-coral text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-coral/30 active:scale-95 transition-all disabled:opacity-50 disabled:shadow-none"
+                                >
+                                    {editingItemId ? t.confirm : t.add_activity}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
