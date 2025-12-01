@@ -56,23 +56,58 @@ export const geocodeAddress = async (address: string, userApiKey?: string): Prom
         return null;
     };
 
-    // 1. Try User Key (if provided)
+    // Helper to try Google Maps Geocoding API
+    const tryGoogleMapsGeocode = async (key: string) => {
+        if (!key) return null;
+        try {
+            console.log(`Trying Google Maps Geocoding API with key ${key.substring(0, 5)}...`);
+            const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${key}`;
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (data.status === 'OK' && data.results && data.results.length > 0) {
+                const location = data.results[0].geometry.location;
+                return { lat: location.lat, lng: location.lng };
+            } else {
+                console.warn('Google Maps Geocoding API error:', data.status, data.error_message);
+            }
+        } catch (e) {
+            console.warn('Google Maps Geocoding API request failed:', e);
+        }
+        return null;
+    };
+
+    // 1. Try User Key (Gemini -> Maps)
     if (userApiKey) {
-        const result = await tryGeocode(userApiKey);
+        let result = await tryGeocode(userApiKey);
         if (result) return result;
+
+        // Fallback to Maps API with user key
+        result = await tryGoogleMapsGeocode(userApiKey);
+        if (result) return result;
+
         console.log("User key failed, trying environment key...");
     }
 
-    // 2. Try Environment Key (VITE_API_KEY)
+    // 2. Try Environment Key (Gemini -> Maps)
     if (apiKey) {
-        const result = await tryGeocode(apiKey);
+        let result = await tryGeocode(apiKey);
         if (result) return result;
+
+        // Fallback to Maps API with env key
+        result = await tryGoogleMapsGeocode(apiKey);
+        if (result) return result;
+
         console.log("Environment key failed, trying backup key...");
     }
 
-    // 3. Try Backup Key
+    // 3. Try Backup Key (Gemini -> Maps)
     if (backupKey) {
-        return await tryGeocode(backupKey);
+        let result = await tryGeocode(backupKey);
+        if (result) return result;
+
+        // Fallback to Maps API with backup key
+        return await tryGoogleMapsGeocode(backupKey);
     }
 
     console.error("No API Key available for geocoding after all attempts.");
