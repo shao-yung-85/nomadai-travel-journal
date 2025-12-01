@@ -116,6 +116,17 @@ const TripMap: React.FC<TripMapProps> = ({ trip, settings, onUpdateTrip }) => {
         }
     };
 
+    // Auto-sync on mount if items exist but coords are missing
+    useEffect(() => {
+        const hasItems = trip.itinerary && trip.itinerary.length > 0;
+        const hasMissingCoords = trip.itinerary?.some(i => !i.coordinates && !i.lat);
+
+        if (hasItems && hasMissingCoords) {
+            handleGeocodeMissing();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Run once on mount
+
     const days = Object.keys(itemsByDay).map(Number).sort((a, b) => a - b);
     const colors = ['#FF5733', '#33FF57', '#3357FF', '#FF33F5', '#33FFF5', '#F5FF33'];
 
@@ -209,24 +220,11 @@ const TripMap: React.FC<TripMapProps> = ({ trip, settings, onUpdateTrip }) => {
                     })}
                 </MapContainer>
 
-                {(!bounds) && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/10 pointer-events-none z-[400]">
-                        <div className="bg-white p-4 rounded-2xl shadow-lg text-center pointer-events-auto">
-                            <MapPinIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                            <p className="text-sm font-bold text-gray-500">No coordinates found.</p>
-                            <button
-                                onClick={handleGeocodeMissing}
-                                disabled={isGeocoding}
-                                className="mt-3 px-4 py-2 bg-coral text-white rounded-xl text-xs font-bold shadow-lg shadow-coral/30 active:scale-95 transition-all disabled:opacity-50"
-                            >
-                                {isGeocoding ? 'Syncing...' : 'Sync Map Locations'}
-                            </button>
-                        </div>
-                    </div>
-                )}
+                {/* Overlay removed for auto-show map */}
             </div>
         </div>
     );
 };
+
 
 export default TripMap;
