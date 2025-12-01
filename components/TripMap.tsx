@@ -83,8 +83,8 @@ const TripMap: React.FC<TripMapProps> = ({ trip, settings, onUpdateTrip }) => {
                 const item = newItinerary[i];
                 if (!item.coordinates && !item.lat) {
                     // Try to geocode
-                    // Use location + destination title for better context
-                    const query = `${item.location}, ${trip.title}`;
+                    // Use location only for clearer context
+                    const query = item.location;
                     console.log(`Geocoding: ${query}`);
                     const coords = await geocodeAddress(query, settings.apiKey);
 
@@ -121,7 +121,10 @@ const TripMap: React.FC<TripMapProps> = ({ trip, settings, onUpdateTrip }) => {
         const hasItems = trip.itinerary && trip.itinerary.length > 0;
         const hasMissingCoords = trip.itinerary?.some(i => !i.coordinates && !i.lat);
 
+        console.log("Auto-Sync Check:", { hasItems, hasMissingCoords, itinerary: trip.itinerary });
+
         if (hasItems && hasMissingCoords) {
+            console.log("Triggering auto-sync...");
             handleGeocodeMissing();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
