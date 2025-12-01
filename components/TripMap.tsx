@@ -236,6 +236,7 @@ const TripMap: React.FC<TripMapProps> = ({ trip, settings, onUpdateTrip }) => {
                 <p>Items to Geocode: {displayItems.filter(i => !i.coordinates && !i.lat).length}</p>
                 <p>Last Query: {window.localStorage.getItem('last_geocode_query') || 'None'}</p>
                 <p>Last Result: {window.localStorage.getItem('last_geocode_result') || 'None'}</p>
+                <p className="text-red-400">Last Error: {window.localStorage.getItem('last_geocode_error') || 'None'}</p>
 
                 <div className="flex gap-2 mt-2">
                     <button
