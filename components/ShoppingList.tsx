@@ -129,15 +129,12 @@ const ShoppingList: React.FC<ShoppingListProps> = ({ items, onUpdateItems, setti
             )}
 
             {/* Floating Add Button */}
-            <div className="fixed bottom-28 left-0 right-0 px-6 flex justify-center pointer-events-none">
-                <button
-                    onClick={() => setIsAdding(true)}
-                    className="w-full max-w-xs bg-coral text-white py-4 rounded-2xl font-bold text-lg shadow-float flex items-center justify-center gap-2 pointer-events-auto active:scale-95 transition-all hover:bg-coralDark ring-4 ring-white"
-                >
-                    <PlusIcon className="w-5 h-5 stroke-[3]" />
-                    {t.add_activity}
-                </button>
-            </div>
+            <button
+                onClick={() => setIsAdding(true)}
+                className="fixed bottom-24 right-6 w-14 h-14 bg-coral text-white rounded-full shadow-xl shadow-coral/40 flex items-center justify-center z-30 hover:bg-coralDark active:scale-90 transition-all"
+            >
+                <PlusIcon className="w-8 h-8 stroke-[2]" />
+            </button>
         </div>
     );
 };
