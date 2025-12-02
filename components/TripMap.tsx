@@ -30,7 +30,7 @@ const MapUpdater = ({ bounds }: { bounds: L.LatLngBoundsExpression }) => {
     const map = useMap();
     useEffect(() => {
         if (bounds && (bounds as any).length > 0) {
-            map.fitBounds(bounds, { padding: [50, 50] });
+            map.fitBounds(bounds, { padding: [80, 80] });
         }
     }, [bounds, map]);
     return null;
@@ -186,7 +186,10 @@ const TripMap: React.FC<TripMapProps> = ({ trip, settings, onUpdateTrip }) => {
             {/* Controls */}
             <div className="mb-4 flex gap-2 overflow-x-auto no-scrollbar py-1 shrink-0">
                 <button
-                    onClick={() => setActiveDay('ALL')}
+                    onClick={() => {
+                        setActiveDay('ALL');
+                        setSelectedItemId(null); // Reset selection to show all bounds
+                    }}
                     className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${activeDay === 'ALL' ? 'bg-ink text-white' : 'bg-white text-gray-500 border border-sand'}`}
                 >
                     ALL
@@ -194,7 +197,10 @@ const TripMap: React.FC<TripMapProps> = ({ trip, settings, onUpdateTrip }) => {
                 {days.map(day => (
                     <button
                         key={day}
-                        onClick={() => setActiveDay(day)}
+                        onClick={() => {
+                            setActiveDay(day);
+                            setSelectedItemId(null); // Reset selection to show day bounds
+                        }}
                         className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${activeDay === day ? 'bg-coral text-white' : 'bg-white text-gray-500 border border-sand'}`}
                     >
                         Day {day}
