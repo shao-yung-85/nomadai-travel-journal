@@ -28,7 +28,27 @@ const getResponseText = (response: any): string => {
 /**
  * 使用 Gemini AI 將地址轉換為經緯度座標
  */
+/**
+ * 使用 Gemini AI 將地址轉換為經緯度座標
+ */
+const TEST_LOCATIONS: Record<string, { lat: number, lng: number }> = {
+    "1": { lat: 25.0330, lng: 121.5654 }, // Taipei 101
+    "2": { lat: 25.0421, lng: 121.5082 }, // Ximending
+    "3": { lat: 25.1024, lng: 121.5486 }, // National Palace Museum
+    "test": { lat: 25.0330, lng: 121.5654 },
+    "kyoto": { lat: 35.0116, lng: 135.7681 },
+    "osaka": { lat: 34.6937, lng: 135.5023 },
+    "tokyo": { lat: 35.6762, lng: 139.6503 }
+};
+
 export const geocodeAddress = async (address: string, userApiKey?: string): Promise<{ lat: number; lng: number } | null> => {
+    // 0. Check Test Locations first
+    const normalizedAddr = address.toLowerCase().trim();
+    if (TEST_LOCATIONS[normalizedAddr]) {
+        console.log(`Using Test Location for: ${address}`);
+        return TEST_LOCATIONS[normalizedAddr];
+    }
+
     // Helper to try geocoding with a specific key
     const tryGeocode = async (key: string | undefined) => {
         if (!key) return null; // If key is undefined or empty, don't even try
