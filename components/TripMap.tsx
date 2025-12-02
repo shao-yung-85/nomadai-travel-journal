@@ -63,6 +63,45 @@ const MapController = ({ selectedLocation }: { selectedLocation: { lat: number; 
     return null;
 };
 
+// Component to render individual markers with auto-popup functionality
+const ItineraryMarker = ({ item, index, isSelected, color, onClick }: { item: ItineraryItem, index: number, isSelected: boolean, color: string, onClick: () => void }) => {
+    const markerRef = React.useRef<L.Marker>(null);
+
+    useEffect(() => {
+        if (isSelected && markerRef.current) {
+            markerRef.current.openPopup();
+        }
+    }, [isSelected]);
+
+    const lat = item.coordinates?.lat || item.lat;
+    const lng = item.coordinates?.lng || item.lng;
+    if (!lat || !lng) return null;
+
+    return (
+        <Marker
+            ref={markerRef}
+            position={[lat, lng]}
+            icon={L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div style="background-color: ${isSelected ? '#C5A059' : color}; width: ${isSelected ? '32px' : '24px'}; height: ${isSelected ? '32px' : '24px'}; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: ${isSelected ? '14px' : '12px'}; transition: all 0.3s ease;">${index + 1}</div>`,
+                iconSize: [isSelected ? 32 : 24, isSelected ? 32 : 24],
+                iconAnchor: [isSelected ? 16 : 12, isSelected ? 16 : 12]
+            })}
+            eventHandlers={{
+                click: onClick
+            }}
+        >
+            <Popup>
+                <div className="text-center">
+                    <div className="font-bold text-ink">{index + 1}. {item.activity}</div>
+                    <div className="text-xs text-gray-500">{item.time}</div>
+                    <div className="text-xs text-coral mt-1">Day {item.day}</div>
+                </div>
+            </Popup>
+        </Marker>
+    );
+};
+
 const TripMap: React.FC<TripMapProps> = ({ trip, settings, onUpdateTrip }) => {
     const t = translations[settings.language] || translations['zh-TW'];
     const [isGeocoding, setIsGeocoding] = useState(false);
@@ -245,37 +284,16 @@ const TripMap: React.FC<TripMapProps> = ({ trip, settings, onUpdateTrip }) => {
                     <MapController selectedLocation={selectedLocation} />
 
                     {/* Markers */}
-                    {displayItems.map((item, idx) => {
-                        const lat = item.coordinates?.lat || item.lat;
-                        const lng = item.coordinates?.lng || item.lng;
-                        if (!lat || !lng) return null;
-
-                        const isSelected = selectedItemId === item.id;
-
-                        return (
-                            <Marker
-                                key={item.id || idx}
-                                position={[lat, lng]}
-                                icon={L.divIcon({
-                                    className: 'custom-div-icon',
-                                    html: `<div style="background-color: ${isSelected ? '#C5A059' : colors[(item.day - 1) % colors.length]}; width: ${isSelected ? '32px' : '24px'}; height: ${isSelected ? '32px' : '24px'}; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: ${isSelected ? '14px' : '12px'}; transition: all 0.3s ease;">${idx + 1}</div>`,
-                                    iconSize: [isSelected ? 32 : 24, isSelected ? 32 : 24],
-                                    iconAnchor: [isSelected ? 16 : 12, isSelected ? 16 : 12]
-                                })}
-                                eventHandlers={{
-                                    click: () => setSelectedItemId(item.id)
-                                }}
-                            >
-                                <Popup>
-                                    <div className="text-center">
-                                        <div className="font-bold text-ink">{idx + 1}. {item.activity}</div>
-                                        <div className="text-xs text-gray-500">{item.time}</div>
-                                        <div className="text-xs text-coral mt-1">Day {item.day}</div>
-                                    </div>
-                                </Popup>
-                            </Marker>
-                        );
-                    })}
+                    {displayItems.map((item, idx) => (
+                        <ItineraryMarker
+                            key={item.id || idx}
+                            item={item}
+                            index={idx}
+                            isSelected={selectedItemId === item.id}
+                            color={colors[(item.day - 1) % colors.length]}
+                            onClick={() => setSelectedItemId(item.id)}
+                        />
+                    ))}
 
                     {/* Polylines */}
                     {days.map((day, idx) => {
