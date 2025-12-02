@@ -159,6 +159,14 @@ const TripMap: React.FC<TripMapProps> = ({ trip, settings, onUpdateTrip }) => {
         }
     };
 
+    // Auto-select first item on load
+    useEffect(() => {
+        if (trip.itinerary && trip.itinerary.length > 0) {
+            // Select the first item by default
+            setSelectedItemId(trip.itinerary[0].id);
+        }
+    }, [trip.id]); // Re-run if trip changes
+
     // Auto-sync on mount if items exist but coords are missing
     useEffect(() => {
         // Clear stale errors on mount
@@ -221,7 +229,7 @@ const TripMap: React.FC<TripMapProps> = ({ trip, settings, onUpdateTrip }) => {
             </div>
 
             {/* Map Container */}
-            <div className="h-[45vh] shrink-0 bg-gray-100 rounded-3xl overflow-hidden shadow-inner border border-sand relative z-0 mb-4">
+            <div className="h-[35vh] shrink-0 bg-gray-100 rounded-3xl overflow-hidden shadow-inner border border-sand relative z-0 mb-4">
                 <MapContainer
                     center={[25.0330, 121.5654]} // Default to Taipei
                     zoom={13}
