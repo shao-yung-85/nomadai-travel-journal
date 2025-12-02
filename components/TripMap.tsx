@@ -25,27 +25,17 @@ interface TripMapProps {
     onUpdateTrip?: (trip: Trip) => void;
 }
 
-// Component to update map view bounds
-const MapUpdater = ({ bounds }: { bounds: L.LatLngBoundsExpression }) => {
+// Component to handle map flyTo actions
+const MapController = ({ selectedLocation }: { selectedLocation: { lat: number; lng: number } | null }) => {
     const map = useMap();
     useEffect(() => {
-        if (bounds && (bounds as any).length > 0) {
-            map.fitBounds(bounds, { padding: [50, 50] });
+        if (selectedLocation) {
+            map.flyTo([selectedLocation.lat, selectedLocation.lng], 16, {
+                animate: true,
+                duration: 1.5
+            });
         }
-    }, [bounds, map]);
-    return null;
-};
-
-// Component to invalidate map size on mount to fix rendering issues
-const MapInvalidator = () => {
-    const map = useMap();
-    useEffect(() => {
-        // Small delay to ensure container is fully rendered and sized
-        const timer = setTimeout(() => {
-            map.invalidateSize();
-        }, 250);
-        return () => clearTimeout(timer);
-    }, [map]);
+    }, [selectedLocation, map]);
     return null;
 };
 
@@ -53,6 +43,7 @@ const TripMap: React.FC<TripMapProps> = ({ trip, settings, onUpdateTrip }) => {
     const t = translations[settings.language] || translations['zh-TW'];
     const [isGeocoding, setIsGeocoding] = useState(false);
     const [activeDay, setActiveDay] = useState<number | 'ALL'>('ALL');
+    const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
     // Filter items based on active day
     const displayItems = useMemo(() => {
@@ -84,6 +75,18 @@ const TripMap: React.FC<TripMapProps> = ({ trip, settings, onUpdateTrip }) => {
         if (points.length === 0) return null;
         return points;
     }, [displayItems]);
+
+    const selectedLocation = useMemo(() => {
+        if (!selectedItemId) return null;
+        const item = trip.itinerary?.find(i => i.id === selectedItemId);
+        if (item && (item.coordinates || (item.lat && item.lng))) {
+            return {
+                lat: item.coordinates?.lat || item.lat!,
+                lng: item.coordinates?.lng || item.lng!
+            };
+        }
+        return null;
+    }, [selectedItemId, trip.itinerary]);
 
     // Handle Geocoding Missing Items
     const handleGeocodeMissing = async () => {
@@ -155,9 +158,9 @@ const TripMap: React.FC<TripMapProps> = ({ trip, settings, onUpdateTrip }) => {
     const colors = ['#FF5733', '#33FF57', '#3357FF', '#FF33F5', '#33FFF5', '#F5FF33'];
 
     return (
-        <div className="h-[60vh] flex flex-col pb-24">
+        <div className="h-full flex flex-col pb-24">
             {/* Controls */}
-            <div className="mb-4 flex gap-2 overflow-x-auto no-scrollbar py-1">
+            <div className="mb-4 flex gap-2 overflow-x-auto no-scrollbar py-1 shrink-0">
                 <button
                     onClick={() => setActiveDay('ALL')}
                     className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${activeDay === 'ALL' ? 'bg-ink text-white' : 'bg-white text-gray-500 border border-sand'}`}
@@ -187,8 +190,8 @@ const TripMap: React.FC<TripMapProps> = ({ trip, settings, onUpdateTrip }) => {
                 </button>
             </div>
 
-            {/* Map */}
-            <div className="flex-1 bg-gray-100 rounded-3xl overflow-hidden shadow-inner border border-sand relative z-0">
+            {/* Map Container */}
+            <div className="h-[45vh] shrink-0 bg-gray-100 rounded-3xl overflow-hidden shadow-inner border border-sand relative z-0 mb-4">
                 <MapContainer
                     center={[25.0330, 121.5654]} // Default to Taipei
                     zoom={13}
@@ -200,7 +203,8 @@ const TripMap: React.FC<TripMapProps> = ({ trip, settings, onUpdateTrip }) => {
                     />
 
                     <MapInvalidator />
-                    {bounds && <MapUpdater bounds={bounds} />}
+                    {bounds && !selectedLocation && <MapUpdater bounds={bounds} />}
+                    <MapController selectedLocation={selectedLocation} />
 
                     {/* Markers */}
                     {displayItems.map((item, idx) => {
@@ -208,16 +212,21 @@ const TripMap: React.FC<TripMapProps> = ({ trip, settings, onUpdateTrip }) => {
                         const lng = item.coordinates?.lng || item.lng;
                         if (!lat || !lng) return null;
 
+                        const isSelected = selectedItemId === item.id;
+
                         return (
                             <Marker
                                 key={item.id || idx}
                                 position={[lat, lng]}
                                 icon={L.divIcon({
                                     className: 'custom-div-icon',
-                                    html: `<div style="background-color: ${colors[(item.day - 1) % colors.length]}; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px;">${idx + 1}</div>`,
-                                    iconSize: [24, 24],
-                                    iconAnchor: [12, 12]
+                                    html: `<div style="background-color: ${isSelected ? '#C5A059' : colors[(item.day - 1) % colors.length]}; width: ${isSelected ? '32px' : '24px'}; height: ${isSelected ? '32px' : '24px'}; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: ${isSelected ? '14px' : '12px'}; transition: all 0.3s ease;">${idx + 1}</div>`,
+                                    iconSize: [isSelected ? 32 : 24, isSelected ? 32 : 24],
+                                    iconAnchor: [isSelected ? 16 : 12, isSelected ? 16 : 12]
                                 })}
+                                eventHandlers={{
+                                    click: () => setSelectedItemId(item.id)
+                                }}
                             >
                                 <Popup>
                                     <div className="text-center">
@@ -253,8 +262,36 @@ const TripMap: React.FC<TripMapProps> = ({ trip, settings, onUpdateTrip }) => {
                         );
                     })}
                 </MapContainer>
+            </div>
 
-                {/* Overlay removed for auto-show map */}
+            {/* Itinerary List */}
+            <div className="flex-1 overflow-y-auto min-h-0 space-y-3 px-1">
+                {displayItems.map((item, idx) => (
+                    <div
+                        key={item.id || idx}
+                        onClick={() => setSelectedItemId(item.id)}
+                        className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center gap-4 ${selectedItemId === item.id ? 'bg-coral/10 border-coral shadow-md' : 'bg-white border-sand hover:border-coral/50'}`}
+                    >
+                        <div
+                            className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold shrink-0"
+                            style={{ backgroundColor: colors[(item.day - 1) % colors.length] }}
+                        >
+                            {idx + 1}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-start">
+                                <h3 className="font-bold text-ink truncate">{item.activity}</h3>
+                                <span className="text-xs font-bold text-coral bg-coral/10 px-2 py-0.5 rounded-full whitespace-nowrap">
+                                    Day {item.day}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                                <span className="font-mono bg-gray-100 px-1.5 py-0.5 rounded">{item.time}</span>
+                                <span className="truncate">{item.location}</span>
+                            </div>
+                        </div>
+                    </div>
+                ))}
             </div>
         </div>
     );
