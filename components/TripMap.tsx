@@ -25,6 +25,30 @@ interface TripMapProps {
     onUpdateTrip?: (trip: Trip) => void;
 }
 
+// Component to update map view bounds
+const MapUpdater = ({ bounds }: { bounds: L.LatLngBoundsExpression }) => {
+    const map = useMap();
+    useEffect(() => {
+        if (bounds && (bounds as any).length > 0) {
+            map.fitBounds(bounds, { padding: [50, 50] });
+        }
+    }, [bounds, map]);
+    return null;
+};
+
+// Component to invalidate map size on mount to fix rendering issues
+const MapInvalidator = () => {
+    const map = useMap();
+    useEffect(() => {
+        // Small delay to ensure container is fully rendered and sized
+        const timer = setTimeout(() => {
+            map.invalidateSize();
+        }, 250);
+        return () => clearTimeout(timer);
+    }, [map]);
+    return null;
+};
+
 // Component to handle map flyTo actions
 const MapController = ({ selectedLocation }: { selectedLocation: { lat: number; lng: number } | null }) => {
     const map = useMap();
