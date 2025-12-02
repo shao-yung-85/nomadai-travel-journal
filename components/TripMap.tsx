@@ -36,6 +36,19 @@ const MapUpdater = ({ bounds }: { bounds: L.LatLngBoundsExpression }) => {
     return null;
 };
 
+// Component to invalidate map size on mount to fix rendering issues
+const MapInvalidator = () => {
+    const map = useMap();
+    useEffect(() => {
+        // Small delay to ensure container is fully rendered and sized
+        const timer = setTimeout(() => {
+            map.invalidateSize();
+        }, 250);
+        return () => clearTimeout(timer);
+    }, [map]);
+    return null;
+};
+
 const TripMap: React.FC<TripMapProps> = ({ trip, settings, onUpdateTrip }) => {
     const t = translations[settings.language] || translations['zh-TW'];
     const [isGeocoding, setIsGeocoding] = useState(false);
@@ -186,6 +199,7 @@ const TripMap: React.FC<TripMapProps> = ({ trip, settings, onUpdateTrip }) => {
                         url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
                     />
 
+                    <MapInvalidator />
                     {bounds && <MapUpdater bounds={bounds} />}
 
                     {/* Markers */}
@@ -232,38 +246,6 @@ const TripMap: React.FC<TripMapProps> = ({ trip, settings, onUpdateTrip }) => {
                 </MapContainer>
 
                 {/* Overlay removed for auto-show map */}
-            </div>
-
-            {/* Debug Panel - Temporary */}
-            <div className="mt-4 p-4 bg-gray-800 text-green-400 text-xs font-mono rounded-xl overflow-x-auto">
-                <p className="font-bold text-white mb-2">Debug Info:</p>
-                <p>API Key Configured: {settings.apiKey ? 'Yes (User)' : 'No (Using Backup)'}</p>
-                <p>Items to Geocode: {displayItems.filter(i => !i.coordinates && !i.lat).length}</p>
-                <p>Last Query: {window.localStorage.getItem('last_geocode_query') || 'None'}</p>
-                <p>Last Result: {window.localStorage.getItem('last_geocode_result') || 'None'}</p>
-                <p className="text-red-400">Last Error: {window.localStorage.getItem('last_geocode_error') || 'None'}</p>
-
-                <div className="flex gap-2 mt-2">
-                    <button
-                        onClick={() => {
-                            const newItinerary = trip.itinerary.map(i => ({ ...i, coordinates: undefined, lat: undefined, lng: undefined }));
-                            onUpdateTrip?.({ ...trip, itinerary: newItinerary });
-                            window.location.reload();
-                        }}
-                        className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
-                    >
-                        Force Reset Coords
-                    </button>
-                    <button
-                        onClick={async () => {
-                            const res = await geocodeAddress("Paris", settings.apiKey);
-                            alert(JSON.stringify(res));
-                        }}
-                        className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
-                    >
-                        Test Geocoding (Paris)
-                    </button>
-                </div>
             </div>
         </div>
     );
