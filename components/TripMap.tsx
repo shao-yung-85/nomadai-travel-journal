@@ -209,10 +209,19 @@ const TripMap: React.FC<TripMapProps> = ({ trip, settings, onUpdateTrip }) => {
                         if (!lat || !lng) return null;
 
                         return (
-                            <Marker key={item.id || idx} position={[lat, lng]}>
+                            <Marker
+                                key={item.id || idx}
+                                position={[lat, lng]}
+                                icon={L.divIcon({
+                                    className: 'custom-div-icon',
+                                    html: `<div style="background-color: ${colors[(item.day - 1) % colors.length]}; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px;">${idx + 1}</div>`,
+                                    iconSize: [24, 24],
+                                    iconAnchor: [12, 12]
+                                })}
+                            >
                                 <Popup>
                                     <div className="text-center">
-                                        <div className="font-bold text-ink">{item.activity}</div>
+                                        <div className="font-bold text-ink">{idx + 1}. {item.activity}</div>
                                         <div className="text-xs text-gray-500">{item.time}</div>
                                         <div className="text-xs text-coral mt-1">Day {item.day}</div>
                                     </div>
