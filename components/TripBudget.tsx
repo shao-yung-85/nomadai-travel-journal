@@ -59,13 +59,22 @@ const TripBudget: React.FC<TripBudgetProps> = ({ trip, settings, onUpdateTrip })
     useEffect(() => {
         const fetchRate = async () => {
             const baseCurrency = trip.budget?.currency || 'TWD';
-            if (selectedCurrency !== baseCurrency && settings.apiKey) {
-                setIsFetchingRate(true);
-                const rate = await getExchangeRate(selectedCurrency, baseCurrency);
-                if (rate) {
-                    setExchangeRate(rate);
+            if (selectedCurrency !== baseCurrency) {
+                if (settings.apiKey) {
+                    setIsFetchingRate(true);
+                    try {
+                        const rate = await getExchangeRate(selectedCurrency, baseCurrency);
+                        if (rate) {
+                            setExchangeRate(rate);
+                        } else {
+                            // Only alert if we tried and failed (and it wasn't just a race condition/unmount)
+                            console.warn("Failed to fetch rate");
+                        }
+                    } catch (e) {
+                        console.error(e);
+                    }
+                    setIsFetchingRate(false);
                 }
-                setIsFetchingRate(false);
             }
         };
         fetchRate();
@@ -311,6 +320,11 @@ const TripBudget: React.FC<TripBudgetProps> = ({ trip, settings, onUpdateTrip })
                                             </div>
                                         )}
                                     </div>
+                                    {!settings.apiKey && (
+                                        <p className="text-[10px] text-red-400 mt-1">
+                                            * 請在設定中輸入 API Key 以啟用自動匯率
+                                        </p>
+                                    )}
                                 </div>
                             )}
 

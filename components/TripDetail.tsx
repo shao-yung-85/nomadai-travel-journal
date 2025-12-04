@@ -83,13 +83,15 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
     useEffect(() => {
         const fetchRate = async () => {
             const baseCurrency = trip.budget?.currency || 'TWD';
-            if (quickExpenseCurrency !== baseCurrency && settings.apiKey) {
-                setIsFetchingQuickRate(true);
-                const rate = await getExchangeRate(quickExpenseCurrency, baseCurrency);
-                if (rate) {
-                    setQuickExpenseRate(rate);
+            if (quickExpenseCurrency !== baseCurrency) {
+                if (settings.apiKey) {
+                    setIsFetchingQuickRate(true);
+                    const rate = await getExchangeRate(quickExpenseCurrency, baseCurrency);
+                    if (rate) {
+                        setQuickExpenseRate(rate);
+                    }
+                    setIsFetchingQuickRate(false);
                 }
-                setIsFetchingQuickRate(false);
             }
         };
         fetchRate();
@@ -552,6 +554,11 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
                                                 </div>
                                             )}
                                         </div>
+                                        {!settings.apiKey && (
+                                            <p className="text-[10px] text-red-400 mt-1">
+                                                * 請在設定中輸入 API Key 以啟用自動匯率
+                                            </p>
+                                        )}
                                     </div>
                                 )}
 
