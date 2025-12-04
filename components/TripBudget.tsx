@@ -3,6 +3,7 @@ import { Trip, ExpenseItem, AppSettings } from '../types';
 import { translations } from '../utils/translations';
 import { TrashIcon } from './Icons';
 import { COMMON_CURRENCIES, getCurrencySymbol } from '../utils/currencies';
+import { getExchangeRate } from '../services/gemini';
 
 interface TripBudgetProps {
     trip: Trip;
@@ -23,6 +24,7 @@ const TripBudget: React.FC<TripBudgetProps> = ({ trip, settings, onUpdateTrip })
     const [selectedCurrency, setSelectedCurrency] = useState(trip.budget?.currency || 'TWD');
     const [exchangeRate, setExchangeRate] = useState('');
     const [calculatedBaseAmount, setCalculatedBaseAmount] = useState(0);
+    const [isFetchingRate, setIsFetchingRate] = useState(false);
 
     // Reset currency when modal opens
     useEffect(() => {
@@ -31,6 +33,22 @@ const TripBudget: React.FC<TripBudgetProps> = ({ trip, settings, onUpdateTrip })
             setExchangeRate('');
         }
     }, [isAddingExpense, trip.budget?.currency]);
+
+    // Auto-fetch exchange rate
+    useEffect(() => {
+        const fetchRate = async () => {
+            const baseCurrency = trip.budget?.currency || 'TWD';
+            if (selectedCurrency !== baseCurrency && settings.apiKey) {
+                setIsFetchingRate(true);
+                const rate = await getExchangeRate(selectedCurrency, baseCurrency);
+                if (rate) {
+                    setExchangeRate(rate);
+                }
+                setIsFetchingRate(false);
+            }
+        };
+        fetchRate();
+    }, [selectedCurrency, trip.budget?.currency, settings.apiKey]);
 
     // Calculate base amount when inputs change
     useEffect(() => {
@@ -229,15 +247,23 @@ const TripBudget: React.FC<TripBudgetProps> = ({ trip, settings, onUpdateTrip })
                                             ≈ {baseSymbol}{calculatedBaseAmount.toLocaleString()}
                                         </span>
                                     </div>
-                                    <input
-                                        value={exchangeRate}
-                                        onChange={(e) => setExchangeRate(e.target.value)}
-                                        type="number"
-                                        step="0.01"
-                                        placeholder="Exchange Rate"
-                                        className="w-full bg-white p-3 rounded-xl text-sm font-bold border-none shadow-sm outline-none"
-                                        onFocus={(e) => e.target.select()}
-                                    />
+                                    <div className="relative">
+                                        <input
+                                            value={exchangeRate}
+                                            onChange={(e) => setExchangeRate(e.target.value)}
+                                            type="number"
+                                            step="0.01"
+                                            placeholder={isFetchingRate ? "載入匯率中..." : "Exchange Rate"}
+                                            className="w-full bg-white p-3 rounded-xl text-sm font-bold border-none shadow-sm outline-none"
+                                            onFocus={(e) => e.target.select()}
+                                            disabled={isFetchingRate}
+                                        />
+                                        {isFetchingRate && (
+                                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                                <div className="w-4 h-4 border-2 border-coral border-t-transparent rounded-full animate-spin"></div>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             )}
 

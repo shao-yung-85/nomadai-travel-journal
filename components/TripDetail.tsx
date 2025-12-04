@@ -9,6 +9,7 @@ import TripMap from './TripMap';
 import { translations } from '../utils/translations';
 import { geocodeAddress } from '../services/geocoding';
 import { COMMON_CURRENCIES, getCurrencySymbol } from '../utils/currencies';
+import { getExchangeRate } from '../services/gemini';
 
 interface TripDetailProps {
     trip: Trip;
@@ -68,6 +69,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
     const [quickExpenseCurrency, setQuickExpenseCurrency] = useState(trip.budget?.currency || 'TWD');
     const [quickExpenseRate, setQuickExpenseRate] = useState('');
     const [quickExpenseBaseAmount, setQuickExpenseBaseAmount] = useState(0);
+    const [isFetchingQuickRate, setIsFetchingQuickRate] = useState(false);
 
     // Reset currency when modal opens
     useEffect(() => {
@@ -76,6 +78,22 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
             setQuickExpenseRate('');
         }
     }, [isAddingQuickExpense, trip.budget?.currency]);
+
+    // Auto-fetch exchange rate for Quick Expense
+    useEffect(() => {
+        const fetchRate = async () => {
+            const baseCurrency = trip.budget?.currency || 'TWD';
+            if (quickExpenseCurrency !== baseCurrency && settings.apiKey) {
+                setIsFetchingQuickRate(true);
+                const rate = await getExchangeRate(quickExpenseCurrency, baseCurrency);
+                if (rate) {
+                    setQuickExpenseRate(rate);
+                }
+                setIsFetchingQuickRate(false);
+            }
+        };
+        fetchRate();
+    }, [quickExpenseCurrency, trip.budget?.currency, settings.apiKey]);
 
     // Calculate base amount when inputs change
     useEffect(() => {
@@ -517,15 +535,23 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
                                                 ≈ {baseSymbol}{quickExpenseBaseAmount.toLocaleString()}
                                             </span>
                                         </div>
-                                        <input
-                                            value={quickExpenseRate}
-                                            onChange={(e) => setQuickExpenseRate(e.target.value)}
-                                            type="number"
-                                            step="0.01"
-                                            placeholder="Exchange Rate"
-                                            className="w-full bg-white p-3 rounded-xl text-sm font-bold border-none shadow-sm outline-none"
-                                            onFocus={(e) => e.target.select()}
-                                        />
+                                        <div className="relative">
+                                            <input
+                                                value={quickExpenseRate}
+                                                onChange={(e) => setQuickExpenseRate(e.target.value)}
+                                                type="number"
+                                                step="0.01"
+                                                placeholder={isFetchingQuickRate ? "載入匯率中..." : "Exchange Rate"}
+                                                className="w-full bg-white p-3 rounded-xl text-sm font-bold border-none shadow-sm outline-none"
+                                                onFocus={(e) => e.target.select()}
+                                                disabled={isFetchingQuickRate}
+                                            />
+                                            {isFetchingQuickRate && (
+                                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                                    <div className="w-4 h-4 border-2 border-coral border-t-transparent rounded-full animate-spin"></div>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 )}
 
