@@ -414,20 +414,25 @@ export const getClothingAdvice = async (weather: any[], location: string, langua
 };
 
 export const getExchangeRate = async (fromCurrency: string, toCurrency: string): Promise<string | null> => {
-    return callAiWithFallback(async (ai) => {
-        try {
-            const response = await ai.models.generateContent({
-                model: MODEL_NAME,
-                contents: `What is the current exchange rate from ${fromCurrency} to ${toCurrency}?
-                Return ONLY the number. Example: 0.23
-                If you are unsure, return "null".`
-            });
-            const text = getResponseText(response);
-            const rate = parseFloat(text);
-            return isNaN(rate) ? null : rate.toString();
-        } catch (error) {
-            console.error("Exchange Rate Error:", error);
-            return null;
-        }
-    });
+    try {
+        return await callAiWithFallback(async (ai) => {
+            try {
+                const response = await ai.models.generateContent({
+                    model: MODEL_NAME,
+                    contents: `What is the current exchange rate from ${fromCurrency} to ${toCurrency}?
+                    Return ONLY the number. Example: 0.23
+                    If you are unsure, return "null".`
+                });
+                const text = getResponseText(response);
+                const rate = parseFloat(text);
+                return isNaN(rate) ? null : rate.toString();
+            } catch (error) {
+                console.error("Exchange Rate Error:", error);
+                return null;
+            }
+        });
+    } catch (error) {
+        console.warn("Call AI failed for exchange rate:", error);
+        return null;
+    }
 };

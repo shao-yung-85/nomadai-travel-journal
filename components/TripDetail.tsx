@@ -86,9 +86,13 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
             if (quickExpenseCurrency !== baseCurrency) {
                 if (settings.apiKey) {
                     setIsFetchingQuickRate(true);
-                    const rate = await getExchangeRate(quickExpenseCurrency, baseCurrency);
-                    if (rate) {
-                        setQuickExpenseRate(rate);
+                    try {
+                        const rate = await getExchangeRate(quickExpenseCurrency, baseCurrency);
+                        if (rate) {
+                            setQuickExpenseRate(rate);
+                        }
+                    } catch (error) {
+                        console.error("Failed to fetch rate:", error);
                     }
                     setIsFetchingQuickRate(false);
                 }
