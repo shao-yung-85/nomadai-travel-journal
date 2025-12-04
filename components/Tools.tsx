@@ -48,7 +48,7 @@ const ExpenseSplitter = ({ onBack }: { onBack: () => void }) => {
     )
 }
 
-const VisaCheck = ({ onBack, t, language }: { onBack: () => void, t: any, language: string }) => {
+const VisaCheck = ({ onBack, t, language, onOpenSettings }: { onBack: () => void, t: any, language: string, onOpenSettings: () => void }) => {
     const [passport, setPassport] = useState('Taiwan (ROC)');
     const [dest, setDest] = useState('');
     const [result, setResult] = useState<string | null>(null);
@@ -60,8 +60,8 @@ const VisaCheck = ({ onBack, t, language }: { onBack: () => void, t: any, langua
         try {
             const info = await getVisaRequirements(passport, dest, language);
             setResult(info || "錯誤");
-        } catch (e) {
-            setResult("錯誤");
+        } catch (e: any) {
+            setResult(e.message || "發生錯誤");
         } finally {
             setLoading(false);
         }
@@ -94,8 +94,16 @@ const VisaCheck = ({ onBack, t, language }: { onBack: () => void, t: any, langua
                 </div>
                 {result && (
                     <div className="bg-white p-6 rounded-3xl shadow-card border border-sand animate-fade-in">
-                        <div className="prose prose-sm max-w-none text-ink leading-relaxed whitespace-pre-line">
+                        <div className={`prose prose-sm max-w-none leading-relaxed whitespace-pre-line ${result?.includes('API Key') ? 'text-red-600' : 'text-ink'}`}>
                             {result}
+                            {result?.includes('API Key') && (
+                                <button
+                                    onClick={onOpenSettings}
+                                    className="mt-4 w-full py-3 bg-red-500 text-white rounded-xl font-bold shadow-lg shadow-red-500/20 hover:bg-red-600 transition-colors"
+                                >
+                                    前往設定更新 API Key
+                                </button>
+                            )}
                         </div>
                     </div>
                 )}
@@ -104,7 +112,7 @@ const VisaCheck = ({ onBack, t, language }: { onBack: () => void, t: any, langua
     )
 }
 
-const CultureGuide = ({ onBack, t, language }: { onBack: () => void, t: any, language: string }) => {
+const CultureGuide = ({ onBack, t, language, onOpenSettings }: { onBack: () => void, t: any, language: string, onOpenSettings: () => void }) => {
     const [location, setLocation] = useState('');
     const [advice, setAdvice] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -115,8 +123,8 @@ const CultureGuide = ({ onBack, t, language }: { onBack: () => void, t: any, lan
             const loc = location || "Kyoto, Japan";
             const info = await getCulturalEtiquette(loc, language);
             setAdvice(info || "錯誤");
-        } catch (e) {
-            setAdvice("錯誤");
+        } catch (e: any) {
+            setAdvice(e.message || "發生錯誤");
         } finally {
             setLoading(false);
         }
@@ -138,8 +146,16 @@ const CultureGuide = ({ onBack, t, language }: { onBack: () => void, t: any, lan
 
                 {advice && (
                     <div className="bg-white p-6 rounded-3xl shadow-card border border-sand animate-fade-in">
-                        <div className="prose prose-sm text-ink whitespace-pre-line leading-relaxed">
+                        <div className={`prose prose-sm whitespace-pre-line leading-relaxed ${advice?.includes('API Key') ? 'text-red-600' : 'text-ink'}`}>
                             {advice}
+                            {advice?.includes('API Key') && (
+                                <button
+                                    onClick={onOpenSettings}
+                                    className="mt-4 w-full py-3 bg-red-500 text-white rounded-xl font-bold shadow-lg shadow-red-500/20 hover:bg-red-600 transition-colors"
+                                >
+                                    前往設定更新 API Key
+                                </button>
+                            )}
                         </div>
                     </div>
                 )}
@@ -224,7 +240,7 @@ const EmergencyHelper = ({ onBack, t, language, onOpenSettings }: { onBack: () =
     )
 }
 
-const CardAdvice = ({ onBack, t, language }: { onBack: () => void, t: any, language: string }) => {
+const CardAdvice = ({ onBack, t, language, onOpenSettings }: { onBack: () => void, t: any, language: string, onOpenSettings: () => void }) => {
     const [dest, setDest] = useState('');
     const [info, setInfo] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -255,8 +271,16 @@ const CardAdvice = ({ onBack, t, language }: { onBack: () => void, t: any, langu
                 </div>
 
                 {info && (
-                    <div className="mt-6 bg-white p-6 rounded-3xl shadow-card border border-sand whitespace-pre-line leading-relaxed text-ink">
+                    <div className={`mt-6 bg-white p-6 rounded-3xl shadow-card border border-sand whitespace-pre-line leading-relaxed ${info?.includes('API Key') ? 'text-red-600' : 'text-ink'}`}>
                         {info}
+                        {info?.includes('API Key') && (
+                            <button
+                                onClick={onOpenSettings}
+                                className="mt-4 w-full py-3 bg-red-500 text-white rounded-xl font-bold shadow-lg shadow-red-500/20 hover:bg-red-600 transition-colors"
+                            >
+                                前往設定更新 API Key
+                            </button>
+                        )}
                     </div>
                 )}
             </div>
@@ -566,12 +590,12 @@ const Tools: React.FC<ToolsProps> = ({ onBack, trips, settings, onMagicEditor, o
     const t = translations[settings.language] || translations['zh-TW'];
 
     if (activeTool === 'EXPENSE') return <ExpenseSplitter onBack={() => setActiveTool('MENU')} />;
-    if (activeTool === 'VISA') return <VisaCheck onBack={() => setActiveTool('MENU')} t={t} language={settings.language} />;
-    if (activeTool === 'CULTURE') return <CultureGuide onBack={() => setActiveTool('MENU')} t={t} language={settings.language} />;
+    if (activeTool === 'VISA') return <VisaCheck onBack={() => setActiveTool('MENU')} t={t} language={settings.language} onOpenSettings={onOpenSettings} />;
+    if (activeTool === 'CULTURE') return <CultureGuide onBack={() => setActiveTool('MENU')} t={t} language={settings.language} onOpenSettings={onOpenSettings} />;
     if (activeTool === 'RESTROOM') return <RestroomFinder onBack={() => setActiveTool('MENU')} t={t} />;
     if (activeTool === 'SCRATCH_MAP') return <ScratchMap onBack={() => setActiveTool('MENU')} trips={trips} t={t} />;
     if (activeTool === 'EMERGENCY') return <EmergencyHelper onBack={() => setActiveTool('MENU')} t={t} language={settings.language} onOpenSettings={onOpenSettings} />;
-    if (activeTool === 'CARD_ADVICE') return <CardAdvice onBack={() => setActiveTool('MENU')} t={t} language={settings.language} />;
+    if (activeTool === 'CARD_ADVICE') return <CardAdvice onBack={() => setActiveTool('MENU')} t={t} language={settings.language} onOpenSettings={onOpenSettings} />;
     if (activeTool === 'TIME_CAPSULE') return <div onClick={() => setActiveTool('MENU')}>Coming Soon</div>;
 
     if (activeTool === 'TRANSLATION') return <TranslationTool onBack={() => setActiveTool('MENU')} t={t} language={settings.language} />;
