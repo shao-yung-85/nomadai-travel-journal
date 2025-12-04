@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Trip, ExpenseItem, AppSettings } from '../types';
 import { translations } from '../utils/translations';
 import { TrashIcon } from './Icons';
+import { COMMON_CURRENCIES, getCurrencySymbol } from '../utils/currencies';
 
 interface TripBudgetProps {
     trip: Trip;
@@ -18,16 +19,44 @@ const TripBudget: React.FC<TripBudgetProps> = ({ trip, settings, onUpdateTrip })
     const [newExpensePayer, setNewExpensePayer] = useState('');
     const [newExpenseMethod, setNewExpenseMethod] = useState('Cash');
 
+    // Multi-currency state
+    const [selectedCurrency, setSelectedCurrency] = useState(trip.budget?.currency || 'TWD');
+    const [exchangeRate, setExchangeRate] = useState('1');
+    const [calculatedBaseAmount, setCalculatedBaseAmount] = useState(0);
+
+    // Reset currency when modal opens
+    useEffect(() => {
+        if (isAddingExpense) {
+            setSelectedCurrency(trip.budget?.currency || 'TWD');
+            setExchangeRate('1');
+        }
+    }, [isAddingExpense, trip.budget?.currency]);
+
+    // Calculate base amount when inputs change
+    useEffect(() => {
+        const amount = parseFloat(newExpenseAmount) || 0;
+        const rate = parseFloat(exchangeRate) || 1;
+        setCalculatedBaseAmount(Math.round(amount * rate));
+    }, [newExpenseAmount, exchangeRate]);
+
     const handleAddExpense = () => {
         if (!newExpenseName || !newExpenseAmount) return;
+
+        const amount = parseFloat(newExpenseAmount);
+        const rate = parseFloat(exchangeRate) || 1;
+        const baseAmount = Math.round(amount * rate);
+
         const newItem: ExpenseItem = {
             id: Date.now().toString(),
             title: newExpenseName,
-            amount: parseInt(newExpenseAmount),
+            amount: baseAmount, // Store in base currency for totaling
             category: 'Other',
             date: new Date().toISOString().split('T')[0],
             payer: newExpensePayer || 'ME',
-            paymentMethod: newExpenseMethod
+            paymentMethod: newExpenseMethod,
+            originalCurrency: selectedCurrency,
+            originalAmount: amount,
+            exchangeRate: rate
         };
 
         const currentExpenses = trip.budget?.expenses || [];
@@ -66,6 +95,8 @@ const TripBudget: React.FC<TripBudgetProps> = ({ trip, settings, onUpdateTrip })
     const totalSpent = (trip.budget?.expenses || []).reduce((sum, item) => sum + item.amount, 0);
     const budgetTotal = trip.budget?.total || 0;
     const progress = budgetTotal > 0 ? Math.min((totalSpent / budgetTotal) * 100, 100) : 0;
+    const baseCurrency = trip.budget?.currency || 'TWD';
+    const baseSymbol = getCurrencySymbol(baseCurrency);
 
     return (
         <div className="pb-32">
@@ -75,19 +106,20 @@ const TripBudget: React.FC<TripBudgetProps> = ({ trip, settings, onUpdateTrip })
                 <div className="relative z-10">
                     <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-1">{t.budget_total}</p>
                     <h2 className="text-4xl font-black mb-6">
-                        <span className="text-2xl mr-1">¥</span>{budgetTotal.toLocaleString()}
+                        <span className="text-2xl mr-1">{baseSymbol}</span>{budgetTotal.toLocaleString()}
                     </h2>
 
                     <div className="mb-2 flex justify-between text-sm font-bold">
                         <span className="text-gray-300">{t.budget_spent}</span>
-                        <span>¥{totalSpent.toLocaleString()}</span>
+                        <span>{baseSymbol}{totalSpent.toLocaleString()}</span>
                     </div>
                     <div className="h-3 bg-gray-700 rounded-full overflow-hidden mb-4">
                         <div className={`h-full rounded-full ${progress > 90 ? 'bg-red-500' : 'bg-coral'}`} style={{ width: `${progress}%` }}></div>
                     </div>
                     <div className="flex justify-between text-xs text-gray-400 font-medium">
                         <span>{progress.toFixed(1)}%</span>
-                        <span>{t.budget_remaining}: ¥{(budgetTotal - totalSpent).toLocaleString()}</span>
+                        {/* Modified to show Accumulated Spent instead of Remaining */}
+                        <span>目前累積花費: {baseSymbol}{totalSpent.toLocaleString()}</span>
                     </div>
                 </div>
             </div>
@@ -104,11 +136,18 @@ const TripBudget: React.FC<TripBudgetProps> = ({ trip, settings, onUpdateTrip })
                             <div>
                                 <h4 className="font-bold text-ink">{expense.title}</h4>
                                 <p className="text-xs text-gray-400">{expense.date} • {expense.paymentMethod}</p>
+                                {expense.originalCurrency && expense.originalCurrency !== baseCurrency && (
+                                    <p className="text-xs text-coral font-medium mt-0.5">
+                                        {getCurrencySymbol(expense.originalCurrency)}{expense.originalAmount?.toLocaleString()}
+                                        <span className="text-gray-300 mx-1">@</span>
+                                        {expense.exchangeRate}
+                                    </p>
+                                )}
                                 {expense.note && <p className="text-xs text-gray-500 mt-0.5">{expense.note}</p>}
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
-                            <span className="font-bold text-ink text-lg">¥{expense.amount.toLocaleString()}</span>
+                            <span className="font-bold text-ink text-lg">{baseSymbol}{expense.amount.toLocaleString()}</span>
                             <button
                                 onClick={() => handleDeleteExpense(expense.id)}
                                 className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
@@ -147,21 +186,55 @@ const TripBudget: React.FC<TripBudgetProps> = ({ trip, settings, onUpdateTrip })
                                     placeholder="例如: 章魚燒"
                                     className="w-full bg-white p-4 rounded-xl text-base font-bold border-none shadow-sm outline-none placeholder:font-normal"
                                     autoFocus
+                                    onFocus={(e) => e.target.select()}
                                 />
                             </div>
+
                             <div className="space-y-1">
                                 <label className="text-xs font-bold text-gray-400 ml-1">{t.amount}</label>
-                                <div className="flex items-center bg-white rounded-xl border-none shadow-sm px-4">
-                                    <span className="text-gray-400 font-bold mr-2">¥</span>
-                                    <input
-                                        value={newExpenseAmount}
-                                        onChange={(e) => setNewExpenseAmount(e.target.value)}
-                                        type="number"
-                                        placeholder="0"
-                                        className="w-full bg-transparent py-4 text-xl font-bold border-none outline-none placeholder:font-normal"
-                                    />
+                                <div className="flex gap-2">
+                                    <select
+                                        value={selectedCurrency}
+                                        onChange={(e) => setSelectedCurrency(e.target.value)}
+                                        className="bg-white rounded-xl border-none shadow-sm px-3 font-bold text-ink outline-none"
+                                    >
+                                        {COMMON_CURRENCIES.map(c => (
+                                            <option key={c.code} value={c.code}>{c.code}</option>
+                                        ))}
+                                    </select>
+                                    <div className="flex-1 flex items-center bg-white rounded-xl border-none shadow-sm px-4">
+                                        <span className="text-gray-400 font-bold mr-2">{getCurrencySymbol(selectedCurrency)}</span>
+                                        <input
+                                            value={newExpenseAmount}
+                                            onChange={(e) => setNewExpenseAmount(e.target.value)}
+                                            type="number"
+                                            placeholder="0"
+                                            className="w-full bg-transparent py-4 text-xl font-bold border-none outline-none placeholder:font-normal"
+                                            onFocus={(e) => e.target.select()}
+                                        />
+                                    </div>
                                 </div>
                             </div>
+
+                            {selectedCurrency !== baseCurrency && (
+                                <div className="space-y-1 bg-sand/30 p-3 rounded-xl">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <label className="text-xs font-bold text-gray-500">匯率 ({selectedCurrency} → {baseCurrency})</label>
+                                        <span className="text-xs font-bold text-coral">
+                                            ≈ {baseSymbol}{calculatedBaseAmount.toLocaleString()}
+                                        </span>
+                                    </div>
+                                    <input
+                                        value={exchangeRate}
+                                        onChange={(e) => setExchangeRate(e.target.value)}
+                                        type="number"
+                                        step="0.01"
+                                        placeholder="Exchange Rate"
+                                        className="w-full bg-white p-3 rounded-xl text-sm font-bold border-none shadow-sm outline-none"
+                                        onFocus={(e) => e.target.select()}
+                                    />
+                                </div>
+                            )}
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="flex bg-white rounded-xl p-1 shadow-sm">

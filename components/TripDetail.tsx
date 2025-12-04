@@ -8,6 +8,7 @@ import TripBookings from './TripBookings';
 import TripMap from './TripMap';
 import { translations } from '../utils/translations';
 import { geocodeAddress } from '../services/geocoding';
+import { COMMON_CURRENCIES, getCurrencySymbol } from '../utils/currencies';
 
 interface TripDetailProps {
     trip: Trip;
@@ -62,6 +63,27 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
     const [quickExpenseAmount, setQuickExpenseAmount] = useState('');
     const [quickExpenseNote, setQuickExpenseNote] = useState('');
     const [quickExpenseItems, setQuickExpenseItems] = useState<{ name: string, price: string }[]>([{ name: '', price: '' }]);
+
+    // Multi-currency Quick Expense
+    const [quickExpenseCurrency, setQuickExpenseCurrency] = useState(trip.budget?.currency || 'TWD');
+    const [quickExpenseRate, setQuickExpenseRate] = useState('1');
+    const [quickExpenseBaseAmount, setQuickExpenseBaseAmount] = useState(0);
+
+    // Reset currency when modal opens
+    useEffect(() => {
+        if (isAddingQuickExpense) {
+            setQuickExpenseCurrency(trip.budget?.currency || 'TWD');
+            setQuickExpenseRate('1');
+        }
+    }, [isAddingQuickExpense, trip.budget?.currency]);
+
+    // Calculate base amount when inputs change
+    useEffect(() => {
+        const amount = parseFloat(quickExpenseAmount) || 0;
+        const rate = parseFloat(quickExpenseRate) || 1;
+        setQuickExpenseBaseAmount(Math.round(amount * rate));
+    }, [quickExpenseAmount, quickExpenseRate]);
+
 
     // Trip Editing State
     const [isEditMode, setIsEditMode] = useState(false);
@@ -138,10 +160,13 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
     const handleSaveQuickExpense = () => {
         if (!quickExpenseItem || !quickExpenseAmount) return;
 
-        const totalAmount = parseInt(quickExpenseAmount);
+        const amount = parseFloat(quickExpenseAmount);
+        const rate = parseFloat(quickExpenseRate) || 1;
+        const baseAmount = Math.round(amount * rate);
+
         const note = quickExpenseItems
             .filter(i => i.name && i.price)
-            .map(i => `${i.name}: ¥${i.price}`)
+            .map(i => `${i.name}: ${getCurrencySymbol(quickExpenseCurrency)}${i.price}`)
             .join(', ');
 
         const finalNote = quickExpenseNote ? (note ? `${quickExpenseNote} (${note})` : quickExpenseNote) : note;
@@ -149,12 +174,15 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
         const newExpense: ExpenseItem = {
             id: Date.now().toString(),
             title: quickExpenseItem.activity,
-            amount: totalAmount,
+            amount: baseAmount,
             category: 'Shopping',
             date: trip.startDate ? new Date(trip.startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
             payer: 'ME',
             paymentMethod: 'Cash',
-            note: finalNote
+            note: finalNote,
+            originalCurrency: quickExpenseCurrency,
+            originalAmount: amount,
+            exchangeRate: rate
         };
 
         const currentExpenses = trip.budget?.expenses || [];
@@ -186,6 +214,9 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
     const addQuickExpenseItemRow = () => {
         setQuickExpenseItems([...quickExpenseItems, { name: '', price: '' }]);
     };
+
+    const baseCurrency = trip.budget?.currency || 'TWD';
+    const baseSymbol = getCurrencySymbol(baseCurrency);
 
     return (
         <div className="flex flex-col h-full bg-paper animate-fade-in relative">
@@ -437,8 +468,9 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
                                         type="number"
                                         value={item.price}
                                         onChange={(e) => updateQuickExpenseItem(idx, 'price', e.target.value)}
-                                        placeholder="¥"
+                                        placeholder={getCurrencySymbol(quickExpenseCurrency)}
                                         className="w-24 bg-white p-3 rounded-xl font-bold border-none shadow-sm outline-none text-center"
+                                        onFocus={(e) => e.target.select()}
                                     />
                                 </div>
                             ))}
@@ -448,18 +480,50 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
 
                             <div className="pt-4 border-t border-sand">
                                 <div className="flex justify-between items-center mb-4">
-                                    <span className="font-bold text-gray-400">總金額</span>
                                     <div className="flex items-center gap-2">
-                                        <span className="font-bold text-ink text-2xl">¥</span>
+                                        <select
+                                            value={quickExpenseCurrency}
+                                            onChange={(e) => setQuickExpenseCurrency(e.target.value)}
+                                            className="bg-transparent font-bold text-gray-400 outline-none text-sm"
+                                        >
+                                            {COMMON_CURRENCIES.map(c => (
+                                                <option key={c.code} value={c.code}>{c.code}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-bold text-ink text-2xl">{getCurrencySymbol(quickExpenseCurrency)}</span>
                                         <input
                                             type="number"
                                             value={quickExpenseAmount}
                                             onChange={(e) => setQuickExpenseAmount(e.target.value)}
                                             className="w-32 bg-transparent text-right text-3xl font-black border-none outline-none p-0"
                                             placeholder="0"
+                                            onFocus={(e) => e.target.select()}
                                         />
                                     </div>
                                 </div>
+
+                                {quickExpenseCurrency !== baseCurrency && (
+                                    <div className="mb-4 bg-sand/30 p-3 rounded-xl">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <label className="text-xs font-bold text-gray-500">匯率 ({quickExpenseCurrency} → {baseCurrency})</label>
+                                            <span className="text-xs font-bold text-coral">
+                                                ≈ {baseSymbol}{quickExpenseBaseAmount.toLocaleString()}
+                                            </span>
+                                        </div>
+                                        <input
+                                            value={quickExpenseRate}
+                                            onChange={(e) => setQuickExpenseRate(e.target.value)}
+                                            type="number"
+                                            step="0.01"
+                                            placeholder="Exchange Rate"
+                                            className="w-full bg-white p-3 rounded-xl text-sm font-bold border-none shadow-sm outline-none"
+                                            onFocus={(e) => e.target.select()}
+                                        />
+                                    </div>
+                                )}
+
                                 <textarea
                                     value={quickExpenseNote}
                                     onChange={(e) => setQuickExpenseNote(e.target.value)}

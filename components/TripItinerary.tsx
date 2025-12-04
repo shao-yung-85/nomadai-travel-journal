@@ -192,12 +192,17 @@ const TripItinerary: React.FC<TripItineraryProps> = ({ trip, settings, onUpdateT
 
         let coords = null;
         if (newActivityLocation) {
-            // Try to geocode
+            // Try to geocode with timeout
             try {
                 const { geocodeAddress } = await import('../services/geocoding');
-                coords = await geocodeAddress(`${newActivityLocation}, ${trip.title}`);
+                const geocodePromise = geocodeAddress(newActivityLocation);
+                const timeoutPromise = new Promise<{ lat: number; lng: number } | null>((_, reject) =>
+                    setTimeout(() => reject(new Error('Geocoding timeout')), 5000)
+                );
+
+                coords = await Promise.race([geocodePromise, timeoutPromise]);
             } catch (e) {
-                console.error("Auto-geocoding failed", e);
+                console.error("Auto-geocoding failed or timed out", e);
             }
         }
 
@@ -209,15 +214,17 @@ const TripItinerary: React.FC<TripItineraryProps> = ({ trip, settings, onUpdateT
             activity: newActivityName,
             location: newActivityLocation,
             notes: newActivityNotes,
-            coordinates: coords || existingItem?.coordinates,
-            lat: coords?.lat || existingItem?.lat,
-            lng: coords?.lng || existingItem?.lng,
+            coordinates: coords || existingItem?.coordinates || null,
+            lat: coords?.lat ?? existingItem?.lat ?? null,
+            lng: coords?.lng ?? existingItem?.lng ?? null,
             attachments: existingItem?.attachments || [],
-            travelToNext: newTravelDuration ? {
-                mode: newTravelMode,
-                duration: newTravelDuration,
-                details: newTravelDetails
-            } : undefined
+            ...(newTravelDuration ? {
+                travelToNext: {
+                    mode: newTravelMode,
+                    duration: newTravelDuration,
+                    details: newTravelDetails
+                }
+            } : {})
         };
 
         let updatedItinerary;

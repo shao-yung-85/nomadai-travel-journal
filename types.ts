@@ -50,6 +50,7 @@ export interface ExpenseItem {
   participants?: string[]; // Who should split this expense
   splits?: { person: string; amount: number }[]; // Custom split amounts
   originalCurrency?: string; // e.g. 'JPY', 'KRW'
+  originalAmount?: number; // Amount in original currency
   exchangeRate?: number; // Rate to TWD
   note?: string;
 }

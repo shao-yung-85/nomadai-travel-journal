@@ -33,6 +33,7 @@ const getResponseText = (response: any): string => {
  */
 const TEST_LOCATIONS: Record<string, { lat: number, lng: number }> = {
     "1": { lat: 25.0330, lng: 121.5654 }, // Taipei 101
+    "taipei 101": { lat: 25.0330, lng: 121.5654 },
     "2": { lat: 25.0421, lng: 121.5082 }, // Ximending
     "3": { lat: 25.1024, lng: 121.5486 }, // National Palace Museum
     "test": { lat: 25.0330, lng: 121.5654 },

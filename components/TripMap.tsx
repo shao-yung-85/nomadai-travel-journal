@@ -444,9 +444,9 @@ const TripMap: React.FC<TripMapProps> = ({ trip, settings, onUpdateTrip, searche
                                     <span className="font-mono bg-gray-100 px-1.5 py-0.5 rounded">{item.time}</span>
                                     <span className="truncate flex-1">
                                         {item.location}
-                                        {!hasCoords && !isItemGeocoding && !isFailed && <span className="text-coral ml-1 text-[10px]">(點擊搜尋位置)</span>}
+
                                         {isItemGeocoding && !hasCoords && <span className="text-coral ml-1 text-[10px] animate-pulse">搜尋中...</span>}
-                                        {isFailed && !hasCoords && !isItemGeocoding && <span className="text-red-500 ml-1 text-[10px]">位置未找到</span>}
+                                        {isFailed && !hasCoords && !isItemGeocoding && !((searchedLocation && (item.location === mapSearchQuery || item.activity === mapSearchQuery))) && <span className="text-red-500 ml-1 text-[10px]">位置未找到</span>}
                                     </span>
                                 </div>
                             </div>
