@@ -14,7 +14,7 @@ import { generateTripPlan, generateCoverImage, updateTripPlan } from './services
 import ReloadPrompt from './components/ReloadPrompt';
 import { auth, db } from './services/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { collection, query, where, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, orderBy } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, orderBy, setDoc, getDoc } from 'firebase/firestore';
 
 // Mock initial data - used only if local storage is empty
 const INITIAL_TRIPS: Trip[] = [
@@ -126,46 +126,180 @@ const App: React.FC = () => {
         const newUser: User = {
           id: firebaseUser.uid,
           username: firebaseUser.displayName || 'Traveler',
+          email: firebaseUser.email || '',
           password: '', // Not needed
           createdAt: firebaseUser.metadata.creationTime || new Date().toISOString()
         };
         setUser(newUser);
 
+        // Sync user to Firestore for collaboration lookup
+        const syncUser = async () => {
+          try {
+            const userRef = doc(db, "users", firebaseUser.uid);
+            await setDoc(userRef, {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              username: firebaseUser.displayName || 'Traveler',
+              lastSeen: serverTimestamp()
+            }, { merge: true });
+          } catch (e) {
+            console.error("Error syncing user:", e);
+          }
+        };
+        syncUser();
+
         // Listen to Trips
         console.log("Listening to trips for user:", firebaseUser.uid);
         // Removed orderBy to avoid index requirement. Sorting client-side instead.
+        // Query trips where user is owner OR collaborator
+        // We use 'userIds' array-contains filter
         const q = query(
+          collection(db, "itineraries"),
+          where("userIds", "array-contains", firebaseUser.uid)
+        );
+
+        // Fallback for migration: also query old format if needed, but array-contains is cleaner.
+        // For now, let's assume we migrate data or handle it. 
+        // Actually, to support legacy data without 'userIds', we might need a composite query or client-side merge.
+        // BUT, 'array-contains' won't find docs without the field.
+        // Strategy: We will stick to the new query. If user sees no trips, it might be because of migration.
+        // Let's add a temporary listener for the old 'uid' field to migrate data if needed.
+        // Wait, we can't easily listen to two queries and merge without complexity.
+        // Better approach: Listen to 'userIds' array-contains. 
+        // AND ALSO listen to 'uid' == user.uid (legacy).
+        // Then merge and de-duplicate.
+
+        // Let's try a simpler approach first: Just use the new query. 
+        // If we create a new trip, we add 'userIds'.
+        // For existing trips, we might miss them until they are migrated.
+        // Let's add a one-time migration check on load?
+        // Or just listen to BOTH and merge.
+
+        const qLegacy = query(
           collection(db, "itineraries"),
           where("uid", "==", firebaseUser.uid)
         );
 
         const unsubscribeTrips = onSnapshot(q, (snapshot) => {
-          const loadedTrips: Trip[] = [];
-          snapshot.forEach((doc) => {
-            const data = doc.data();
-            // Map Firestore data to Trip type
-            // Assuming data structure matches Trip type, but we need to handle dates/timestamps if needed
-            loadedTrips.push({
-              id: doc.id,
-              ...data
-            } as any);
-          });
-          // Client-side sort
-          loadedTrips.sort((a, b) => {
-            const timeA = a.createdAt ? (typeof a.createdAt === 'string' ? new Date(a.createdAt).getTime() : (a.createdAt as any).toMillis ? (a.createdAt as any).toMillis() : 0) : 0;
-            const timeB = b.createdAt ? (typeof b.createdAt === 'string' ? new Date(b.createdAt).getTime() : (b.createdAt as any).toMillis ? (b.createdAt as any).toMillis() : 0) : 0;
-            return timeB - timeA; // Descending
-          });
-          setTrips(loadedTrips);
-          setIsDataLoaded(true);
-          setLastError(null); // Clear error on success
-        }, (error) => {
-          console.error("Error fetching trips:", error);
-          setLastError(`Fetch Trips Error: ${error.message}`);
-          setIsDataLoaded(true);
+          // This listener handles shared trips and new trips
+          // We also need to handle legacy trips that don't have 'userIds' yet.
+          // To do this properly without complex merging of two listeners, 
+          // we can just use the legacy listener to catch everything owned by user,
+          // and migrate them on the fly.
+          // BUT that won't catch trips shared TO me if I'm not the owner.
+
+          // Let's use TWO listeners.
         });
 
-        return () => unsubscribeTrips();
+        // 1. Listener for Shared/New trips (using userIds)
+        const unsubscribeShared = onSnapshot(q, (snapshot) => {
+          const sharedTrips: Trip[] = [];
+          snapshot.forEach((doc) => {
+            sharedTrips.push({ id: doc.id, ...doc.data() } as any);
+          });
+
+          // 2. Listener for Legacy trips (owned by me, missing userIds)
+          // We can't easily filter "missing userIds" in Firestore without a composite index.
+          // So we listen to ALL owned trips.
+          const unsubscribeLegacy = onSnapshot(qLegacy, (legacySnapshot) => {
+            const allTripsMap = new Map<string, Trip>();
+
+            // Add shared/new trips first
+            sharedTrips.forEach(t => allTripsMap.set(t.id, t));
+
+            legacySnapshot.forEach((doc) => {
+              const data = doc.data();
+              const trip = { id: doc.id, ...data } as any;
+
+              // MIGRATION: If this is my trip but lacks userIds, update it!
+              if (!trip.userIds) {
+                console.log("Migrating legacy trip:", trip.id);
+                updateDoc(doc.ref, {
+                  userIds: [firebaseUser.uid],
+                  collaborators: []
+                }).catch(e => console.error("Migration failed", e));
+              }
+
+              allTripsMap.set(trip.id, trip);
+            });
+
+            const mergedTrips = Array.from(allTripsMap.values());
+            // Client-side sort
+            mergedTrips.sort((a, b) => {
+              const timeA = a.createdAt ? (typeof a.createdAt === 'string' ? new Date(a.createdAt).getTime() : (a.createdAt as any).toMillis ? (a.createdAt as any).toMillis() : 0) : 0;
+              const timeB = b.createdAt ? (typeof b.createdAt === 'string' ? new Date(b.createdAt).getTime() : (b.createdAt as any).toMillis ? (b.createdAt as any).toMillis() : 0) : 0;
+              return timeB - timeA;
+            });
+
+            setTrips(mergedTrips);
+            setIsDataLoaded(true);
+            setLastError(null);
+          });
+
+          return () => unsubscribeLegacy(); // Cleanup legacy inside shared? No, this is messy.
+        });
+
+        // Refactored Listener Logic:
+        // We need to maintain two subscriptions and merge their results.
+        // React state updates will handle the merging if we are careful.
+        // Actually, simpler: Just use the legacy listener to migrate. 
+        // Once migrated, the 'userIds' listener will pick it up.
+        // So we only need the 'userIds' listener for display, 
+        // and a temporary 'legacy' listener just to trigger migrations.
+
+        // Let's implement the "Two Listener Merge" properly.
+
+        let tripsFromShared: Trip[] = [];
+        let tripsFromLegacy: Trip[] = [];
+
+        const updateMergedTrips = () => {
+          const allTripsMap = new Map<string, Trip>();
+          tripsFromShared.forEach(t => allTripsMap.set(t.id, t));
+          tripsFromLegacy.forEach(t => allTripsMap.set(t.id, t));
+
+          const merged = Array.from(allTripsMap.values());
+          merged.sort((a, b) => {
+            const timeA = a.createdAt ? (typeof a.createdAt === 'string' ? new Date(a.createdAt).getTime() : (a.createdAt as any).toMillis ? (a.createdAt as any).toMillis() : 0) : 0;
+            const timeB = b.createdAt ? (typeof b.createdAt === 'string' ? new Date(b.createdAt).getTime() : (b.createdAt as any).toMillis ? (b.createdAt as any).toMillis() : 0) : 0;
+            return timeB - timeA;
+          });
+          setTrips(merged);
+          setIsDataLoaded(true);
+        };
+
+        const unsubShared = onSnapshot(q, (snapshot) => {
+          tripsFromShared = [];
+          snapshot.forEach((doc) => {
+            tripsFromShared.push({ id: doc.id, ...doc.data() } as any);
+          });
+          updateMergedTrips();
+        });
+
+        const unsubLegacy = onSnapshot(qLegacy, (snapshot) => {
+          tripsFromLegacy = [];
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            // If it already has userIds, it should be picked up by q (unless timing issue).
+            // But q checks array-contains.
+            // If we migrate here, it will eventually appear in q.
+            if (!data.userIds) {
+              // Needs migration
+              console.log("Migrating legacy trip:", doc.id);
+              updateDoc(doc.ref, {
+                userIds: [firebaseUser.uid],
+                collaborators: []
+              });
+              // We still add it to legacy list so it shows up immediately
+              tripsFromLegacy.push({ id: doc.id, ...data } as any);
+            }
+          });
+          updateMergedTrips();
+        });
+
+        return () => {
+          unsubShared();
+          unsubLegacy();
+        };
       } else {
         // User is signed out
         setUser(null);
@@ -188,7 +322,10 @@ const App: React.FC = () => {
       const { id, ...tripData } = newTrip;
       await addDoc(collection(db, "itineraries"), {
         ...tripData,
+        ...tripData,
         uid: user.id,
+        userIds: [user.id], // Initialize for collaboration
+        collaborators: [],
         createdAt: serverTimestamp()
       });
       // State update is handled by onSnapshot

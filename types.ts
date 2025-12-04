@@ -86,6 +86,7 @@ export interface WeatherForecast {
 export interface User {
   id: string;
   username: string;
+  email?: string; // For collaboration lookup
   password?: string; // In a real app, never store plain text passwords!
   createdAt: string;
 }
@@ -96,6 +97,8 @@ export interface Trip {
   startDate: string;
   endDate: string;
   coverImage?: string;
+  collaborators?: string[]; // List of invited User IDs
+  userIds?: string[]; // Owner ID + Collaborator IDs (for querying)
   itinerary: ItineraryItem[];
   bookings?: Flight[];
   budget?: Budget;
