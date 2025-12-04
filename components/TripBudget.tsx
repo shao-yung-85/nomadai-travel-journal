@@ -21,14 +21,14 @@ const TripBudget: React.FC<TripBudgetProps> = ({ trip, settings, onUpdateTrip })
 
     // Multi-currency state
     const [selectedCurrency, setSelectedCurrency] = useState(trip.budget?.currency || 'TWD');
-    const [exchangeRate, setExchangeRate] = useState('1');
+    const [exchangeRate, setExchangeRate] = useState('');
     const [calculatedBaseAmount, setCalculatedBaseAmount] = useState(0);
 
     // Reset currency when modal opens
     useEffect(() => {
         if (isAddingExpense) {
             setSelectedCurrency(trip.budget?.currency || 'TWD');
-            setExchangeRate('1');
+            setExchangeRate('');
         }
     }, [isAddingExpense, trip.budget?.currency]);
 
@@ -43,6 +43,11 @@ const TripBudget: React.FC<TripBudgetProps> = ({ trip, settings, onUpdateTrip })
         if (!newExpenseName || !newExpenseAmount) return;
 
         const amount = parseFloat(newExpenseAmount);
+        if (amount <= 0) {
+            alert(t.amount_invalid || 'Amount must be greater than 0');
+            return;
+        }
+
         const rate = parseFloat(exchangeRate) || 1;
         const baseAmount = Math.round(amount * rate);
 

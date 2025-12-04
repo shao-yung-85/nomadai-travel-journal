@@ -66,14 +66,14 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
 
     // Multi-currency Quick Expense
     const [quickExpenseCurrency, setQuickExpenseCurrency] = useState(trip.budget?.currency || 'TWD');
-    const [quickExpenseRate, setQuickExpenseRate] = useState('1');
+    const [quickExpenseRate, setQuickExpenseRate] = useState('');
     const [quickExpenseBaseAmount, setQuickExpenseBaseAmount] = useState(0);
 
     // Reset currency when modal opens
     useEffect(() => {
         if (isAddingQuickExpense) {
             setQuickExpenseCurrency(trip.budget?.currency || 'TWD');
-            setQuickExpenseRate('1');
+            setQuickExpenseRate('');
         }
     }, [isAddingQuickExpense, trip.budget?.currency]);
 
@@ -161,6 +161,11 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
         if (!quickExpenseItem || !quickExpenseAmount) return;
 
         const amount = parseFloat(quickExpenseAmount);
+        if (amount <= 0) {
+            alert('Amount must be greater than 0');
+            return;
+        }
+
         const rate = parseFloat(quickExpenseRate) || 1;
         const baseAmount = Math.round(amount * rate);
 
