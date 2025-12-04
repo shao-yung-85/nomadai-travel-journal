@@ -144,7 +144,7 @@ const TripBudget: React.FC<TripBudgetProps> = ({ trip, settings, onUpdateTrip })
                                 {expense.originalCurrency && expense.originalCurrency !== baseCurrency && (
                                     <p className="text-xs text-coral font-medium mt-0.5">
                                         {getCurrencySymbol(expense.originalCurrency)}{expense.originalAmount?.toLocaleString()}
-                                        <span className="text-gray-300 mx-1">@</span>
+                                        <span className="text-gray-400 mx-1">匯率：</span>
                                         {expense.exchangeRate}
                                     </p>
                                 )}
