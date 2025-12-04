@@ -27,6 +27,7 @@ interface ToolsProps {
     trips?: Trip[];
     settings: AppSettings;
     onMagicEditor: () => void;
+    onOpenSettings: () => void;
 }
 
 type ToolView = 'MENU' | 'EXPENSE' | 'VISA' | 'CULTURE' | 'RESTROOM' | 'SCRATCH_MAP' | 'TIME_CAPSULE' | 'EMERGENCY' | 'CARD_ADVICE' | 'TRANSLATION' | 'CURRENCY';
@@ -168,7 +169,7 @@ const RestroomFinder = ({ onBack, t }: { onBack: () => void, t: any }) => {
     )
 }
 
-const EmergencyHelper = ({ onBack, t, language }: { onBack: () => void, t: any, language: string }) => {
+const EmergencyHelper = ({ onBack, t, language, onOpenSettings }: { onBack: () => void, t: any, language: string, onOpenSettings: () => void }) => {
     const [country, setCountry] = useState('');
     const [info, setInfo] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -182,6 +183,8 @@ const EmergencyHelper = ({ onBack, t, language }: { onBack: () => void, t: any, 
         } catch (e) { setInfo("錯誤"); }
         finally { setLoading(false); }
     }
+
+    const isApiKeyError = info && (info.includes('API Key') || info.includes('403'));
 
     return (
         <div className="flex flex-col h-full bg-paper">
@@ -204,8 +207,16 @@ const EmergencyHelper = ({ onBack, t, language }: { onBack: () => void, t: any, 
                 </div>
 
                 {info && (
-                    <div className="mt-6 bg-white p-6 rounded-3xl shadow-card border border-sand whitespace-pre-line leading-relaxed text-ink">
+                    <div className={`mt-6 p-6 rounded-3xl shadow-card border whitespace-pre-line leading-relaxed ${isApiKeyError ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-sand text-ink'}`}>
                         {info}
+                        {isApiKeyError && (
+                            <button
+                                onClick={onOpenSettings}
+                                className="mt-4 w-full py-3 bg-red-500 text-white rounded-xl font-bold shadow-lg shadow-red-500/20 hover:bg-red-600 transition-colors"
+                            >
+                                前往設定更新 API Key
+                            </button>
+                        )}
                     </div>
                 )}
             </div>
@@ -253,9 +264,80 @@ const CardAdvice = ({ onBack, t, language }: { onBack: () => void, t: any, langu
     )
 }
 
+// --- Leaflet Imports ---
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+// Fix Leaflet default icon issue
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+
+let DefaultIcon = L.icon({
+    iconUrl: icon,
+    shadowUrl: iconShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41]
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
+
+// --- Constants ---
+const COUNTRY_COORDS: { [key: string]: [number, number] } = {
+    'Japan': [36.2048, 138.2529],
+    'Taiwan': [23.6978, 120.9605],
+    'Thailand': [15.8700, 100.9925],
+    'USA': [37.0902, -95.7129],
+    'France': [46.2276, 2.2137],
+    'South Korea': [35.9078, 127.7669],
+    'Vietnam': [14.0583, 108.2772],
+    'China': [35.8617, 104.1954],
+    'Germany': [51.1657, 10.4515],
+    'Italy': [41.8719, 12.5674],
+    'UK': [55.3781, -3.4360],
+    'Spain': [40.4637, -3.7492],
+    'Australia': [-25.2744, 133.7751],
+    'Canada': [56.1304, -106.3468],
+    'Singapore': [1.3521, 103.8198],
+    'Malaysia': [4.2105, 101.9758],
+    'Philippines': [12.8797, 121.7740],
+    'Indonesia': [-0.7893, 113.9213],
+    'India': [20.5937, 78.9629],
+    'Russia': [61.5240, 105.3188],
+    'Brazil': [-14.2350, -51.9253],
+    'Mexico': [23.6345, -102.5528],
+    'Egypt': [26.8206, 30.8025],
+    'Turkey': [38.9637, 35.2433],
+    'Netherlands': [52.1326, 5.2913],
+    'Switzerland': [46.8182, 8.2275],
+    'Austria': [47.5162, 14.5501],
+    'Belgium': [50.5039, 4.4699],
+    'Sweden': [60.1282, 18.6435],
+    'Norway': [60.4720, 8.4689],
+    'Denmark': [56.2639, 9.5018],
+    'Finland': [61.9241, 25.7482],
+    'New Zealand': [-40.9006, 174.8860],
+    'Hong Kong': [22.3193, 114.1694],
+    'Macau': [22.1987, 113.5439]
+};
+
+// Component to invalidate map size on mount to fix rendering issues
+const MapInvalidator = ({ onReady }: { onReady: () => void }) => {
+    const map = useMap();
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            map.invalidateSize();
+            onReady();
+        }, 250);
+        return () => clearTimeout(timer);
+    }, [map, onReady]);
+    return null;
+};
+
 const ScratchMap = ({ onBack, trips, t }: { onBack: () => void, trips?: Trip[], t: any }) => {
     const [visited, setVisited] = useState<Set<string>>(new Set(['Japan', 'Thailand', 'Taiwan']));
     const [newCountry, setNewCountry] = useState('');
+    const [isMapReady, setIsMapReady] = useState(false);
 
     useEffect(() => {
         if (trips) {
@@ -266,6 +348,10 @@ const ScratchMap = ({ onBack, trips, t }: { onBack: () => void, trips?: Trip[], 
                 if (t.title.includes('台灣') || t.title.includes('Taiwan') || t.title.includes('台北')) newSet.add('Taiwan');
                 if (t.title.includes('美國') || t.title.includes('USA')) newSet.add('USA');
                 if (t.title.includes('法國') || t.title.includes('France') || t.title.includes('Paris')) newSet.add('France');
+                if (t.title.includes('韓國') || t.title.includes('Korea') || t.title.includes('首爾')) newSet.add('South Korea');
+                if (t.title.includes('越南') || t.title.includes('Vietnam')) newSet.add('Vietnam');
+                if (t.title.includes('中國') || t.title.includes('China') || t.title.includes('上海') || t.title.includes('北京')) newSet.add('China');
+                if (t.title.includes('香港') || t.title.includes('Hong Kong')) newSet.add('Hong Kong');
             });
             setVisited(newSet);
         }
@@ -273,7 +359,16 @@ const ScratchMap = ({ onBack, trips, t }: { onBack: () => void, trips?: Trip[], 
 
     const handleAdd = () => {
         if (newCountry.trim()) {
-            setVisited(prev => new Set(prev).add(newCountry.trim()));
+            // Try to match input to known coords keys (case insensitive)
+            const input = newCountry.trim();
+            const matchedKey = Object.keys(COUNTRY_COORDS).find(k => k.toLowerCase() === input.toLowerCase());
+
+            if (matchedKey) {
+                setVisited(prev => new Set(prev).add(matchedKey));
+            } else {
+                // Add anyway, but it won't show on map unless we have coords
+                setVisited(prev => new Set(prev).add(input));
+            }
             setNewCountry('');
         }
     }
@@ -294,17 +389,48 @@ const ScratchMap = ({ onBack, trips, t }: { onBack: () => void, trips?: Trip[], 
             </div>
 
             <div className="p-6 flex-1 overflow-y-auto pb-32">
-                <div className="relative w-full aspect-[1.6] bg-[#1F2937] rounded-3xl overflow-hidden mb-8 shadow-2xl border border-gray-700 flex items-center justify-center">
-                    <div className="absolute inset-0 opacity-30 flex items-center justify-center">
-                        <svg viewBox="0 0 100 50" className="w-full h-full text-coral fill-current">
-                            <path d="M20 10 Q30 5 40 15 T60 15 T80 10 V40 H20 Z" opacity="0.5" />
-                            <circle cx="25" cy="15" r="5" />
-                            <circle cx="75" cy="15" r="6" />
-                            <circle cx="50" cy="30" r="4" />
-                        </svg>
+                <div className="relative w-full aspect-[1.6] bg-[#1F2937] rounded-3xl overflow-hidden mb-8 shadow-2xl border border-gray-700">
+                    <MapContainer
+                        center={[20, 0]}
+                        zoom={2}
+                        style={{ height: '100%', width: '100%', background: '#1F2937' }}
+                        zoomControl={false}
+                        attributionControl={false}
+                    >
+                        {/* Dark theme tiles */}
+                        <TileLayer
+                            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                        />
+                        <MapInvalidator onReady={() => setIsMapReady(true)} />
+
+                        {Array.from(visited).map(country => {
+                            const coords = COUNTRY_COORDS[country as keyof typeof COUNTRY_COORDS];
+                            if (!coords) return null;
+                            return (
+                                <Marker
+                                    key={country}
+                                    position={coords}
+                                    icon={L.divIcon({
+                                        className: 'custom-div-icon',
+                                        html: `<div style="background-color: #FF6B6B; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 10px #FF6B6B;"></div>`,
+                                        iconSize: [12, 12],
+                                        iconAnchor: [6, 6]
+                                    })}
+                                >
+                                    <Popup>
+                                        <div className="text-ink font-bold">{country}</div>
+                                    </Popup>
+                                </Marker>
+                            );
+                        })}
+                    </MapContainer>
+
+                    <div className="absolute bottom-4 left-0 right-0 text-center pointer-events-none">
+                        <div className="inline-block bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full text-xs text-gray-400 font-mono tracking-widest border border-white/10">
+                            [ 互動式地圖 ]
+                        </div>
                     </div>
-                    <h1 className="relative text-5xl font-black text-coral tracking-tighter opacity-80 mix-blend-overlay">WORLD</h1>
-                    <div className="absolute bottom-4 text-xs text-gray-500 font-mono tracking-widest">[ 互動式地圖 ]</div>
                 </div>
 
                 <div className="bg-[#1F2937] rounded-3xl p-6 shadow-lg border border-gray-700 mb-6">
@@ -314,8 +440,8 @@ const ScratchMap = ({ onBack, trips, t }: { onBack: () => void, trips?: Trip[], 
                             <input
                                 value={newCountry}
                                 onChange={e => setNewCountry(e.target.value)}
-                                placeholder="新增..."
-                                className="bg-gray-800 border border-gray-600 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-coral w-32"
+                                placeholder="新增國家 (英文)..."
+                                className="bg-gray-800 border border-gray-600 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-coral w-36 placeholder-gray-500"
                             />
                             <button onClick={handleAdd} className="bg-coral p-1.5 rounded-lg text-white hover:bg-coralDark">
                                 <PlusIcon className="w-4 h-4" />
@@ -435,7 +561,7 @@ const TranslationTool = ({ onBack, t, language }: { onBack: () => void, t: any, 
 
 // --- Main Tools Container ---
 
-const Tools: React.FC<ToolsProps> = ({ onBack, trips, settings, onMagicEditor }) => {
+const Tools: React.FC<ToolsProps> = ({ onBack, trips, settings, onMagicEditor, onOpenSettings }) => {
     const [activeTool, setActiveTool] = useState<ToolView>('MENU');
     const t = translations[settings.language] || translations['zh-TW'];
 
@@ -444,7 +570,7 @@ const Tools: React.FC<ToolsProps> = ({ onBack, trips, settings, onMagicEditor })
     if (activeTool === 'CULTURE') return <CultureGuide onBack={() => setActiveTool('MENU')} t={t} language={settings.language} />;
     if (activeTool === 'RESTROOM') return <RestroomFinder onBack={() => setActiveTool('MENU')} t={t} />;
     if (activeTool === 'SCRATCH_MAP') return <ScratchMap onBack={() => setActiveTool('MENU')} trips={trips} t={t} />;
-    if (activeTool === 'EMERGENCY') return <EmergencyHelper onBack={() => setActiveTool('MENU')} t={t} language={settings.language} />;
+    if (activeTool === 'EMERGENCY') return <EmergencyHelper onBack={() => setActiveTool('MENU')} t={t} language={settings.language} onOpenSettings={onOpenSettings} />;
     if (activeTool === 'CARD_ADVICE') return <CardAdvice onBack={() => setActiveTool('MENU')} t={t} language={settings.language} />;
     if (activeTool === 'TIME_CAPSULE') return <div onClick={() => setActiveTool('MENU')}>Coming Soon</div>;
 

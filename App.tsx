@@ -512,6 +512,7 @@ const App: React.FC = () => {
             trips={trips}
             settings={settings}
             onMagicEditor={() => setViewState(ViewState.MAGIC_EDITOR)}
+            onOpenSettings={() => setViewState(ViewState.SETTINGS)}
           />
         );
       case ViewState.TRIP_DETAILS:

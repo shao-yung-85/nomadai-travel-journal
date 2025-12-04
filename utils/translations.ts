@@ -162,6 +162,8 @@ export const translations = {
     mode_car: '開車/計程車',
     mode_flight: '飛機',
     minutes: '分鐘',
+    search_placeholder: '搜尋地點 (例如: 東京鐵塔)',
+    search_location: '搜尋',
   },
   'en-US': {
     // Common
@@ -285,6 +287,8 @@ export const translations = {
     mode_car: 'Car/Taxi',
     mode_flight: 'Flight',
     minutes: 'min',
+    search_placeholder: 'Search location (e.g. Tokyo Tower)',
+    search_location: 'Search',
   },
   'ja-JP': {
     // Common
@@ -403,5 +407,7 @@ export const translations = {
     mode_car: '車/タクシー',
     mode_flight: '飛行機',
     minutes: '分',
+    search_placeholder: '場所を検索 (例: 東京タワー)',
+    search_location: '検索',
   }
 };

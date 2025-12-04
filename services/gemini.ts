@@ -314,7 +314,7 @@ export const getEmergencyInfo = async (country: string, language: string = 'zh-T
             });
             return getResponseText(response);
         } catch (error) {
-            return "無法取得緊急資訊。請直接撥打國際通用緊急電話 112。";
+            return `無法取得緊急資訊。錯誤詳情: ${error instanceof Error ? error.message : String(error)}`;
         }
     });
 }

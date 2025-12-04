@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Leaflet Test</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        #map {
+            height: 400px;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Leaflet Map Test</h1>
+    <div id="map"></div>
+    <script>
+        try {
+            var map = L.map('map').setView([25.0330, 121.5654], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+            L.marker([25.0330, 121.5654]).addTo(map)
+                .bindPopup('Taipei 101')
+                .openPopup();
+            console.log("Map initialized successfully");
+        } catch (e) {
+            console.error("Map initialization failed:", e);
+            document.body.innerHTML += "<p style='color:red'>Error: " + e.message + "</p>";
+        }
+    </script>
+</body>
+
+</html>
