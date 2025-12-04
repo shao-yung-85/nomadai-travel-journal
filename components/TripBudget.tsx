@@ -26,6 +26,27 @@ const TripBudget: React.FC<TripBudgetProps> = ({ trip, settings, onUpdateTrip })
     const [calculatedBaseAmount, setCalculatedBaseAmount] = useState(0);
     const [isFetchingRate, setIsFetchingRate] = useState(false);
 
+    // Budget Editing State
+    const [isEditingBudget, setIsEditingBudget] = useState(false);
+    const [tempBudgetTotal, setTempBudgetTotal] = useState('');
+
+    const handleSaveBudget = () => {
+        const newTotal = parseInt(tempBudgetTotal);
+        if (!isNaN(newTotal) && newTotal >= 0) {
+            const updatedTrip = {
+                ...trip,
+                budget: {
+                    ...trip.budget,
+                    total: newTotal,
+                    currency: trip.budget?.currency || 'TWD',
+                    expenses: trip.budget?.expenses || []
+                }
+            };
+            onUpdateTrip?.(updatedTrip);
+        }
+        setIsEditingBudget(false);
+    };
+
     // Reset currency when modal opens
     useEffect(() => {
         if (isAddingExpense) {
@@ -128,9 +149,35 @@ const TripBudget: React.FC<TripBudgetProps> = ({ trip, settings, onUpdateTrip })
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-10 -mt-10 blur-2xl"></div>
                 <div className="relative z-10">
                     <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-1">{t.budget_total}</p>
-                    <h2 className="text-4xl font-black mb-6">
-                        <span className="text-2xl mr-1">{baseSymbol}</span>{budgetTotal.toLocaleString()}
-                    </h2>
+                    <div className="flex items-center gap-2 mb-6 group">
+                        {isEditingBudget ? (
+                            <div className="flex items-center">
+                                <span className="text-2xl mr-1 font-black">{baseSymbol}</span>
+                                <input
+                                    type="number"
+                                    value={tempBudgetTotal}
+                                    onChange={(e) => setTempBudgetTotal(e.target.value)}
+                                    onBlur={handleSaveBudget}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleSaveBudget()}
+                                    className="bg-transparent text-4xl font-black text-white border-b-2 border-white/20 outline-none w-48"
+                                    autoFocus
+                                />
+                            </div>
+                        ) : (
+                            <h2
+                                className="text-4xl font-black cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-2"
+                                onClick={() => {
+                                    setTempBudgetTotal(budgetTotal.toString());
+                                    setIsEditingBudget(true);
+                                }}
+                            >
+                                <span className="text-2xl mr-1">{baseSymbol}</span>{budgetTotal.toLocaleString()}
+                                <svg className="w-5 h-5 text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                </svg>
+                            </h2>
+                        )}
+                    </div>
 
                     <div className="mb-2 flex justify-between text-sm font-bold">
                         <span className="text-gray-300">{t.budget_spent}</span>
