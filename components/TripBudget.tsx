@@ -24,7 +24,9 @@ const TripBudget: React.FC<TripBudgetProps> = ({ trip, settings, onUpdateTrip })
     const [selectedCurrency, setSelectedCurrency] = useState(trip.budget?.currency || 'TWD');
     const [exchangeRate, setExchangeRate] = useState('');
     const [calculatedBaseAmount, setCalculatedBaseAmount] = useState(0);
+    const [calculatedBaseAmount, setCalculatedBaseAmount] = useState(0);
     const [isFetchingRate, setIsFetchingRate] = useState(false);
+    const [fetchError, setFetchError] = useState<string | null>(null);
 
     // Budget Editing State
     const [isEditingBudget, setIsEditingBudget] = useState(false);
@@ -59,6 +61,7 @@ const TripBudget: React.FC<TripBudgetProps> = ({ trip, settings, onUpdateTrip })
     useEffect(() => {
         const fetchRate = async () => {
             const baseCurrency = trip.budget?.currency || 'TWD';
+            setFetchError(null); // Reset error
             if (selectedCurrency !== baseCurrency) {
                 if (settings.apiKey) {
                     setIsFetchingRate(true);
@@ -67,11 +70,11 @@ const TripBudget: React.FC<TripBudgetProps> = ({ trip, settings, onUpdateTrip })
                         if (rate) {
                             setExchangeRate(rate);
                         } else {
-                            // Only alert if we tried and failed (and it wasn't just a race condition/unmount)
-                            console.warn("Failed to fetch rate");
+                            setFetchError("無法取得匯率 (API Key 可能無效)");
                         }
                     } catch (e) {
                         console.error(e);
+                        setFetchError("連線錯誤");
                     }
                     setIsFetchingRate(false);
                 }
@@ -323,6 +326,11 @@ const TripBudget: React.FC<TripBudgetProps> = ({ trip, settings, onUpdateTrip })
                                     {!settings.apiKey && (
                                         <p className="text-[10px] text-red-400 mt-1">
                                             * 請在設定中輸入 API Key 以啟用自動匯率
+                                        </p>
+                                    )}
+                                    {fetchError && (
+                                        <p className="text-[10px] text-red-400 mt-1">
+                                            * {fetchError}
                                         </p>
                                     )}
                                 </div>

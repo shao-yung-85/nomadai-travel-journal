@@ -70,6 +70,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
     const [quickExpenseRate, setQuickExpenseRate] = useState('');
     const [quickExpenseBaseAmount, setQuickExpenseBaseAmount] = useState(0);
     const [isFetchingQuickRate, setIsFetchingQuickRate] = useState(false);
+    const [quickFetchError, setQuickFetchError] = useState<string | null>(null);
 
     // Reset currency when modal opens
     useEffect(() => {
@@ -83,6 +84,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
     useEffect(() => {
         const fetchRate = async () => {
             const baseCurrency = trip.budget?.currency || 'TWD';
+            setQuickFetchError(null);
             if (quickExpenseCurrency !== baseCurrency) {
                 if (settings.apiKey) {
                     setIsFetchingQuickRate(true);
@@ -90,9 +92,12 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
                         const rate = await getExchangeRate(quickExpenseCurrency, baseCurrency);
                         if (rate) {
                             setQuickExpenseRate(rate);
+                        } else {
+                            setQuickFetchError("無法取得匯率 (API Key 可能無效)");
                         }
                     } catch (error) {
                         console.error("Failed to fetch rate:", error);
+                        setQuickFetchError("連線錯誤");
                     }
                     setIsFetchingQuickRate(false);
                 }
@@ -561,6 +566,11 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
                                         {!settings.apiKey && (
                                             <p className="text-[10px] text-red-400 mt-1">
                                                 * 請在設定中輸入 API Key 以啟用自動匯率
+                                            </p>
+                                        )}
+                                        {quickFetchError && (
+                                            <p className="text-[10px] text-red-400 mt-1">
+                                                * {quickFetchError}
                                             </p>
                                         )}
                                     </div>
