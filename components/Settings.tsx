@@ -28,6 +28,7 @@ const Settings: React.FC<SettingsProps> = ({ onBack, settings, onUpdateSettings,
 
     const handleSaveApiKey = (value: string) => {
         onUpdateSettings({ apiKey: value });
+        localStorage.setItem('geminiApiKey', value);
         if (value) {
             setShowSaved(true);
             setTimeout(() => setShowSaved(false), 2000);

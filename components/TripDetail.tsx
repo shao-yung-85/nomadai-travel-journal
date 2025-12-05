@@ -72,6 +72,8 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
     const [quickExpenseBaseAmount, setQuickExpenseBaseAmount] = useState(0);
     const [isFetchingQuickRate, setIsFetchingQuickRate] = useState(false);
     const [quickFetchError, setQuickFetchError] = useState<string | null>(null);
+    const [isAddingQuickExpense, setIsAddingQuickExpense] = useState(false);
+    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
     // Reset currency when modal opens
     useEffect(() => {
@@ -284,32 +286,33 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
                             className="p-2 bg-black/30 backdrop-blur-md rounded-full text-white hover:bg-black/50 transition-colors opacity-0 group-hover:opacity-100"
                         >
                             <SparklesIcon className="w-5 h-5" />
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={() => setIsShareModalOpen(true)}
-                                    className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors"
-                                >
-                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                                    </svg>
-                                </button>
-                                <button
-                                    onClick={() => onOpenAI(trip.id)}
-                                    className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors"
-                                >
-                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                    </svg>
-                                </button>
-                                <button
-                                    onClick={() => onDelete(trip.id)}
-                                    className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-red-500/50 transition-colors"
-                                >
-                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                </button>
-                            </div>
+                        </button>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setIsShareModalOpen(true)}
+                                className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors"
+                            >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                                </svg>
+                            </button>
+                            <button
+                                onClick={() => onOpenAI(trip.id)}
+                                className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors"
+                            >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                            </button>
+                            <button
+                                onClick={() => onDelete(trip.id)}
+                                className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-red-500/50 transition-colors"
+                            >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
 
                     {/* Share Modal */}
@@ -319,304 +322,311 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
                             onClose={() => setIsShareModalOpen(false)}
                             onUpdateTrip={onUpdateTrip}
                         />
-                    )} className="flex items-center gap-2 mb-2">
-                    <input
-                        value={editedTitle}
-                        onChange={(e) => setEditedTitle(e.target.value)}
-                        className="bg-white/20 backdrop-blur-md text-white text-3xl font-black px-2 py-1 rounded-lg outline-none w-full"
-                        autoFocus
-                        onBlur={handleSaveTitle}
-                        onKeyDown={(e) => e.key === 'Enter' && handleSaveTitle()}
-                    />
-                </div>
-                ) : (
-                <h1
-                    className="text-3xl font-black mb-2 leading-tight drop-shadow-md cursor-pointer hover:text-coral/90 transition-colors flex items-center gap-2"
-                    onClick={() => { setIsEditingTitle(true); setEditedTitle(trip.title); }}
-                >
-                    {trip.title}
-                    <PencilIcon className="w-5 h-5 opacity-50" />
-                </h1>
                     )}
-                <div className="flex items-center gap-3 text-sm font-bold text-gray-200">
-                    <span className="bg-white/20 backdrop-blur-md px-2 py-0.5 rounded text-xs">{trip.days} Days</span>
-                    <span>{trip.startDate} - {trip.endDate}</span>
                 </div>
-            </div>
-        </div>
 
-            {/* Content Area */ }
-    <div className="flex-1 overflow-y-auto bg-paper relative rounded-t-3xl -mt-6 z-20 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
-        <div className="p-5 min-h-full">
-            {activeTab === 'ITINERARY' && (
-                <TripItinerary
-                    trip={trip}
-                    settings={settings}
-                    onUpdateTrip={onUpdateTrip}
-                    onOpenQuickExpense={handleOpenQuickExpense}
-                />
-            )}
-            {activeTab === 'MAP' && (
-                <>
-                    <div className="mb-4 flex gap-2">
-                        <div className="flex-1 relative">
+                {/* Title and Info Overlay */}
+                <div className="absolute bottom-0 left-0 right-0 p-5 text-white z-10">
+                    {isEditingTitle ? (
+                        <div className="flex items-center gap-2 mb-2">
                             <input
-                                type="text"
-                                value={mapSearchQuery}
-                                onChange={(e) => setMapSearchQuery(e.target.value)}
-                                onKeyDown={(e) => e.key === 'Enter' && handleMapSearch()}
-                                placeholder={t.search_placeholder}
-                                className="w-full pl-10 pr-4 py-2 rounded-full border border-sand focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm"
+                                value={editedTitle}
+                                onChange={(e) => setEditedTitle(e.target.value)}
+                                className="bg-white/20 backdrop-blur-md text-white text-3xl font-black px-2 py-1 rounded-lg outline-none w-full"
+                                autoFocus
+                                onBlur={handleSaveTitle}
+                                onKeyDown={(e) => e.key === 'Enter' && handleSaveTitle()}
                             />
-                            <SearchIcon className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                         </div>
-                        <button
-                            onClick={() => handleMapSearch()}
-                            disabled={isSearchingMap || !mapSearchQuery.trim()}
-                            className="bg-ink text-white px-4 py-2 rounded-full text-sm font-bold disabled:opacity-50 flex items-center gap-1"
+                    ) : (
+                        <h1
+                            className="text-3xl font-black mb-2 leading-tight drop-shadow-md cursor-pointer hover:text-coral/90 transition-colors flex items-center gap-2"
+                            onClick={() => { setIsEditingTitle(true); setEditedTitle(trip.title); }}
                         >
-                            {isSearchingMap ? (
-                                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            ) : (
-                                t.search_location
-                            )}
-                        </button>
-                    </div>
-                    <TripMap
-                        trip={trip}
-                        settings={settings}
-                        searchedLocation={mapSearchResult}
-                        onItemClick={(query) => handleMapSearch(query)}
-                        mapSearchQuery={mapSearchQuery}
-                    />
-                </>
-            )}
-            {activeTab === 'BUDGET' && <TripBudget trip={trip} settings={settings} onUpdateTrip={onUpdateTrip} />}
-            {activeTab === 'BOOKINGS' && <TripBookings trip={trip} settings={settings} onUpdateTrip={onUpdateTrip} />}
-            {activeTab === 'SHOPPING' && (
-                <ShoppingList
-                    items={trip.shoppingList || []}
-                    onUpdateItems={(items) => onUpdateTrip?.({ ...trip, shoppingList: items })}
-                    settings={settings}
-                />
-            )}
-        </div>
-    </div>
-
-    {/* Floating Tab Bar */ }
-    <div className="absolute bottom-6 left-6 right-6 bg-white/90 backdrop-blur-xl rounded-full shadow-2xl border border-white/50 p-1.5 flex justify-between items-center z-30">
-        {[
-            { id: 'ITINERARY', icon: ListIcon, label: t.itinerary },
-            { id: 'MAP', icon: MapIcon, label: t.map },
-            { id: 'BUDGET', icon: WalletIcon, label: t.budget },
-            { id: 'BOOKINGS', icon: TicketIcon, label: t.bookings },
-            { id: 'SHOPPING', icon: ShoppingBagIcon, label: t.shopping },
-        ].map((tab) => (
-            <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as Tab)}
-                className={`flex-1 flex flex-col items-center justify-center py-2 rounded-full transition-all duration-300 ${activeTab === tab.id ? 'bg-ink text-white shadow-lg scale-105' : 'text-gray-400 hover:text-ink hover:bg-gray-100'}`}
-            >
-                <tab.icon className={`w-5 h-5 ${activeTab === tab.id ? 'stroke-2' : 'stroke-[1.5]'}`} />
-                {activeTab === tab.id && <span className="text-[10px] font-bold mt-0.5">{tab.label}</span>}
-            </button>
-        ))}
-    </div>
-
-    {/* Delete Confirmation Modal */ }
-    {
-        isDeleteModalOpen && (
-            <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
-                <div className="bg-white rounded-3xl p-6 w-full max-w-xs shadow-2xl animate-scale-in text-center">
-                    <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <TrashIcon className="w-8 h-8" />
-                    </div>
-                    <h3 className="text-xl font-bold text-ink mb-2">{t.delete_trip}</h3>
-                    <p className="text-gray-500 mb-6">{t.delete_trip_confirm.replace('{title}', trip.title)}</p>
-                    <div className="flex gap-3">
-                        <button
-                            onClick={() => setIsDeleteModalOpen(false)}
-                            className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition-colors"
-                        >
-                            {t.cancel}
-                        </button>
-                        <button
-                            onClick={confirmDelete}
-                            className="flex-1 py-3 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 shadow-lg shadow-red-500/30 transition-colors"
-                        >
-                            {t.delete}
-                        </button>
+                            {trip.title}
+                            <PencilIcon className="w-5 h-5 opacity-50" />
+                        </h1>
+                    )}
+                    <div className="flex items-center gap-3 text-sm font-bold text-gray-200">
+                        <span className="bg-white/20 backdrop-blur-md px-2 py-0.5 rounded text-xs">{trip.days} Days</span>
+                        <span>{trip.startDate} - {trip.endDate}</span>
                     </div>
                 </div>
             </div>
-        )
-    }
 
-    {/* Cover Image Edit Modal */ }
-    {
-        isEditingCover && (
-            <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 animate-fade-in" onClick={() => setIsEditingCover(false)}>
-                <div className="bg-paper w-full max-w-sm rounded-3xl shadow-2xl p-6 animate-slide-up" onClick={e => e.stopPropagation()}>
-                    <h3 className="text-xl font-bold text-ink mb-6 text-center">更換封面圖片</h3>
-                    <div className="space-y-3">
-                        <button
-                            onClick={() => handleCoverChange('upload')}
-                            className="w-full py-4 bg-white border border-sand rounded-xl font-bold text-ink hover:bg-gray-50 flex items-center justify-center gap-2"
-                        >
-                            <span>📁</span> 上傳照片
-                        </button>
-                        <button
-                            onClick={() => handleCoverChange('ai')}
-                            disabled={isGeneratingCover}
-                            className="w-full py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold shadow-lg flex items-center justify-center gap-2"
-                        >
-                            {isGeneratingCover ? (
-                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            ) : (
-                                <><span>✨</span> AI 生成</>
-                            )}
-                        </button>
-                        <div className="relative">
-                            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-sand"></div></div>
-                            <div className="relative flex justify-center text-xs uppercase"><span className="bg-paper px-2 text-gray-400">OR</span></div>
-                        </div>
-                        <div className="flex gap-2">
-                            <input
-                                value={newCoverUrl}
-                                onChange={(e) => setNewCoverUrl(e.target.value)}
-                                placeholder="貼上圖片網址..."
-                                className="flex-1 bg-white p-3 rounded-xl border border-sand outline-none"
-                            />
-                            <button
-                                onClick={() => handleCoverChange('url')}
-                                disabled={!newCoverUrl}
-                                className="bg-ink text-white px-4 rounded-xl font-bold disabled:opacity-50"
-                            >
-                                OK
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        )
-    }
 
-    {/* Quick Expense Modal */ }
-    {
-        isAddingQuickExpense && (
-            <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 animate-fade-in" onClick={() => setIsAddingQuickExpense(false)}>
-                <div className="bg-paper w-full max-w-sm rounded-3xl shadow-2xl p-6 animate-slide-up" onClick={e => e.stopPropagation()}>
-                    <h3 className="text-xl font-bold text-ink mb-2 text-center">快速記帳</h3>
-                    <p className="text-center text-gray-400 text-sm mb-6">{quickExpenseItem?.activity}</p>
-
-                    <div className="space-y-4">
-                        {quickExpenseItems.map((item, idx) => (
-                            <div key={idx} className="flex gap-2">
-                                <input
-                                    value={item.name}
-                                    onChange={(e) => updateQuickExpenseItem(idx, 'name', e.target.value)}
-                                    placeholder="品項 (如: 門票)"
-                                    className="flex-1 bg-white p-3 rounded-xl font-bold border-none shadow-sm outline-none"
-                                    autoFocus={idx === 0}
-                                />
-                                <input
-                                    type="number"
-                                    value={item.price}
-                                    onChange={(e) => updateQuickExpenseItem(idx, 'price', e.target.value)}
-                                    placeholder={getCurrencySymbol(quickExpenseCurrency)}
-                                    className="w-24 bg-white p-3 rounded-xl font-bold border-none shadow-sm outline-none text-center"
-                                    onFocus={(e) => e.target.select()}
-                                />
-                            </div>
-                        ))}
-                        <button onClick={addQuickExpenseItemRow} className="text-xs font-bold text-coral flex items-center gap-1 mx-auto hover:bg-coral/10 px-3 py-1 rounded-lg transition-colors">
-                            + 新增細項
-                        </button>
-
-                        <div className="pt-4 border-t border-sand">
-                            <div className="flex justify-between items-center mb-4">
-                                <div className="flex items-center gap-2">
-                                    <select
-                                        value={quickExpenseCurrency}
-                                        onChange={(e) => setQuickExpenseCurrency(e.target.value)}
-                                        className="bg-transparent font-bold text-gray-400 outline-none text-sm"
-                                    >
-                                        {COMMON_CURRENCIES.map(c => (
-                                            <option key={c.code} value={c.code}>{c.code}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="font-bold text-ink text-2xl">{getCurrencySymbol(quickExpenseCurrency)}</span>
+            {/* Content Area */}
+            <div className="flex-1 overflow-y-auto bg-paper relative rounded-t-3xl -mt-6 z-20 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
+                <div className="p-5 min-h-full">
+                    {activeTab === 'ITINERARY' && (
+                        <TripItinerary
+                            trip={trip}
+                            settings={settings}
+                            onUpdateTrip={onUpdateTrip}
+                            onOpenQuickExpense={handleOpenQuickExpense}
+                        />
+                    )}
+                    {activeTab === 'MAP' && (
+                        <>
+                            <div className="mb-4 flex gap-2">
+                                <div className="flex-1 relative">
                                     <input
-                                        type="number"
-                                        value={quickExpenseAmount}
-                                        onChange={(e) => setQuickExpenseAmount(e.target.value)}
-                                        className="w-32 bg-transparent text-right text-3xl font-black border-none outline-none p-0"
-                                        placeholder="0"
-                                        onFocus={(e) => e.target.select()}
+                                        type="text"
+                                        value={mapSearchQuery}
+                                        onChange={(e) => setMapSearchQuery(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && handleMapSearch()}
+                                        placeholder={t.search_placeholder}
+                                        className="w-full pl-10 pr-4 py-2 rounded-full border border-sand focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm"
+                                    />
+                                    <SearchIcon className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                                </div>
+                                <button
+                                    onClick={() => handleMapSearch()}
+                                    disabled={isSearchingMap || !mapSearchQuery.trim()}
+                                    className="bg-ink text-white px-4 py-2 rounded-full text-sm font-bold disabled:opacity-50 flex items-center gap-1"
+                                >
+                                    {isSearchingMap ? (
+                                        <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    ) : (
+                                        t.search_location
+                                    )}
+                                </button>
+                            </div>
+                            <TripMap
+                                trip={trip}
+                                settings={settings}
+                                searchedLocation={mapSearchResult}
+                                onItemClick={(query) => handleMapSearch(query)}
+                                mapSearchQuery={mapSearchQuery}
+                            />
+                        </>
+                    )}
+                    {activeTab === 'BUDGET' && <TripBudget trip={trip} settings={settings} onUpdateTrip={onUpdateTrip} />}
+                    {activeTab === 'BOOKINGS' && <TripBookings trip={trip} settings={settings} onUpdateTrip={onUpdateTrip} />}
+                    {activeTab === 'SHOPPING' && (
+                        <ShoppingList
+                            items={trip.shoppingList || []}
+                            onUpdateItems={(items) => onUpdateTrip?.({ ...trip, shoppingList: items })}
+                            settings={settings}
+                        />
+                    )}
+                </div>
+            </div>
+
+            {/* Floating Tab Bar */}
+            <div className="absolute bottom-6 left-6 right-6 bg-white/90 backdrop-blur-xl rounded-full shadow-2xl border border-white/50 p-1.5 flex justify-between items-center z-30">
+                {[
+                    { id: 'ITINERARY', icon: ListIcon, label: t.itinerary },
+                    { id: 'MAP', icon: MapIcon, label: t.map },
+                    { id: 'BUDGET', icon: WalletIcon, label: t.budget },
+                    { id: 'BOOKINGS', icon: TicketIcon, label: t.bookings },
+                    { id: 'SHOPPING', icon: ShoppingBagIcon, label: t.shopping },
+                ].map((tab) => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id as Tab)}
+                        className={`flex-1 flex flex-col items-center justify-center py-2 rounded-full transition-all duration-300 ${activeTab === tab.id ? 'bg-ink text-white shadow-lg scale-105' : 'text-gray-400 hover:text-ink hover:bg-gray-100'}`}
+                    >
+                        <tab.icon className={`w-5 h-5 ${activeTab === tab.id ? 'stroke-2' : 'stroke-[1.5]'}`} />
+                        {activeTab === tab.id && <span className="text-[10px] font-bold mt-0.5">{tab.label}</span>}
+                    </button>
+                ))}
+            </div>
+
+            {/* Delete Confirmation Modal */}
+            {
+                isDeleteModalOpen && (
+                    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+                        <div className="bg-white rounded-3xl p-6 w-full max-w-xs shadow-2xl animate-scale-in text-center">
+                            <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <TrashIcon className="w-8 h-8" />
+                            </div>
+                            <h3 className="text-xl font-bold text-ink mb-2">{t.delete_trip}</h3>
+                            <p className="text-gray-500 mb-6">{t.delete_trip_confirm.replace('{title}', trip.title)}</p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setIsDeleteModalOpen(false)}
+                                    className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition-colors"
+                                >
+                                    {t.cancel}
+                                </button>
+                                <button
+                                    onClick={confirmDelete}
+                                    className="flex-1 py-3 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 shadow-lg shadow-red-500/30 transition-colors"
+                                >
+                                    {t.delete}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+            {/* Cover Image Edit Modal */}
+            {
+                isEditingCover && (
+                    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 animate-fade-in" onClick={() => setIsEditingCover(false)}>
+                        <div className="bg-paper w-full max-w-sm rounded-3xl shadow-2xl p-6 animate-slide-up" onClick={e => e.stopPropagation()}>
+                            <h3 className="text-xl font-bold text-ink mb-6 text-center">更換封面圖片</h3>
+                            <div className="space-y-3">
+                                <button
+                                    onClick={() => handleCoverChange('upload')}
+                                    className="w-full py-4 bg-white border border-sand rounded-xl font-bold text-ink hover:bg-gray-50 flex items-center justify-center gap-2"
+                                >
+                                    <span>📁</span> 上傳照片
+                                </button>
+                                <button
+                                    onClick={() => handleCoverChange('ai')}
+                                    disabled={isGeneratingCover}
+                                    className="w-full py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold shadow-lg flex items-center justify-center gap-2"
+                                >
+                                    {isGeneratingCover ? (
+                                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    ) : (
+                                        <><span>✨</span> AI 生成</>
+                                    )}
+                                </button>
+                                <div className="relative">
+                                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-sand"></div></div>
+                                    <div className="relative flex justify-center text-xs uppercase"><span className="bg-paper px-2 text-gray-400">OR</span></div>
+                                </div>
+                                <div className="flex gap-2">
+                                    <input
+                                        value={newCoverUrl}
+                                        onChange={(e) => setNewCoverUrl(e.target.value)}
+                                        placeholder="貼上圖片網址..."
+                                        className="flex-1 bg-white p-3 rounded-xl border border-sand outline-none"
+                                    />
+                                    <button
+                                        onClick={() => handleCoverChange('url')}
+                                        disabled={!newCoverUrl}
+                                        className="bg-ink text-white px-4 rounded-xl font-bold disabled:opacity-50"
+                                    >
+                                        OK
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+            {/* Quick Expense Modal */}
+            {
+                isAddingQuickExpense && (
+                    <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 animate-fade-in" onClick={() => setIsAddingQuickExpense(false)}>
+                        <div className="bg-paper w-full max-w-sm rounded-3xl shadow-2xl p-6 animate-slide-up" onClick={e => e.stopPropagation()}>
+                            <h3 className="text-xl font-bold text-ink mb-2 text-center">快速記帳</h3>
+                            <p className="text-center text-gray-400 text-sm mb-6">{quickExpenseItem?.activity}</p>
+
+                            <div className="space-y-4">
+                                {quickExpenseItems.map((item, idx) => (
+                                    <div key={idx} className="flex gap-2">
+                                        <input
+                                            value={item.name}
+                                            onChange={(e) => updateQuickExpenseItem(idx, 'name', e.target.value)}
+                                            placeholder="品項 (如: 門票)"
+                                            className="flex-1 bg-white p-3 rounded-xl font-bold border-none shadow-sm outline-none"
+                                            autoFocus={idx === 0}
+                                        />
+                                        <input
+                                            type="number"
+                                            value={item.price}
+                                            onChange={(e) => updateQuickExpenseItem(idx, 'price', e.target.value)}
+                                            placeholder={getCurrencySymbol(quickExpenseCurrency)}
+                                            className="w-24 bg-white p-3 rounded-xl font-bold border-none shadow-sm outline-none text-center"
+                                            onFocus={(e) => e.target.select()}
+                                        />
+                                    </div>
+                                ))}
+                                <button onClick={addQuickExpenseItemRow} className="text-xs font-bold text-coral flex items-center gap-1 mx-auto hover:bg-coral/10 px-3 py-1 rounded-lg transition-colors">
+                                    + 新增細項
+                                </button>
+
+                                <div className="pt-4 border-t border-sand">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <div className="flex items-center gap-2">
+                                            <select
+                                                value={quickExpenseCurrency}
+                                                onChange={(e) => setQuickExpenseCurrency(e.target.value)}
+                                                className="bg-transparent font-bold text-gray-400 outline-none text-sm"
+                                            >
+                                                {COMMON_CURRENCIES.map(c => (
+                                                    <option key={c.code} value={c.code}>{c.code}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-bold text-ink text-2xl">{getCurrencySymbol(quickExpenseCurrency)}</span>
+                                            <input
+                                                type="number"
+                                                value={quickExpenseAmount}
+                                                onChange={(e) => setQuickExpenseAmount(e.target.value)}
+                                                className="w-32 bg-transparent text-right text-3xl font-black border-none outline-none p-0"
+                                                placeholder="0"
+                                                onFocus={(e) => e.target.select()}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {quickExpenseCurrency !== baseCurrency && (
+                                        <div className="mb-4 bg-sand/30 p-3 rounded-xl">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <label className="text-xs font-bold text-gray-500">匯率 ({quickExpenseCurrency} → {baseCurrency})</label>
+                                                <span className="text-xs font-bold text-coral">
+                                                    ≈ {baseSymbol}{quickExpenseBaseAmount.toLocaleString()}
+                                                </span>
+                                            </div>
+                                            <div className="relative">
+                                                <input
+                                                    value={quickExpenseRate}
+                                                    onChange={(e) => setQuickExpenseRate(e.target.value)}
+                                                    type="number"
+                                                    step="0.01"
+                                                    placeholder={isFetchingQuickRate ? "載入匯率中..." : "Exchange Rate"}
+                                                    className="w-full bg-white p-3 rounded-xl text-sm font-bold border-none shadow-sm outline-none"
+                                                    onFocus={(e) => e.target.select()}
+                                                    disabled={isFetchingQuickRate}
+                                                />
+                                                {isFetchingQuickRate && (
+                                                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                                        <div className="w-4 h-4 border-2 border-coral border-t-transparent rounded-full animate-spin"></div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {!settings.apiKey && (
+                                                <p className="text-[10px] text-red-400 mt-1">
+                                                    * 請在設定中輸入 API Key 以啟用自動匯率
+                                                </p>
+                                            )}
+                                            {quickFetchError && (
+                                                <p className="text-[10px] text-red-400 mt-1">
+                                                    * {quickFetchError}
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    <textarea
+                                        value={quickExpenseNote}
+                                        onChange={(e) => setQuickExpenseNote(e.target.value)}
+                                        placeholder="備註..."
+                                        className="w-full bg-white p-3 rounded-xl text-sm font-medium border-none shadow-sm outline-none min-h-[60px]"
                                     />
                                 </div>
+
+                                <button
+                                    onClick={handleSaveQuickExpense}
+                                    disabled={!quickExpenseAmount}
+                                    className="w-full bg-ink text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-ink/30 mt-2 active:scale-95 transition-all disabled:opacity-50 disabled:shadow-none"
+                                >
+                                    入帳
+                                </button>
                             </div>
-
-                            {quickExpenseCurrency !== baseCurrency && (
-                                <div className="mb-4 bg-sand/30 p-3 rounded-xl">
-                                    <div className="flex justify-between items-center mb-2">
-                                        <label className="text-xs font-bold text-gray-500">匯率 ({quickExpenseCurrency} → {baseCurrency})</label>
-                                        <span className="text-xs font-bold text-coral">
-                                            ≈ {baseSymbol}{quickExpenseBaseAmount.toLocaleString()}
-                                        </span>
-                                    </div>
-                                    <div className="relative">
-                                        <input
-                                            value={quickExpenseRate}
-                                            onChange={(e) => setQuickExpenseRate(e.target.value)}
-                                            type="number"
-                                            step="0.01"
-                                            placeholder={isFetchingQuickRate ? "載入匯率中..." : "Exchange Rate"}
-                                            className="w-full bg-white p-3 rounded-xl text-sm font-bold border-none shadow-sm outline-none"
-                                            onFocus={(e) => e.target.select()}
-                                            disabled={isFetchingQuickRate}
-                                        />
-                                        {isFetchingQuickRate && (
-                                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                                <div className="w-4 h-4 border-2 border-coral border-t-transparent rounded-full animate-spin"></div>
-                                            </div>
-                                        )}
-                                    </div>
-                                    {!settings.apiKey && (
-                                        <p className="text-[10px] text-red-400 mt-1">
-                                            * 請在設定中輸入 API Key 以啟用自動匯率
-                                        </p>
-                                    )}
-                                    {quickFetchError && (
-                                        <p className="text-[10px] text-red-400 mt-1">
-                                            * {quickFetchError}
-                                        </p>
-                                    )}
-                                </div>
-                            )}
-
-                            <textarea
-                                value={quickExpenseNote}
-                                onChange={(e) => setQuickExpenseNote(e.target.value)}
-                                placeholder="備註..."
-                                className="w-full bg-white p-3 rounded-xl text-sm font-medium border-none shadow-sm outline-none min-h-[60px]"
-                            />
                         </div>
-
-                        <button
-                            onClick={handleSaveQuickExpense}
-                            disabled={!quickExpenseAmount}
-                            className="w-full bg-ink text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-ink/30 mt-2 active:scale-95 transition-all disabled:opacity-50 disabled:shadow-none"
-                        >
-                            入帳
-                        </button>
                     </div>
-                </div>
-            </div>
-        )
-    }
+                )
+            }
         </div >
     );
 };

@@ -21,6 +21,7 @@ const getApiKey = () => {
 const callAiWithFallback = async (apiCall: (client: GoogleGenAI) => Promise<any>) => {
     // Always get the latest key from storage/env
     const currentKey = getApiKey();
+    let lastError: any = null;
 
     // 1. Try Primary Key
     if (currentKey) {
@@ -29,6 +30,7 @@ const callAiWithFallback = async (apiCall: (client: GoogleGenAI) => Promise<any>
             return await apiCall(client);
         } catch (error: any) {
             console.warn("Primary API Key failed", error);
+            lastError = error;
             // If it's a permission error (403), throw immediately to let user know key is invalid
             if (error.message?.includes('403') || error.toString().includes('403')) {
                 throw new Error("Invalid API Key (403). Please check your key in Settings.");
@@ -38,7 +40,7 @@ const callAiWithFallback = async (apiCall: (client: GoogleGenAI) => Promise<any>
         throw new Error("API key is missing. Please provide a valid API key in Settings.");
     }
 
-    throw new Error("AI Service Failed. Please check your API Key.");
+    throw new Error(`AI Service Failed. ${lastError?.message || lastError || 'Unknown error'}`);
 };
 
 

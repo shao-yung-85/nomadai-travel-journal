@@ -24,7 +24,7 @@ const TripBudget: React.FC<TripBudgetProps> = ({ trip, settings, onUpdateTrip })
     const [selectedCurrency, setSelectedCurrency] = useState(trip.budget?.currency || 'TWD');
     const [exchangeRate, setExchangeRate] = useState('');
     const [calculatedBaseAmount, setCalculatedBaseAmount] = useState(0);
-    const [calculatedBaseAmount, setCalculatedBaseAmount] = useState(0);
+
     const [isFetchingRate, setIsFetchingRate] = useState(false);
     const [fetchError, setFetchError] = useState<string | null>(null);
 
