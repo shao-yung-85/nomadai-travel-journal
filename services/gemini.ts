@@ -83,7 +83,7 @@ const getResponseText = (response: any): string => {
     throw new Error("No text found in AI response");
 };
 
-const MODEL_NAME = 'gemini-2.5-flash';
+const MODEL_NAME = 'gemini-1.5-flash';
 
 // Note: Image generation and editing is not supported by Gemini Flash models
 // This function is disabled until we integrate with an image generation API

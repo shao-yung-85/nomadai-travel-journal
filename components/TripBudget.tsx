@@ -63,7 +63,8 @@ const TripBudget: React.FC<TripBudgetProps> = ({ trip, settings, onUpdateTrip })
             const baseCurrency = trip.budget?.currency || 'TWD';
             setFetchError(null); // Reset error
             if (selectedCurrency !== baseCurrency) {
-                if (settings.apiKey) {
+                const hasApiKey = settings.apiKey || import.meta.env.VITE_API_KEY || (typeof window !== 'undefined' && localStorage.getItem('nomad_user_api_key'));
+                if (hasApiKey) {
                     setIsFetchingRate(true);
                     try {
                         const rate = await getExchangeRate(selectedCurrency, baseCurrency);
@@ -176,18 +177,29 @@ const TripBudget: React.FC<TripBudgetProps> = ({ trip, settings, onUpdateTrip })
                                 />
                             </div>
                         ) : (
-                            <h2
-                                className="text-4xl font-black cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-2"
-                                onClick={() => {
-                                    setTempBudgetTotal(budgetTotal.toString());
-                                    setIsEditingBudget(true);
-                                }}
-                            >
-                                <span className="text-2xl mr-1">{baseSymbol}</span>{budgetTotal.toLocaleString()}
-                                <svg className="w-5 h-5 text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                </svg>
-                            </h2>
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                <h2
+                                    className="text-4xl font-black cursor-pointer hover:opacity-80 transition-opacity flex items-center"
+                                    onClick={() => {
+                                        setTempBudgetTotal(budgetTotal.toString());
+                                        setIsEditingBudget(true);
+                                    }}
+                                >
+                                    <span className="text-2xl mr-1">{baseSymbol}</span>{budgetTotal.toLocaleString()}
+                                </h2>
+                                <button
+                                    onClick={() => {
+                                        setTempBudgetTotal(budgetTotal.toString());
+                                        setIsEditingBudget(true);
+                                    }}
+                                    className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors flex-shrink-0"
+                                    title={t.edit_budget || "修改預算"}
+                                >
+                                    <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                    </svg>
+                                </button>
+                            </div>
                         )}
                     </div>
 
@@ -323,7 +335,7 @@ const TripBudget: React.FC<TripBudgetProps> = ({ trip, settings, onUpdateTrip })
                                             </div>
                                         )}
                                     </div>
-                                    {!settings.apiKey && (
+                                    {(!settings.apiKey && !import.meta.env.VITE_API_KEY) && (
                                         <p className="text-[10px] text-red-400 mt-1">
                                             * 請在設定中輸入 API Key 以啟用自動匯率
                                         </p>
