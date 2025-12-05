@@ -4,13 +4,21 @@ import { GoogleGenAI, Type } from "@google/genai";
 // Safe API key retrieval for Vite environment
 const getApiKey = () => {
     try {
-        // 1. Check LocalStorage (User entered key)
-        const storedKey = localStorage.getItem('nomad_user_api_key');
-        if (storedKey) return storedKey;
+        // 1. Check LocalStorage (Browser only)
+        if (typeof window !== 'undefined' && window.localStorage) {
+            const storedKey = localStorage.getItem('nomad_user_api_key');
+            if (storedKey) return storedKey;
+        }
 
-        // 2. Check Environment Variable
-        // 2. Check Environment Variable
-        return import.meta.env.VITE_API_KEY || '';
+        // 2. Check Environment Variable (Vite)
+        if (typeof import.meta !== 'undefined' && import.meta.env) {
+            return import.meta.env.VITE_API_KEY || '';
+        }
+
+        // 3. Check Environment Variable (Node.js)
+        if (typeof process !== 'undefined' && process.env) {
+            return process.env.VITE_API_KEY || '';
+        }
     } catch (e) {
         console.warn("Failed to access API key", e);
     }
@@ -75,7 +83,7 @@ const getResponseText = (response: any): string => {
     throw new Error("No text found in AI response");
 };
 
-const MODEL_NAME = 'gemini-2.0-flash';
+const MODEL_NAME = 'gemini-2.5-flash';
 
 // Note: Image generation and editing is not supported by Gemini Flash models
 // This function is disabled until we integrate with an image generation API

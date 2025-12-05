@@ -1,8 +1,17 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
-// Safe API key retrieval for Vite environment
 const getApiKey = () => {
-    return import.meta.env.VITE_API_KEY || '';
+    try {
+        if (typeof import.meta !== 'undefined' && import.meta.env) {
+            return import.meta.env.VITE_API_KEY || '';
+        }
+        if (typeof process !== 'undefined' && process.env) {
+            return process.env.VITE_API_KEY || '';
+        }
+    } catch (e) {
+        console.warn("Failed to access API key", e);
+    }
+    return '';
 };
 
 const apiKey = getApiKey();
