@@ -1,7 +1,7 @@
 
 import { GoogleGenAI } from "@google/genai";
 
-const apiKey = 'AIzaSyBXnKuqh2CBcnSWsDt1rMKTHxnQ3LlNxSA';
+const apiKey = 'AIzaSyBvNFuwIk0XCcmAacR02zVCwHsDQHLIgn4';
 
 async function testKey() {
     console.log(`Testing API Key: ${apiKey}`);

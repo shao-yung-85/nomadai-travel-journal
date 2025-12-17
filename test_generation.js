@@ -2,7 +2,7 @@
 import { GoogleGenAI } from "@google/genai";
 
 const apiKey = process.env.VITE_API_KEY || '';
-const MODEL_NAME = 'gemini-2.5-flash';
+const MODEL_NAME = 'gemini-2.0-flash';
 
 const generateTripPlan = async (userPrompt) => {
     const client = new GoogleGenAI({ apiKey: apiKey });

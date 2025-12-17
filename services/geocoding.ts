@@ -117,11 +117,15 @@ export const geocodeAddress = async (address: string, userApiKey?: string): Prom
             } else {
                 console.warn('Google Maps Geocoding API error:', data.status, data.error_message);
                 // Store error for debug panel
-                window.localStorage.setItem('last_geocode_error', `${data.status}: ${data.error_message || 'Unknown error'}`);
+                if (typeof window !== 'undefined') {
+                    window.localStorage.setItem('last_geocode_error', `${data.status}: ${data.error_message || 'Unknown error'}`);
+                }
             }
         } catch (e) {
             console.warn('Google Maps Geocoding API request failed:', e);
-            window.localStorage.setItem('last_geocode_error', `Network Error: ${e}`);
+            if (typeof window !== 'undefined') {
+                window.localStorage.setItem('last_geocode_error', `Network Error: ${e}`);
+            }
         }
         return null;
     };
