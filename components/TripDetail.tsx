@@ -276,7 +276,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
                 </div>
 
                 {/* Top Bar */}
-                <div className="absolute top-0 left-0 right-0 p-4 pt-safe pt-4 flex justify-between items-start z-10">
+                <div className="absolute top-[5px] left-0 right-0 p-4 pt-safe pt-4 flex justify-between items-start z-10">
                     <button onClick={onBack} className="p-2 bg-black/30 backdrop-blur-md rounded-full text-white hover:bg-black/50 transition-colors">
                         <ChevronLeftIcon className="w-6 h-6" />
                     </button>
