@@ -37,7 +37,7 @@ type ToolView = 'MENU' | 'EXPENSE' | 'VISA' | 'CULTURE' | 'RESTROOM' | 'SCRATCH_
 const ExpenseSplitter = ({ onBack }: { onBack: () => void }) => {
     return (
         <div className="flex flex-col h-full bg-paper">
-            <div className="bg-paper p-4 flex items-center gap-2 sticky top-0 z-10">
+            <div className="bg-paper p-4 pt-9 flex items-center gap-2 sticky top-0 z-10">
                 <button onClick={onBack}><ChevronLeftIcon className="w-6 h-6 text-gray-500" /></button>
                 <h3 className="font-bold text-lg text-ink">分帳工具</h3>
             </div>
@@ -71,7 +71,7 @@ const VisaCheck = ({ onBack, t, language, onOpenSettings }: { onBack: () => void
 
     return (
         <div className="flex flex-col h-full bg-paper">
-            <div className="bg-paper p-4 flex items-center gap-2 sticky top-0 z-10">
+            <div className="bg-paper p-4 pt-9 flex items-center gap-2 sticky top-0 z-10">
                 <button onClick={onBack}><ChevronLeftIcon className="w-6 h-6 text-gray-500" /></button>
                 <h3 className="font-bold text-lg text-ink">{t.tool_visa}</h3>
             </div>
@@ -100,7 +100,7 @@ const VisaCheck = ({ onBack, t, language, onOpenSettings }: { onBack: () => void
                         <div className="bg-white p-4 rounded-3xl shadow-sm border border-sand flex justify-between items-center">
                             <span className="font-bold text-gray-500 text-sm uppercase">申請難度</span>
                             <span className={`px-4 py-1.5 rounded-full font-bold text-sm ${result.difficulty?.includes('Easy') || result.difficulty?.includes('簡單') || result.difficulty?.includes('免簽') ? 'bg-green-100 text-green-600' :
-                                    result.difficulty?.includes('Hard') || result.difficulty?.includes('困難') ? 'bg-red-100 text-red-600' : 'bg-yellow-100 text-yellow-600'
+                                result.difficulty?.includes('Hard') || result.difficulty?.includes('困難') ? 'bg-red-100 text-red-600' : 'bg-yellow-100 text-yellow-600'
                                 }`}>
                                 {result.difficulty}
                             </span>
@@ -154,7 +154,7 @@ const CultureGuide = ({ onBack, t, language, onOpenSettings }: { onBack: () => v
 
     return (
         <div className="flex flex-col h-full bg-paper">
-            <div className="bg-paper p-4 flex items-center gap-2 sticky top-0 z-10">
+            <div className="bg-paper p-4 pt-9 flex items-center gap-2 sticky top-0 z-10">
                 <button onClick={onBack}><ChevronLeftIcon className="w-6 h-6 text-gray-500" /></button>
                 <h3 className="font-bold text-lg text-ink">{t.tool_culture}</h3>
             </div>
@@ -215,7 +215,7 @@ const CultureGuide = ({ onBack, t, language, onOpenSettings }: { onBack: () => v
 const RestroomFinder = ({ onBack, t }: { onBack: () => void, t: any }) => {
     return (
         <div className="flex flex-col h-full bg-paper">
-            <div className="bg-paper p-4 flex items-center gap-2 sticky top-0 z-10">
+            <div className="bg-paper p-4 pt-9 flex items-center gap-2 sticky top-0 z-10">
                 <button onClick={onBack}><ChevronLeftIcon className="w-6 h-6 text-gray-500" /></button>
                 <h3 className="font-bold text-lg text-ink">{t.tool_restroom}</h3>
             </div>
@@ -259,7 +259,7 @@ const EmergencyHelper = ({ onBack, t, language, onOpenSettings }: { onBack: () =
 
     return (
         <div className="flex flex-col h-full bg-paper">
-            <div className="bg-paper p-4 flex items-center gap-2 sticky top-0 z-10">
+            <div className="bg-paper p-4 pt-9 flex items-center gap-2 sticky top-0 z-10">
                 <button onClick={onBack}><ChevronLeftIcon className="w-6 h-6 text-gray-500" /></button>
                 <h3 className="font-bold text-lg text-ink">{t.tool_emergency}</h3>
             </div>
@@ -368,7 +368,7 @@ const CardAdvice = ({ onBack, t, language, onOpenSettings }: { onBack: () => voi
 
     return (
         <div className="flex flex-col h-full bg-paper">
-            <div className="bg-paper p-4 flex items-center gap-2 sticky top-0 z-10">
+            <div className="bg-paper p-4 pt-9 flex items-center gap-2 sticky top-0 z-10">
                 <button onClick={onBack}><ChevronLeftIcon className="w-6 h-6 text-gray-500" /></button>
                 <h3 className="font-bold text-lg text-ink">{t.tool_card}</h3>
             </div>
@@ -535,7 +535,7 @@ const ScratchMap = ({ onBack, trips, t }: { onBack: () => void, trips?: Trip[], 
 
     return (
         <div className="flex flex-col h-full bg-[#111827] text-white">
-            <div className="bg-[#111827] p-4 flex items-center justify-between sticky top-0 z-10 border-b border-gray-800">
+            <div className="bg-[#111827] p-4 pt-9 flex items-center justify-between sticky top-0 z-10 border-b border-gray-800">
                 <div className="flex items-center gap-2">
                     <button onClick={onBack}><ChevronLeftIcon className="w-6 h-6 text-gray-300" /></button>
                     <h3 className="font-bold text-lg">{t.tool_map}</h3>
@@ -651,7 +651,7 @@ const CurrencyConverter = ({ onBack, t }: { onBack: () => void, t: any }) => {
 
     return (
         <div className="flex flex-col h-full bg-paper">
-            <div className="bg-paper p-4 flex items-center gap-2 sticky top-0 z-10">
+            <div className="bg-paper p-4 pt-9 flex items-center gap-2 sticky top-0 z-10">
                 <button onClick={onBack}><ChevronLeftIcon className="w-6 h-6 text-gray-500" /></button>
                 <h3 className="font-bold text-lg text-ink">匯率計算</h3>
             </div>
@@ -702,7 +702,7 @@ const CurrencyConverter = ({ onBack, t }: { onBack: () => void, t: any }) => {
 const TranslationTool = ({ onBack, t, language }: { onBack: () => void, t: any, language: string }) => {
     return (
         <div className="flex flex-col h-full bg-paper">
-            <div className="bg-paper p-4 flex items-center gap-2 sticky top-0 z-10">
+            <div className="bg-paper p-4 pt-9 flex items-center gap-2 sticky top-0 z-10">
                 <button onClick={onBack}><ChevronLeftIcon className="w-6 h-6 text-gray-500" /></button>
                 <h3 className="font-bold text-lg text-ink">{t.tool_translation || "Translation"}</h3>
             </div>
@@ -745,7 +745,7 @@ const Tools: React.FC<ToolsProps> = ({ onBack, trips, settings, onMagicEditor, o
 
     return (
         <div className="flex flex-col h-full bg-paper pt-safe">
-            <div className="px-5 py-4 bg-paper sticky top-0 z-10 flex items-center justify-between border-b border-sand/50">
+            <div className="px-5 py-4 pt-9 bg-paper sticky top-0 z-10 flex items-center justify-between border-b border-sand/50">
                 <h2 className="text-xl font-extrabold text-ink flex items-center gap-2">
                     <SquaresPlusIcon className="w-6 h-6 text-coral" />
                     {t.tools_title}

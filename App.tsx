@@ -618,7 +618,7 @@ const App: React.FC = () => {
           />
         );
       case ViewState.MAGIC_EDITOR:
-        return <MagicEditor settings={settings} />;
+        return <MagicEditor settings={settings} onBack={() => setViewState(ViewState.TOOLS)} />;
       case ViewState.TRIP_MEMORY:
         return (
           <TripMemory
