@@ -83,7 +83,7 @@ const getResponseText = (response: any): string => {
     throw new Error("No text found in AI response");
 };
 
-const MODEL_NAME = 'gemini-2.0-flash';
+const MODEL_NAME = 'gemini-2.5-flash-lite';
 
 // Note: Image generation and editing is not supported by Gemini Flash models
 // This function is disabled until we integrate with an image generation API
@@ -262,32 +262,59 @@ export const updateTripPlan = async (currentTrip: any, userPrompt: string, langu
 export const getVisaRequirements = async (passport: string, destination: string, language: string = 'zh-TW') => {
     const targetLang = langMap[language] || langMap['zh-TW'];
     return callAiWithFallback(async (ai) => {
-        const response = await ai.models.generateContent({
-            model: MODEL_NAME,
-            contents: `I hold a ${passport} passport and want to travel to ${destination}. 
-            What are the visa requirements, entry rules, and any vaccination requirements? 
-            Provide a concise summary in Markdown format. 
-            Include a 'Difficulty Level' (Easy, Moderate, Hard) at the top.
-            Response MUST be in ${targetLang}.`
-        });
-        return getResponseText(response);
+        try {
+            const response = await ai.models.generateContent({
+                model: MODEL_NAME,
+                contents: `I hold a ${passport} passport and want to travel to ${destination}. 
+                Provide visa requirements in STRICT JSON format.
+                
+                Required JSON Structure:
+                {
+                  "difficulty": "Easy / Moderate / Hard",
+                  "summary": "One sentence summary",
+                  "requirements": ["Requirement 1", "Requirement 2"]
+                }
+                
+                Translate all content to ${targetLang}.
+                Return ONLY valid JSON.`,
+                config: { responseMimeType: "application/json" }
+            });
+            const text = getResponseText(response);
+            return JSON.parse(text);
+        } catch (error) {
+            console.error(error);
+            return null;
+        }
     });
 };
 
 export const getCulturalEtiquette = async (location: string, language: string = 'zh-TW') => {
     const targetLang = langMap[language] || langMap['zh-TW'];
     return callAiWithFallback(async (ai) => {
-        const response = await ai.models.generateContent({
-            model: MODEL_NAME,
-            contents: `I am currently in (or planning to go to) ${location}. 
-            Give me a quick guide on:
-            1. Tipping customs (Restaurants, Taxis, Hotels).
-            2. Major cultural taboos (Do's and Don'ts).
-            3. Dress code advice.
-            Keep it short, fun, and formatted in Markdown.
-            Response MUST be in ${targetLang}.`
-        });
-        return getResponseText(response);
+        try {
+            const response = await ai.models.generateContent({
+                model: MODEL_NAME,
+                contents: `I am currently in (or planning to go to) ${location}. 
+                Provide cultural etiquette guide in STRICT JSON format.
+                
+                Required JSON Structure:
+                {
+                  "tipping": "Tipping advice",
+                  "dos": ["Do 1", "Do 2"],
+                  "donts": ["Don't 1", "Don't 2"],
+                  "dressCode": "Dress code advice"
+                }
+                
+                Translate all content to ${targetLang}.
+                Return ONLY valid JSON.`,
+                config: { responseMimeType: "application/json" }
+            });
+            const text = getResponseText(response);
+            return JSON.parse(text);
+        } catch (error) {
+            console.error(error);
+            return null;
+        }
     });
 };
 
@@ -317,14 +344,33 @@ export const getEmergencyInfo = async (country: string, language: string = 'zh-T
             const response = await ai.models.generateContent({
                 model: MODEL_NAME,
                 contents: `I am travelling in ${country}. 
-                List the emergency phone numbers for: Police, Ambulance, Fire.
-                Also list the address and phone number of the nearest major hospital in the capital city.
-                Format as a clear list.
-                Response MUST be in ${targetLang}.`
+                Provide emergency contact info in STRICT JSON format.
+                
+                Required JSON Structure:
+                {
+                  "numbers": [
+                    {"label": "Title (e.g. Police)", "number": "110"}
+                  ],
+                  "hospital": {
+                    "name": "Name of nearest major hospital in capital",
+                    "address": "Address",
+                    "phone": "Phone number"
+                  }
+                }
+                
+                Translate all labels and values to ${targetLang}.
+                Return ONLY valid JSON. Do not include markdown formatting.`
             });
-            return getResponseText(response);
+
+            const text = getResponseText(response);
+            if (!text) throw new Error("Empty response");
+
+            const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+            return JSON.parse(cleanText);
         } catch (error) {
-            return `無法取得緊急資訊。錯誤詳情: ${error instanceof Error ? error.message : String(error)}`;
+            console.error("Emergency Info Error:", error);
+            // Return null or a consistent error structure to handle in UI
+            return null;
         }
     });
 }
@@ -336,15 +382,24 @@ export const getCreditCardAdvice = async (destination: string, language: string 
             const response = await ai.models.generateContent({
                 model: MODEL_NAME,
                 contents: `I am travelling to ${destination}. 
-                What kind of credit cards are best to use there (Visa, Mastercard, Amex, JCB)?
-                Are cash payments preferred?
-                Any tips on currency exchange or dynamic currency conversion (DCC)?
-                Keep it concise.
-                Response MUST be in ${targetLang}.`
+                Provide credit card advice in STRICT JSON format.
+                
+                Required JSON Structure:
+                {
+                  "bestCards": ["Visa", "Mastercard"],
+                  "cashInfo": "Advice on cash usage",
+                  "tips": ["Tip 1", "Tip 2"]
+                }
+                
+                Translate all content to ${targetLang}.
+                Return ONLY valid JSON.`,
+                config: { responseMimeType: "application/json" }
             });
-            return getResponseText(response);
+            const text = getResponseText(response);
+            return JSON.parse(text);
         } catch (error) {
-            return "無法取得建議。一般建議攜帶 Visa/Mastercard 並準備少量當地現金。";
+            console.error(error);
+            return null;
         }
     });
 }

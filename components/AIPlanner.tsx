@@ -195,12 +195,14 @@ const AIPlanner: React.FC<AIPlannerProps> = ({
                 }
               }}
               placeholder={t.input_placeholder}
+              data-testid="input-ai-chat"
               className="flex-1 bg-paper rounded-2xl px-5 py-3.5 outline-none focus:ring-2 focus:ring-coral/50 transition-all font-medium text-ink placeholder:text-gray-400 border border-sand resize-none min-h-[50px] max-h-[120px]"
               disabled={isRequestSent}
               rows={1}
             />
             <button
               onClick={handleSend}
+              data-testid="btn-ai-send"
               disabled={!input.trim() || isRequestSent}
               className="bg-coral text-white p-3.5 rounded-2xl disabled:opacity-50 active:scale-95 transition-transform shadow-lg shadow-coral/20"
             >

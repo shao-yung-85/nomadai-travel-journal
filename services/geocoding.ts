@@ -81,7 +81,7 @@ export const geocodeAddress = async (address: string, userApiKey?: string): Prom
         try {
             const client = new GoogleGenAI({ apiKey: key });
             const response = await client.models.generateContent({
-                model: 'gemini-2.0-flash',
+                model: 'gemini-2.5-flash-lite',
                 contents: `Convert this address to latitude and longitude coordinates: "${address}". 
                 
                 IMPORTANT: Return ONLY a JSON object in this exact format:

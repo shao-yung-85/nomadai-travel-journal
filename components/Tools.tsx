@@ -51,17 +51,19 @@ const ExpenseSplitter = ({ onBack }: { onBack: () => void }) => {
 const VisaCheck = ({ onBack, t, language, onOpenSettings }: { onBack: () => void, t: any, language: string, onOpenSettings: () => void }) => {
     const [passport, setPassport] = useState('Taiwan (ROC)');
     const [dest, setDest] = useState('');
-    const [result, setResult] = useState<string | null>(null);
+    const [result, setResult] = useState<any | null>(null);
     const [loading, setLoading] = useState(false);
 
     const check = async () => {
         if (!dest) return;
         setLoading(true);
+        setResult(null);
         try {
             const info = await getVisaRequirements(passport, dest, language);
-            setResult(info || "錯誤");
+            setResult(info);
         } catch (e: any) {
-            setResult(e.message || "發生錯誤");
+            console.error(e);
+            setResult(null);
         } finally {
             setLoading(false);
         }
@@ -93,17 +95,36 @@ const VisaCheck = ({ onBack, t, language, onOpenSettings }: { onBack: () => void
                     </button>
                 </div>
                 {result && (
-                    <div className="bg-white p-6 rounded-3xl shadow-card border border-sand animate-fade-in">
-                        <div className={`prose prose-sm max-w-none leading-relaxed whitespace-pre-line ${result?.includes('API Key') ? 'text-red-600' : 'text-ink'}`}>
-                            {result}
-                            {result?.includes('API Key') && (
-                                <button
-                                    onClick={onOpenSettings}
-                                    className="mt-4 w-full py-3 bg-red-500 text-white rounded-xl font-bold shadow-lg shadow-red-500/20 hover:bg-red-600 transition-colors"
-                                >
-                                    前往設定更新 API Key
-                                </button>
-                            )}
+                    <div className="space-y-4 animate-slide-up">
+                        {/* Difficulty Card */}
+                        <div className="bg-white p-4 rounded-3xl shadow-sm border border-sand flex justify-between items-center">
+                            <span className="font-bold text-gray-500 text-sm uppercase">申請難度</span>
+                            <span className={`px-4 py-1.5 rounded-full font-bold text-sm ${result.difficulty?.includes('Easy') || result.difficulty?.includes('簡單') || result.difficulty?.includes('免簽') ? 'bg-green-100 text-green-600' :
+                                    result.difficulty?.includes('Hard') || result.difficulty?.includes('困難') ? 'bg-red-100 text-red-600' : 'bg-yellow-100 text-yellow-600'
+                                }`}>
+                                {result.difficulty}
+                            </span>
+                        </div>
+
+                        {/* Summary */}
+                        <div className="bg-ink text-white p-6 rounded-3xl shadow-lg">
+                            <p className="font-medium leading-relaxed">{result.summary}</p>
+                        </div>
+
+                        {/* Requirements List */}
+                        <div className="bg-white p-6 rounded-3xl shadow-card border border-sand">
+                            <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                <span className="w-2 h-6 bg-coral rounded-full"></span>
+                                應備文件與規定
+                            </h4>
+                            <ul className="space-y-3">
+                                {result.requirements?.map((req: string, idx: number) => (
+                                    <li key={idx} className="flex gap-3 text-sm text-gray-600">
+                                        <span className="text-coral mt-0.5">•</span>
+                                        <span className="flex-1">{req}</span>
+                                    </li>
+                                ))}
+                            </ul>
                         </div>
                     </div>
                 )}
@@ -114,17 +135,18 @@ const VisaCheck = ({ onBack, t, language, onOpenSettings }: { onBack: () => void
 
 const CultureGuide = ({ onBack, t, language, onOpenSettings }: { onBack: () => void, t: any, language: string, onOpenSettings: () => void }) => {
     const [location, setLocation] = useState('');
-    const [advice, setAdvice] = useState<string | null>(null);
+    const [advice, setAdvice] = useState<any | null>(null);
     const [loading, setLoading] = useState(false);
 
     const getAdvice = async () => {
         setLoading(true);
+        setAdvice(null);
         try {
             const loc = location || "Kyoto, Japan";
             const info = await getCulturalEtiquette(loc, language);
-            setAdvice(info || "錯誤");
+            setAdvice(info);
         } catch (e: any) {
-            setAdvice(e.message || "發生錯誤");
+            console.error(e);
         } finally {
             setLoading(false);
         }
@@ -145,17 +167,43 @@ const CultureGuide = ({ onBack, t, language, onOpenSettings }: { onBack: () => v
                 </button>
 
                 {advice && (
-                    <div className="bg-white p-6 rounded-3xl shadow-card border border-sand animate-fade-in">
-                        <div className={`prose prose-sm whitespace-pre-line leading-relaxed ${advice?.includes('API Key') ? 'text-red-600' : 'text-ink'}`}>
-                            {advice}
-                            {advice?.includes('API Key') && (
-                                <button
-                                    onClick={onOpenSettings}
-                                    className="mt-4 w-full py-3 bg-red-500 text-white rounded-xl font-bold shadow-lg shadow-red-500/20 hover:bg-red-600 transition-colors"
-                                >
-                                    前往設定更新 API Key
-                                </button>
-                            )}
+                    <div className="space-y-4 animate-slide-up">
+                        {/* Tipping */}
+                        <div className="bg-white p-5 rounded-3xl shadow-sm border border-sand">
+                            <h4 className="font-bold text-orange-500 text-sm uppercase mb-2">💡 小費文化</h4>
+                            <p className="text-ink text-sm leading-relaxed">{advice.tipping}</p>
+                        </div>
+
+                        {/* Dos */}
+                        <div className="bg-green-50 p-5 rounded-3xl border border-green-100">
+                            <h4 className="font-bold text-green-600 text-sm uppercase mb-3">✅ Do's (建議)</h4>
+                            <ul className="space-y-2">
+                                {advice.dos?.map((item: string, idx: number) => (
+                                    <li key={idx} className="flex gap-2 text-sm text-green-800">
+                                        <span>•</span>
+                                        <span>{item}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+
+                        {/* Donts */}
+                        <div className="bg-red-50 p-5 rounded-3xl border border-red-100">
+                            <h4 className="font-bold text-red-600 text-sm uppercase mb-3">🚫 Don'ts (禁忌)</h4>
+                            <ul className="space-y-2">
+                                {advice.donts?.map((item: string, idx: number) => (
+                                    <li key={idx} className="flex gap-2 text-sm text-red-800">
+                                        <span>•</span>
+                                        <span>{item}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+
+                        {/* Dress Code */}
+                        <div className="bg-white p-5 rounded-3xl shadow-sm border border-sand">
+                            <h4 className="font-bold text-gray-400 text-sm uppercase mb-2">👗 穿著建議</h4>
+                            <p className="text-ink text-sm leading-relaxed">{advice.dressCode}</p>
                         </div>
                     </div>
                 )}
@@ -187,20 +235,27 @@ const RestroomFinder = ({ onBack, t }: { onBack: () => void, t: any }) => {
 
 const EmergencyHelper = ({ onBack, t, language, onOpenSettings }: { onBack: () => void, t: any, language: string, onOpenSettings: () => void }) => {
     const [country, setCountry] = useState('');
-    const [info, setInfo] = useState<string | null>(null);
+    const [info, setInfo] = useState<any | null>(null);
+    const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
     const getInfo = async () => {
         if (!country) return;
         setLoading(true);
+        setInfo(null);
+        setError(null);
         try {
             const res = await getEmergencyInfo(country, language);
-            setInfo(res);
-        } catch (e) { setInfo("錯誤"); }
+            if (res) {
+                setInfo(res);
+            } else {
+                setError("無法取得資訊，請檢查 API Key 或稍後再試。");
+            }
+        } catch (e: any) {
+            setError("發生錯誤");
+        }
         finally { setLoading(false); }
     }
-
-    const isApiKeyError = info && (info.includes('API Key') || info.includes('403'));
 
     return (
         <div className="flex flex-col h-full bg-paper">
@@ -214,24 +269,79 @@ const EmergencyHelper = ({ onBack, t, language, onOpenSettings }: { onBack: () =
                     <p className="opacity-90 text-sm">全球通用緊急電話: <span className="font-black text-2xl ml-1">112</span></p>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-3 mb-6">
                     <label className="text-xs font-bold text-gray-400 uppercase ml-1">當地資訊查詢</label>
-                    <input value={country} onChange={e => setCountry(e.target.value)} placeholder="國家 (例如：日本)..." className="w-full p-4 bg-white rounded-2xl border border-sand shadow-sm outline-none" />
-                    <button onClick={getInfo} disabled={loading || !country} className="w-full py-3.5 bg-ink text-white rounded-2xl font-bold shadow-lg">
-                        {loading ? t.loading : t.confirm}
-                    </button>
+                    <div className="flex gap-2">
+                        <input
+                            value={country}
+                            onChange={e => setCountry(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && getInfo()}
+                            placeholder="國家 (例如：日本)..."
+                            className="flex-1 p-4 bg-white rounded-2xl border border-sand shadow-sm outline-none font-bold text-ink"
+                        />
+                        <button
+                            onClick={getInfo}
+                            disabled={loading || !country}
+                            className="px-6 bg-ink text-white rounded-2xl font-bold shadow-lg disabled:opacity-50"
+                        >
+                            {loading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : 'Go'}
+                        </button>
+                    </div>
                 </div>
 
-                {info && (
-                    <div className={`mt-6 p-6 rounded-3xl shadow-card border whitespace-pre-line leading-relaxed ${isApiKeyError ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-sand text-ink'}`}>
-                        {info}
-                        {isApiKeyError && (
+                {error && (
+                    <div className="p-6 bg-red-50 border border-red-200 rounded-3xl text-red-600 text-center font-medium animate-fade-in">
+                        {error}
+                        {error.includes('API') && (
                             <button
                                 onClick={onOpenSettings}
-                                className="mt-4 w-full py-3 bg-red-500 text-white rounded-xl font-bold shadow-lg shadow-red-500/20 hover:bg-red-600 transition-colors"
+                                className="mt-3 text-sm underline hover:text-red-800"
                             >
-                                前往設定更新 API Key
+                                前往設定
                             </button>
+                        )}
+                    </div>
+                )}
+
+                {info && (
+                    <div className="space-y-6 animate-slide-up">
+                        {/* Numbers Table */}
+                        <div className="bg-white rounded-3xl shadow-card border border-sand overflow-hidden">
+                            <div className="p-4 bg-gray-50 border-b border-sand">
+                                <h4 className="font-bold text-gray-500 text-sm uppercase">緊急電話</h4>
+                            </div>
+                            <div className="divide-y divide-sand">
+                                {info.numbers?.map((item: any, idx: number) => (
+                                    <div key={idx} className="flex justify-between items-center p-4 hover:bg-gray-50 transition-colors">
+                                        <span className="font-bold text-ink">{item.label}</span>
+                                        <a href={`tel:${item.number}`} className="font-black text-xl text-coral bg-coral/10 px-3 py-1 rounded-lg hover:bg-coral hover:text-white transition-colors">
+                                            {item.number}
+                                        </a>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Hospital Info */}
+                        {info.hospital && (
+                            <div className="bg-white rounded-3xl shadow-card border border-sand overflow-hidden">
+                                <div className="p-4 bg-gray-50 border-b border-sand">
+                                    <h4 className="font-bold text-gray-500 text-sm uppercase">最近的大型醫院</h4>
+                                </div>
+                                <div className="p-5 space-y-3">
+                                    <h3 className="text-lg font-black text-ink">{info.hospital.name}</h3>
+                                    <div className="flex items-start gap-3 text-sm text-gray-600">
+                                        <span className="shrink-0 text-xl">📍</span>
+                                        <span className="font-medium leading-relaxed">{info.hospital.address}</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 text-sm text-gray-600">
+                                        <span className="text-xl">📞</span>
+                                        <a href={`tel:${info.hospital.phone}`} className="font-bold text-coral underline decoration-2 underline-offset-2">
+                                            {info.hospital.phone}
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
                         )}
                     </div>
                 )}
@@ -242,16 +352,17 @@ const EmergencyHelper = ({ onBack, t, language, onOpenSettings }: { onBack: () =
 
 const CardAdvice = ({ onBack, t, language, onOpenSettings }: { onBack: () => void, t: any, language: string, onOpenSettings: () => void }) => {
     const [dest, setDest] = useState('');
-    const [info, setInfo] = useState<string | null>(null);
+    const [info, setInfo] = useState<any | null>(null);
     const [loading, setLoading] = useState(false);
 
     const getInfo = async () => {
         if (!dest) return;
         setLoading(true);
+        setInfo(null);
         try {
             const res = await getCreditCardAdvice(dest, language);
             setInfo(res);
-        } catch (e) { setInfo("錯誤"); }
+        } catch (e) { console.error(e); }
         finally { setLoading(false); }
     }
 
@@ -271,16 +382,35 @@ const CardAdvice = ({ onBack, t, language, onOpenSettings }: { onBack: () => voi
                 </div>
 
                 {info && (
-                    <div className={`mt-6 bg-white p-6 rounded-3xl shadow-card border border-sand whitespace-pre-line leading-relaxed ${info?.includes('API Key') ? 'text-red-600' : 'text-ink'}`}>
-                        {info}
-                        {info?.includes('API Key') && (
-                            <button
-                                onClick={onOpenSettings}
-                                className="mt-4 w-full py-3 bg-red-500 text-white rounded-xl font-bold shadow-lg shadow-red-500/20 hover:bg-red-600 transition-colors"
-                            >
-                                前往設定更新 API Key
-                            </button>
-                        )}
+                    <div className="space-y-4 mt-6 animate-slide-up">
+                        {/* Recommended Cards */}
+                        <div className="bg-indigo-50 p-5 rounded-3xl border border-indigo-100">
+                            <h4 className="font-bold text-indigo-600 text-sm uppercase mb-3">💳 推薦信用卡</h4>
+                            <div className="flex flex-wrap gap-2">
+                                {info.bestCards?.map((card: string, idx: number) => (
+                                    <span key={idx} className="bg-white text-indigo-600 px-3 py-1 rounded-lg text-sm font-bold shadow-sm">{card}</span>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Cash Info */}
+                        <div className="bg-white p-5 rounded-3xl shadow-sm border border-sand">
+                            <h4 className="font-bold text-gray-400 text-sm uppercase mb-2">💵 現金建議</h4>
+                            <p className="text-ink text-sm leading-relaxed">{info.cashInfo}</p>
+                        </div>
+
+                        {/* Tips */}
+                        <div className="bg-white p-5 rounded-3xl shadow-sm border border-sand">
+                            <h4 className="font-bold text-gray-400 text-sm uppercase mb-2">💡 實用建議</h4>
+                            <ul className="space-y-2">
+                                {info.tips?.map((tip: string, idx: number) => (
+                                    <li key={idx} className="flex gap-2 text-sm text-gray-600">
+                                        <span className="text-coral mt-0.5">•</span>
+                                        <span>{tip}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
                     </div>
                 )}
             </div>

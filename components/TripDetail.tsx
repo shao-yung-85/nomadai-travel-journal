@@ -298,6 +298,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
                             </button>
                             <button
                                 onClick={() => onOpenAI(trip.id)}
+                                data-testid="btn-ai-planner"
                                 className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors"
                             >
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
