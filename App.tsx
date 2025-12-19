@@ -661,6 +661,7 @@ const App: React.FC = () => {
             onUpdateTrip={handleUpdateTrip}
             onOpenAI={handleOpenAIForTrip}
             settings={settings}
+            user={user!}
           />
         ) : null;
       case ViewState.SETTINGS:

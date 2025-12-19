@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Trip, ExpenseItem, ItineraryItem, AppSettings } from '../types';
+import { Trip, ExpenseItem, ItineraryItem, AppSettings, User } from '../types';
 import { ChevronLeftIcon, MapIcon, WalletIcon, TicketIcon, TrashIcon, ListIcon, PencilIcon, ShoppingBagIcon, SparklesIcon, SearchIcon } from './Icons';
 import ShoppingList from './ShoppingList';
 import TripItinerary from './TripItinerary';
@@ -14,6 +14,7 @@ import { getExchangeRate } from '../services/gemini';
 
 interface TripDetailProps {
     trip: Trip;
+    user: User;
     onBack: () => void;
     onDelete?: (id: string) => void;
     onUpdateTrip?: (trip: Trip) => void;
@@ -23,7 +24,7 @@ interface TripDetailProps {
 
 type Tab = 'ITINERARY' | 'MAP' | 'BUDGET' | 'BOOKINGS' | 'SHOPPING';
 
-const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdateTrip, onOpenAI, settings }) => {
+const TripDetail: React.FC<TripDetailProps> = ({ trip, user, onBack, onDelete, onUpdateTrip, onOpenAI, settings }) => {
     const t = translations[settings.language] || translations['zh-TW'];
     const [activeTab, setActiveTab] = useState<Tab>('ITINERARY');
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -320,8 +321,9 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onBack, onDelete, onUpdat
                     {isShareModalOpen && (
                         <ShareTripModal
                             trip={trip}
+                            currentUser={user}
                             onClose={() => setIsShareModalOpen(false)}
-                            onUpdateTrip={onUpdateTrip}
+                            onUpdate={onUpdateTrip!}
                         />
                     )}
                 </div>

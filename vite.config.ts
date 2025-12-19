@@ -40,8 +40,8 @@ export default defineConfig(({ mode }) => {
               options: {
                 cacheName: 'osm-tiles',
                 expiration: {
-                  maxEntries: 1000,
-                  maxAgeSeconds: 30 * 24 * 60 * 60 // 30 days
+                  maxEntries: 5000,
+                  maxAgeSeconds: 60 * 24 * 60 * 60 // 60 days
                 },
                 cacheableResponse: {
                   statuses: [0, 200]
