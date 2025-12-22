@@ -582,7 +582,7 @@ const TripItinerary: React.FC<TripItineraryProps> = ({ trip, settings, onUpdateT
                                     <input
                                         value={newTravelDetails}
                                         onChange={(e) => setNewTravelDetails(e.target.value)}
-                                        placeholder="Details..."
+                                        placeholder="詳細說明..."
                                         className="w-full bg-white p-3 rounded-xl text-sm font-medium border-none shadow-sm outline-none"
                                     />
                                 </div>
