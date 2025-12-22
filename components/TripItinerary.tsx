@@ -496,11 +496,11 @@ const TripItinerary: React.FC<TripItineraryProps> = ({ trip, settings, onUpdateT
 
             {/* Add/Edit Activity Modal */}
             {isAddingActivity && (
-                <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 animate-fade-in" onClick={() => setIsAddingActivity(false)}>
+                <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 animate-fade-in" onClick={() => setIsAddingActivity(false)}>
                     <div className="bg-paper w-full max-w-sm rounded-3xl shadow-2xl p-6 animate-slide-up max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
                         <h3 className="text-xl font-bold text-ink mb-6 text-center">{editingItemId ? t.edit_activity : t.add_activity}</h3>
                         <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div className="space-y-1">
                                     <label className="text-xs font-bold text-gray-400 ml-1">{t.day}</label>
                                     <div className="flex items-center bg-white rounded-xl border border-sand px-3">
@@ -510,7 +510,7 @@ const TripItinerary: React.FC<TripItineraryProps> = ({ trip, settings, onUpdateT
                                             min="1"
                                             value={newActivityDay}
                                             onChange={(e) => setNewActivityDay(parseInt(e.target.value) || 1)}
-                                            className="w-full bg-transparent p-3 text-lg font-bold border-none outline-none"
+                                            className="w-full bg-transparent p-3 text-lg font-bold border-none outline-none text-ink"
                                         />
                                     </div>
                                 </div>
@@ -522,7 +522,7 @@ const TripItinerary: React.FC<TripItineraryProps> = ({ trip, settings, onUpdateT
                                             type="time"
                                             value={newActivityTime}
                                             onChange={(e) => setNewActivityTime(e.target.value)}
-                                            className="w-full bg-transparent p-3 text-lg font-bold border-none outline-none"
+                                            className="w-full bg-transparent p-3 text-lg font-bold border-none outline-none text-ink"
                                         />
                                     </div>
                                 </div>
