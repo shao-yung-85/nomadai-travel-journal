@@ -180,9 +180,10 @@ const TripBudget: React.FC<TripBudgetProps> = ({ trip, settings, onUpdateTrip, c
         }
     };
 
-    const totalSpent = (trip.budget?.expenses || []).reduce((sum, item) => sum + item.amount, 0);
+    const totalSpent = (trip.budget?.expenses || []).reduce((sum, item) => sum + (item.amount || 0), 0);
     const budgetTotal = trip.budget?.total || 0;
-    const progress = budgetTotal > 0 ? Math.min((totalSpent / budgetTotal) * 100, 100) : 0;
+    const rawProgress = budgetTotal > 0 ? (totalSpent / budgetTotal) * 100 : 0;
+    const progress = isNaN(rawProgress) ? 0 : Math.min(rawProgress, 100);
     const baseCurrency = trip.budget?.currency || 'TWD';
     const baseSymbol = getCurrencySymbol(baseCurrency);
 
@@ -278,13 +279,13 @@ const TripBudget: React.FC<TripBudgetProps> = ({ trip, settings, onUpdateTrip, c
                         <div key={expense.id} className="bg-white p-4 rounded-2xl shadow-sm border border-sand flex items-center justify-between group">
                             <div className="flex items-center gap-4">
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold border-2 ${expense.payer === currentUserId ? 'bg-coral/10 text-coral border-coral' : 'bg-gray-100 text-gray-500 border-gray-200'}`}>
-                                    {getDisplayName(expense.payer, currentUserId).slice(0, 1)}
+                                    {(getDisplayName(expense.payer, currentUserId) || '?').slice(0, 1)}
                                 </div>
                                 <div>
                                     <h4 className="font-bold text-ink">{expense.title}</h4>
                                     <p className="text-xs text-gray-400">
                                         {expense.date} • {expense.paymentMethod} •
-                                        {expense.participants?.length === tripUsers.length ? ' Everyone' : ` ${expense.participants?.length} ppl`}
+                                        {(expense.participants || []).length === tripUsers.length ? ' Everyone' : ` ${(expense.participants || []).length} ppl`}
                                     </p>
                                     {expense.originalCurrency && expense.originalCurrency !== baseCurrency && (
                                         <p className="text-xs text-coral font-medium mt-0.5">
