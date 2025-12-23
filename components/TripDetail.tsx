@@ -317,15 +317,6 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, user, onBack, onDelete, o
                         </div>
                     </div>
 
-                    {/* Share Modal */}
-                    {isShareModalOpen && (
-                        <ShareTripModal
-                            trip={trip}
-                            currentUser={user}
-                            onClose={() => setIsShareModalOpen(false)}
-                            settings={settings}
-                        />
-                    )}
                 </div>
 
                 {/* Title and Info Overlay */}
@@ -404,7 +395,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, user, onBack, onDelete, o
                             />
                         </>
                     )}
-                    {activeTab === 'BUDGET' && <TripBudget trip={trip} settings={settings} onUpdateTrip={onUpdateTrip} />}
+                    {activeTab === 'BUDGET' && <TripBudget trip={trip} settings={settings} onUpdateTrip={onUpdateTrip} currentUserId={user.id} />}
                     {activeTab === 'BOOKINGS' && <TripBookings trip={trip} settings={settings} onUpdateTrip={onUpdateTrip} />}
                     {activeTab === 'SHOPPING' && (
                         <ShoppingList
@@ -435,6 +426,16 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, user, onBack, onDelete, o
                     </button>
                 ))}
             </div>
+
+            {/* Share Modal */}
+            {isShareModalOpen && (
+                <ShareTripModal
+                    trip={trip}
+                    currentUser={user}
+                    onClose={() => setIsShareModalOpen(false)}
+                    settings={settings}
+                />
+            )}
 
             {/* Delete Confirmation Modal */}
             {
