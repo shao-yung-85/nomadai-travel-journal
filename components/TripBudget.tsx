@@ -238,7 +238,7 @@ const TripBudget: React.FC<TripBudgetProps> = ({ trip, settings, onUpdateTrip, c
                                             setIsEditingBudget(true);
                                         }}
                                     >
-                                        <span className="text-2xl mr-1">{baseSymbol}</span>{budgetTotal.toLocaleString()}
+                                        <span className="text-2xl mr-1">{baseSymbol}</span>{(budgetTotal || 0).toLocaleString()}
                                     </h2>
                                     <button
                                         onClick={() => {
@@ -257,14 +257,14 @@ const TripBudget: React.FC<TripBudgetProps> = ({ trip, settings, onUpdateTrip, c
 
                         <div className="mb-2 flex justify-between text-sm font-bold">
                             <span className="text-gray-300">{t.budget_spent}</span>
-                            <span>{baseSymbol}{totalSpent.toLocaleString()}</span>
+                            <span>{baseSymbol}{(totalSpent || 0).toLocaleString()}</span>
                         </div>
                         <div className="h-3 bg-gray-700 rounded-full overflow-hidden mb-4">
                             <div className={`h-full rounded-full ${progress > 90 ? 'bg-red-500' : 'bg-coral'}`} style={{ width: `${progress}%` }}></div>
                         </div>
                         <div className="flex justify-between text-xs text-gray-400 font-medium">
                             <span>{progress.toFixed(1)}%</span>
-                            <span>目前累積花費: {baseSymbol}{totalSpent.toLocaleString()}</span>
+                            <span>目前累積花費: {baseSymbol}{(totalSpent || 0).toLocaleString()}</span>
                         </div>
                     </div>
                 </div>
@@ -290,13 +290,13 @@ const TripBudget: React.FC<TripBudgetProps> = ({ trip, settings, onUpdateTrip, c
                                         <p className="text-xs text-coral font-medium mt-0.5">
                                             {getCurrencySymbol(expense.originalCurrency)}{expense.originalAmount?.toLocaleString()}
                                             <span className="text-gray-400 mx-1">≈</span>
-                                            {baseSymbol}{expense.amount.toLocaleString()}
+                                            {baseSymbol}{(expense.amount || 0).toLocaleString()}
                                         </p>
                                     )}
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
-                                <span className="font-bold text-ink text-lg">{baseSymbol}{expense.amount.toLocaleString()}</span>
+                                <span className="font-bold text-ink text-lg">{baseSymbol}{(expense.amount || 0).toLocaleString()}</span>
                                 <button
                                     onClick={() => handleDeleteExpense(expense.id)}
                                     className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
@@ -338,7 +338,7 @@ const TripBudget: React.FC<TripBudgetProps> = ({ trip, settings, onUpdateTrip, c
 
                                         <div className="flex flex-col items-center z-10">
                                             <span className="text-xs font-bold text-coral bg-coral/10 px-2 py-1 rounded-full mb-1">PAY</span>
-                                            <span className="font-black text-2xl text-ink">{baseSymbol}{debt.amount.toLocaleString()}</span>
+                                            <span className="font-black text-2xl text-ink">{baseSymbol}{(debt.amount || 0).toLocaleString()}</span>
                                         </div>
 
                                         <div className="flex flex-col items-end z-10">
@@ -415,7 +415,7 @@ const TripBudget: React.FC<TripBudgetProps> = ({ trip, settings, onUpdateTrip, c
                                     <div className="flex justify-between items-center mb-2">
                                         <label className="text-xs font-bold text-gray-500">匯率 ({selectedCurrency} → {baseCurrency})</label>
                                         <span className="text-xs font-bold text-coral">
-                                            ≈ {baseSymbol}{calculatedBaseAmount.toLocaleString()}
+                                            ≈ {baseSymbol}{(calculatedBaseAmount || 0).toLocaleString()}
                                         </span>
                                     </div>
                                     <div className="relative">
