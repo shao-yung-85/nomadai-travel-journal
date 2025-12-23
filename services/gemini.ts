@@ -25,30 +25,43 @@ const getApiKey = () => {
     return '';
 };
 
+// Fallback mechanism to switch models on error (e.g. 429 Quota Exceeded)
+const MODEL_LIST = [
+    'gemini-2.5-flash-lite', // Primary (User's choice)
+    'gemini-2.0-flash',      // First Fallback (User's 2nd choice)
+    'gemini-flash-latest'    // System Backup (Proven stable)
+];
+
 // Helper to wrap API calls with fallback
-const callAiWithFallback = async (apiCall: (client: GoogleGenAI) => Promise<any>) => {
+const callAiWithFallback = async (apiCall: (client: GoogleGenAI, model: string) => Promise<any>) => {
     // Always get the latest key from storage/env
     const currentKey = getApiKey();
-    let lastError: any = null;
 
-    // 1. Try Primary Key
-    if (currentKey) {
-        try {
-            const client = new GoogleGenAI({ apiKey: currentKey });
-            return await apiCall(client);
-        } catch (error: any) {
-            console.warn("Primary API Key failed", error);
-            lastError = error;
-            // If it's a permission error (403), throw immediately to let user know key is invalid
-            if (error.message?.includes('403') || error.toString().includes('403')) {
-                throw new Error("Invalid API Key (403). Please check your key in Settings.");
-            }
-        }
-    } else {
+    if (!currentKey) {
         throw new Error("API key is missing. Please provide a valid API key in Settings.");
     }
 
-    throw new Error(`AI Service Failed. ${lastError?.message || lastError || 'Unknown error'}`);
+    const client = new GoogleGenAI({ apiKey: currentKey });
+    let lastError: any = null;
+
+    // Try models in sequence
+    for (const model of MODEL_LIST) {
+        try {
+            console.log(`Trying AI model: ${model}`);
+            return await apiCall(client, model);
+        } catch (error: any) {
+            console.warn(`Model ${model} failed`, error);
+            lastError = error;
+
+            // Critical errors that shouldn't trigger fallback (e.g. Invalid Key)
+            if (error.message?.includes('403') || error.toString().includes('403')) {
+                throw new Error("Invalid API Key (403). Please check your key in Settings.");
+            }
+            // For other errors (429, 404, 500, etc.), continue to next model
+        }
+    }
+
+    throw new Error(`All AI models failed. Last error: ${lastError?.message || lastError || 'Unknown error'}`);
 };
 
 
@@ -83,7 +96,7 @@ const getResponseText = (response: any): string => {
     throw new Error("No text found in AI response");
 };
 
-const MODEL_NAME = 'gemini-flash-latest';
+// Removed single MODEL_NAME constant in favor of MODEL_LIST logic
 
 // Note: Image generation and editing is not supported by Gemini Flash models
 // This function is disabled until we integrate with an image generation API
@@ -156,9 +169,9 @@ export const generateCoverImage = async (location: string): Promise<string> => {
 export const generateTripPlan = async (userPrompt: string, language: string = 'zh-TW') => {
     const targetLang = langMap[language] || langMap['zh-TW'];
 
-    return callAiWithFallback(async (ai) => {
+    return callAiWithFallback(async (ai, model) => {
         const response = await ai.models.generateContent({
-            model: MODEL_NAME,
+            model: model,
             contents: `Help me plan a trip. ${userPrompt}`,
             config: {
                 systemInstruction: `You are a professional travel agent AI. 
@@ -227,9 +240,9 @@ export const generateTripPlan = async (userPrompt: string, language: string = 'z
 export const updateTripPlan = async (currentTrip: any, userPrompt: string, language: string = 'zh-TW') => {
     const targetLang = langMap[language] || langMap['zh-TW'];
 
-    return callAiWithFallback(async (ai) => {
+    return callAiWithFallback(async (ai, model) => {
         const response = await ai.models.generateContent({
-            model: MODEL_NAME,
+            model: model,
             contents: `Help me modify an existing trip plan.
             
             Current Trip JSON:
@@ -261,10 +274,10 @@ export const updateTripPlan = async (currentTrip: any, userPrompt: string, langu
 
 export const getVisaRequirements = async (passport: string, destination: string, language: string = 'zh-TW') => {
     const targetLang = langMap[language] || langMap['zh-TW'];
-    return callAiWithFallback(async (ai) => {
+    return callAiWithFallback(async (ai, model) => {
         try {
             const response = await ai.models.generateContent({
-                model: MODEL_NAME,
+                model: model,
                 contents: `I hold a ${passport} passport and want to travel to ${destination}. 
                 Provide visa requirements in STRICT JSON format.
                 
@@ -290,10 +303,10 @@ export const getVisaRequirements = async (passport: string, destination: string,
 
 export const getCulturalEtiquette = async (location: string, language: string = 'zh-TW') => {
     const targetLang = langMap[language] || langMap['zh-TW'];
-    return callAiWithFallback(async (ai) => {
+    return callAiWithFallback(async (ai, model) => {
         try {
             const response = await ai.models.generateContent({
-                model: MODEL_NAME,
+                model: model,
                 contents: `I am currently in (or planning to go to) ${location}. 
                 Provide cultural etiquette guide in STRICT JSON format.
                 
@@ -320,10 +333,10 @@ export const getCulturalEtiquette = async (location: string, language: string = 
 
 export const getAttractionGuide = async (location: string, activity: string, language: string = 'zh-TW') => {
     const targetLang = langMap[language] || langMap['zh-TW'];
-    return callAiWithFallback(async (ai) => {
+    return callAiWithFallback(async (ai, model) => {
         try {
             const response = await ai.models.generateContent({
-                model: MODEL_NAME,
+                model: model,
                 contents: `Tell me about "${activity}" at "${location}". 
                 Provide a very short fun fact, the best photo spot, and one "pro tip" for visiting.
                 Format as simple Markdown (bold keys). Keep it under 100 words.
@@ -339,10 +352,10 @@ export const getAttractionGuide = async (location: string, activity: string, lan
 
 export const getEmergencyInfo = async (country: string, language: string = 'zh-TW') => {
     const targetLang = langMap[language] || langMap['zh-TW'];
-    return callAiWithFallback(async (ai) => {
+    return callAiWithFallback(async (ai, model) => {
         try {
             const response = await ai.models.generateContent({
-                model: MODEL_NAME,
+                model: model,
                 contents: `I am travelling in ${country}. 
                 Provide emergency contact info in STRICT JSON format.
                 
@@ -377,10 +390,10 @@ export const getEmergencyInfo = async (country: string, language: string = 'zh-T
 
 export const getCreditCardAdvice = async (destination: string, language: string = 'zh-TW') => {
     const targetLang = langMap[language] || langMap['zh-TW'];
-    return callAiWithFallback(async (ai) => {
+    return callAiWithFallback(async (ai, model) => {
         try {
             const response = await ai.models.generateContent({
-                model: MODEL_NAME,
+                model: model,
                 contents: `I am travelling to ${destination}. 
                 Provide credit card advice in STRICT JSON format.
                 
@@ -406,7 +419,7 @@ export const getCreditCardAdvice = async (destination: string, language: string 
 
 export const optimizeRoute = async (items: any[], language: string = 'zh-TW') => {
     const targetLang = langMap[language] || langMap['zh-TW'];
-    return callAiWithFallback(async (ai) => {
+    return callAiWithFallback(async (ai, model) => {
         // Simplify items for the prompt to save tokens
         const simplifiedItems = items.map((item: any) => ({
             id: item.id,
@@ -416,7 +429,7 @@ export const optimizeRoute = async (items: any[], language: string = 'zh-TW') =>
         }));
 
         const response = await ai.models.generateContent({
-            model: MODEL_NAME,
+            model: model,
             contents: `I have a list of activities for one day. Reorder them to create the most efficient geographical route.
             
             Current Items: ${JSON.stringify(simplifiedItems)}
@@ -438,10 +451,10 @@ export const optimizeRoute = async (items: any[], language: string = 'zh-TW') =>
 };
 
 export const getTranslation = async (text: string, targetLang: string, userLang: string = 'zh-TW'): Promise<string | null> => {
-    return callAiWithFallback(async (ai) => {
+    return callAiWithFallback(async (ai, model) => {
         try {
             const response = await ai.models.generateContent({
-                model: MODEL_NAME,
+                model: model,
                 contents: `Translate the following text to ${targetLang}.
                 Text: "${text}"
                 
@@ -457,11 +470,11 @@ export const getTranslation = async (text: string, targetLang: string, userLang:
 
 export const getClothingAdvice = async (weather: any[], location: string, language: string = 'zh-TW') => {
     const targetLang = langMap[language] || langMap['zh-TW'];
-    return callAiWithFallback(async (ai) => {
+    return callAiWithFallback(async (ai, model) => {
         try {
             const weatherSummary = weather.map(w => `${w.date}: ${w.condition}, ${w.tempLow}°C - ${w.tempHigh}°C`).join('\n');
             const response = await ai.models.generateContent({
-                model: MODEL_NAME,
+                model: model,
                 contents: `I am travelling to ${location}. Here is the weather forecast:
                 ${weatherSummary}
                 
@@ -480,10 +493,10 @@ export const getClothingAdvice = async (weather: any[], location: string, langua
 
 export const getExchangeRate = async (fromCurrency: string, toCurrency: string): Promise<string | null> => {
     try {
-        return await callAiWithFallback(async (ai) => {
+        return await callAiWithFallback(async (ai, model) => {
             try {
                 const response = await ai.models.generateContent({
-                    model: MODEL_NAME,
+                    model: model,
                     contents: `What is the current exchange rate from ${fromCurrency} to ${toCurrency}?
                     Return ONLY the number. Example: 0.23
                     If you are unsure, return "null".`
