@@ -153,20 +153,20 @@ const TripBudget: React.FC<TripBudgetProps> = ({ trip, settings, onUpdateTrip, c
     };
 
     const handleDeleteExpense = (expenseId: string) => {
-        if (confirm(t.delete_trip_confirm.replace('{title}', t.expense_item))) {
-            const currentExpenses = trip.budget?.expenses || [];
-            const updatedExpenses = currentExpenses.filter(ex => ex.id !== expenseId);
-            const updatedTrip = {
-                ...trip,
-                budget: {
-                    ...trip.budget,
-                    total: trip.budget?.total || 0,
-                    currency: trip.budget?.currency || 'TWD',
-                    expenses: updatedExpenses
-                }
-            };
-            onUpdateTrip?.(updatedTrip);
-        }
+        // if (confirm(t.delete_trip_confirm.replace('{title}', t.expense_item))) {
+        const currentExpenses = trip.budget?.expenses || [];
+        const updatedExpenses = currentExpenses.filter(ex => ex.id !== expenseId);
+        const updatedTrip = {
+            ...trip,
+            budget: {
+                ...trip.budget,
+                total: trip.budget?.total || 0,
+                currency: trip.budget?.currency || 'TWD',
+                expenses: updatedExpenses
+            }
+        };
+        onUpdateTrip?.(updatedTrip);
+        // }
     };
 
     const toggleParticipant = (userId: string) => {
