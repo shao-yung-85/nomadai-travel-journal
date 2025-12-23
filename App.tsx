@@ -12,6 +12,7 @@ import TripMemory from './components/TripMemory';
 import { HomeIcon, SparklesIcon, SquaresPlusIcon, ChatBubbleIcon, CameraIcon } from './components/Icons';
 import { generateTripPlan, generateCoverImage, updateTripPlan } from './services/gemini';
 import ReloadPrompt from './components/ReloadPrompt';
+import OfflineIndicator from './components/OfflineIndicator';
 import { auth, db } from './services/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { collection, query, where, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, orderBy, setDoc, getDoc } from 'firebase/firestore';
@@ -744,12 +745,11 @@ const App: React.FC = () => {
               <SquaresPlusIcon className={`w-6 h-6 ${viewState === ViewState.TOOLS ? 'stroke-2' : 'stroke-[1.5]'}`} />
               {viewState === ViewState.TOOLS && <span className="w-1 h-1 bg-coral rounded-full mt-1"></span>}
             </button>
-          </div>
-        </div>
       )}
-      <ReloadPrompt settings={settings} />
-    </div>
-  );
+            <ReloadPrompt settings={settings} />
+            <OfflineIndicator />
+          </div>
+          );
 };
 
-export default App;
+          export default App;

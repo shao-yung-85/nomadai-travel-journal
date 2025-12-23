@@ -36,4 +36,22 @@ enableMultiTabIndexedDbPersistence(db).catch((err) => {
     }
 });
 
+// Connection State Listener
+import { ref, onValue } from "firebase/database";
+import { getDatabase } from "firebase/database";
+
+// Initialize Realtime Database just for connection presence
+const rtdb = getDatabase(app);
+
+export const onConnectionStateChanged = (callback: (isConnected: boolean) => void) => {
+    const connectedRef = ref(rtdb, ".info/connected");
+    return onValue(connectedRef, (snap) => {
+        if (snap.val() === true) {
+            callback(true);
+        } else {
+            callback(false);
+        }
+    });
+};
+
 export default app;
