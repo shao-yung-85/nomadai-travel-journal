@@ -68,7 +68,11 @@ const TripBookings: React.FC<TripBookingsProps> = ({ trip, settings, onUpdateTri
                                     {booking.type === 'FLIGHT' ? <PlaneIcon className="w-5 h-5" /> : <TicketIcon className="w-5 h-5" />}
                                 </div>
                                 <div>
-                                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{booking.type}</span>
+                                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                        {booking.type === 'FLIGHT' ? t.booking_type_flight :
+                                            booking.type === 'HOTEL' ? t.booking_type_hotel :
+                                                booking.type === 'TRAIN' ? t.booking_type_train : booking.type}
+                                    </span>
                                     <h4 className="font-bold text-ink text-lg">{booking.airline}</h4>
                                 </div>
                             </div>
@@ -81,12 +85,12 @@ const TripBookings: React.FC<TripBookingsProps> = ({ trip, settings, onUpdateTri
 
                         <div className="grid grid-cols-2 gap-4 mb-4">
                             <div>
-                                <p className="text-xs text-gray-400 font-bold mb-1">DEPARTURE</p>
+                                <p className="text-xs text-gray-400 font-bold mb-1">{t.label_departure || 'DEPARTURE'}</p>
                                 <p className="text-ink font-bold text-lg">{booking.origin}</p>
                                 <p className="text-sm text-gray-500">{booking.departureTime}</p>
                             </div>
                             <div className="text-right">
-                                <p className="text-xs text-gray-400 font-bold mb-1">ARRIVAL</p>
+                                <p className="text-xs text-gray-400 font-bold mb-1">{t.label_arrival || 'ARRIVAL'}</p>
                                 <p className="text-ink font-bold text-lg">{booking.destination}</p>
                                 <p className="text-sm text-gray-500">{booking.arrivalTime}</p>
                             </div>
@@ -94,7 +98,7 @@ const TripBookings: React.FC<TripBookingsProps> = ({ trip, settings, onUpdateTri
 
                         <div className="pt-4 border-t border-sand flex justify-between items-center">
                             <div className="text-xs text-gray-400 font-mono">
-                                REF: <span className="text-ink font-bold">{booking.number}</span>
+                                {t.label_ref || 'REF'}: <span className="text-ink font-bold">{booking.number}</span>
                             </div>
                             <button
                                 onClick={() => handleDeleteBooking(booking.id)}
@@ -125,7 +129,9 @@ const TripBookings: React.FC<TripBookingsProps> = ({ trip, settings, onUpdateTri
                                         onClick={() => setNewBookingType(type as any)}
                                         className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${newBookingType === type ? 'bg-ink text-white shadow-sm' : 'text-gray-400 hover:text-ink'}`}
                                     >
-                                        {type}
+                                        {type === 'FLIGHT' ? t.booking_type_flight :
+                                            type === 'HOTEL' ? t.booking_type_hotel :
+                                                type === 'TRAIN' ? t.booking_type_train : type}
                                     </button>
                                 ))}
                             </div>
@@ -135,7 +141,7 @@ const TripBookings: React.FC<TripBookingsProps> = ({ trip, settings, onUpdateTri
                                 <input
                                     value={newBookingProvider}
                                     onChange={(e) => setNewBookingProvider(e.target.value)}
-                                    placeholder="Airline / Hotel Name..."
+                                    placeholder={t.placeholder_provider}
                                     className="w-full bg-white p-4 rounded-xl text-base font-bold border-none shadow-sm outline-none"
                                     autoFocus
                                 />
@@ -147,7 +153,7 @@ const TripBookings: React.FC<TripBookingsProps> = ({ trip, settings, onUpdateTri
                                     <input
                                         value={newBookingRef}
                                         onChange={(e) => setNewBookingRef(e.target.value)}
-                                        placeholder="PNR..."
+                                        placeholder={t.placeholder_pnr}
                                         className="w-full bg-white p-3 rounded-xl text-sm font-bold border-none shadow-sm outline-none"
                                     />
                                 </div>
@@ -168,7 +174,7 @@ const TripBookings: React.FC<TripBookingsProps> = ({ trip, settings, onUpdateTri
                                     <input
                                         value={newBookingOrigin}
                                         onChange={(e) => setNewBookingOrigin(e.target.value)}
-                                        placeholder="TPE..."
+                                        placeholder={t.placeholder_origin}
                                         className="w-full bg-white p-3 rounded-xl text-sm font-bold border-none shadow-sm outline-none"
                                     />
                                 </div>
@@ -177,7 +183,7 @@ const TripBookings: React.FC<TripBookingsProps> = ({ trip, settings, onUpdateTri
                                     <input
                                         value={newBookingDest}
                                         onChange={(e) => setNewBookingDest(e.target.value)}
-                                        placeholder="NRT..."
+                                        placeholder={t.placeholder_dest}
                                         className="w-full bg-white p-3 rounded-xl text-sm font-bold border-none shadow-sm outline-none"
                                     />
                                 </div>

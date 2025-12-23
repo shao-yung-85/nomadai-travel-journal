@@ -41,10 +41,10 @@ const ShoppingList: React.FC<ShoppingListProps> = ({ items, onUpdateItems, setti
     };
 
     const handleDeleteItem = (itemId: string) => {
-        if (confirm(t.delete_trip_confirm.replace('{title}', t.shopping_list))) {
-            const updatedList = items.filter(item => item.id !== itemId);
-            onUpdateItems(updatedList);
-        }
+        // if (confirm(t.delete_trip_confirm.replace('{title}', t.shopping_list))) {
+        const updatedList = items.filter(item => item.id !== itemId);
+        onUpdateItems(updatedList);
+        // }
     };
 
     return (
@@ -87,7 +87,7 @@ const ShoppingList: React.FC<ShoppingListProps> = ({ items, onUpdateItems, setti
                     <div className="w-16 h-16 bg-sand/30 rounded-full flex items-center justify-center text-gray-400">
                         <ShoppingBagIcon className="w-8 h-8" />
                     </div>
-                    <p className="text-gray-400 font-medium">{t.no_itinerary}<br /><span className="text-xs">{t.click_add}</span></p>
+                    <p className="text-gray-400 font-medium">{t.no_shopping_items || 'No items'}<br /><span className="text-xs">{t.click_add}</span></p>
                 </div>
             )}
 
@@ -102,7 +102,7 @@ const ShoppingList: React.FC<ShoppingListProps> = ({ items, onUpdateItems, setti
                                 <input
                                     value={newItemName}
                                     onChange={(e) => setNewItemName(e.target.value)}
-                                    placeholder={t.shopping_list}
+                                    placeholder={t.placeholder_item || 'Item name'}
                                     className="w-full bg-white p-4 rounded-xl text-base font-bold border-none shadow-sm outline-none placeholder:font-normal"
                                     autoFocus
                                 />
