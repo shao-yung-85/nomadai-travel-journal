@@ -184,7 +184,7 @@ const TripMap: React.FC<TripMapProps> = ({ trip, settings, onUpdateTrip, searche
     useEffect(() => {
         if (trip.itinerary && trip.itinerary.length > 0) {
             // Find first day
-            const days = Array.from(new Set(trip.itinerary.map(i => Number(i.day)))).sort((a, b) => a - b);
+            const days = Array.from(new Set(trip.itinerary.map((i: any) => Number(i.day)))).sort((a: number, b: number) => a - b);
             if (days.length > 0) {
                 const firstDay = days[0];
                 const firstDayItems = trip.itinerary
