@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Trip, User } from '../types';
 import { XMarkIcon, UserPlusIcon, LinkIcon, CheckIcon } from './Icons';
 import { translations } from '../utils/translations';
@@ -71,8 +72,8 @@ const ShareTripModal: React.FC<ShareTripModalProps> = ({ trip, currentUser, onCl
         setTimeout(() => setCopied(false), 2000);
     };
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+    return createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
             <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl">
                 <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
                     <h3 className="text-lg font-bold text-ink">{t.share_trip || "Share Trip"}</h3>
@@ -159,7 +160,8 @@ const ShareTripModal: React.FC<ShareTripModalProps> = ({ trip, currentUser, onCl
                     </div>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 
