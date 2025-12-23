@@ -97,6 +97,7 @@ export interface Trip {
   startDate: string;
   endDate: string;
   coverImage?: string;
+  ownerId?: string; // ID of the creator
   collaborators?: string[]; // List of invited User IDs
   userIds?: string[]; // Owner ID + Collaborator IDs (for querying)
   itinerary: ItineraryItem[];

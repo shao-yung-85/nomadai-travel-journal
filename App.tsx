@@ -616,6 +616,7 @@ const App: React.FC = () => {
             onSave={(t) => { handleAddTrip(t); setViewState(ViewState.HOME); }}
             onCancel={() => setViewState(ViewState.HOME)}
             settings={settings}
+            currentUser={user!}
           />
         );
       case ViewState.MAGIC_EDITOR:

@@ -323,7 +323,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, user, onBack, onDelete, o
                             trip={trip}
                             currentUser={user}
                             onClose={() => setIsShareModalOpen(false)}
-                            onUpdate={onUpdateTrip!}
+                            settings={settings}
                         />
                     )}
                 </div>

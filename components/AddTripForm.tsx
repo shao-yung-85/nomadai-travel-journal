@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { Trip, AppSettings } from '../types';
+import { Trip, AppSettings, User } from '../types';
 import { ChevronLeftIcon, CalendarIcon, CameraIcon, SparklesIcon } from './Icons';
 import { generateCoverImage } from '../services/gemini';
 import { translations } from '../utils/translations';
@@ -9,9 +9,10 @@ interface AddTripFormProps {
   onSave: (trip: Trip) => void;
   onCancel: () => void;
   settings: AppSettings;
+  currentUser: User;
 }
 
-const AddTripForm: React.FC<AddTripFormProps> = ({ onSave, onCancel, settings }) => {
+const AddTripForm: React.FC<AddTripFormProps> = ({ onSave, onCancel, settings, currentUser }) => {
   const t = translations[settings.language] || translations['zh-TW'];
   const [title, setTitle] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -74,7 +75,10 @@ const AddTripForm: React.FC<AddTripFormProps> = ({ onSave, onCancel, settings })
       startDate,
       endDate,
       itinerary: [],
-      coverImage: finalCoverImage
+      coverImage: finalCoverImage,
+      ownerId: currentUser.id,
+      userIds: [currentUser.id],
+      collaborators: []
     };
 
     onSave(newTrip);
