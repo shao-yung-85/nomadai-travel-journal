@@ -745,11 +745,13 @@ const App: React.FC = () => {
               <SquaresPlusIcon className={`w-6 h-6 ${viewState === ViewState.TOOLS ? 'stroke-2' : 'stroke-[1.5]'}`} />
               {viewState === ViewState.TOOLS && <span className="w-1 h-1 bg-coral rounded-full mt-1"></span>}
             </button>
-      )}
-            <ReloadPrompt settings={settings} />
-            <OfflineIndicator />
           </div>
-          );
+        </div>
+      )}
+      <ReloadPrompt settings={settings} />
+      <OfflineIndicator />
+    </div>
+  );
 };
 
-          export default App;
+export default App;
