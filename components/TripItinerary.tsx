@@ -496,8 +496,8 @@ const TripItinerary: React.FC<TripItineraryProps> = ({ trip, settings, onUpdateT
 
             {/* Add/Edit Activity Modal */}
             {isAddingActivity && (
-                <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onClick={() => setIsAddingActivity(false)}>
-                    <div className="bg-paper w-full max-w-sm rounded-3xl shadow-2xl p-6 animate-slide-up max-h-[90vh] overflow-y-auto overscroll-contain" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-start pt-24 sm:items-center sm:pt-0 justify-center p-4 animate-fade-in" onClick={() => setIsAddingActivity(false)}>
+                    <div className="bg-paper w-full max-w-sm rounded-3xl shadow-2xl p-6 animate-slide-up max-h-[85vh] overflow-y-auto overscroll-contain" onClick={e => e.stopPropagation()}>
                         <h3 className="text-xl font-bold text-ink mb-6 text-center">{editingItemId ? t.edit_activity : t.add_activity}</h3>
                         <div className="space-y-4">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
