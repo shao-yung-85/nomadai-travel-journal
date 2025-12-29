@@ -497,27 +497,12 @@ const TripItinerary: React.FC<TripItineraryProps> = ({ trip, settings, onUpdateT
             {/* Add/Edit Activity Modal */}
             {isAddingActivity && (
                 <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onClick={() => setIsAddingActivity(false)}>
-                    <div className="bg-paper w-full max-w-sm rounded-3xl shadow-2xl p-6 animate-slide-up max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                    <div className="bg-paper w-full max-w-sm rounded-3xl shadow-2xl p-6 animate-slide-up max-h-[90vh] overflow-y-auto overscroll-contain" onClick={e => e.stopPropagation()}>
                         <h3 className="text-xl font-bold text-ink mb-6 text-center">{editingItemId ? t.edit_activity : t.add_activity}</h3>
                         <div className="space-y-4">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div className="space-y-1">
-                                    <label className="text-xs font-bold text-gray-400 ml-1">
-                                        {t.day}
-                                        {trip.startDate && (
-                                            <span className="ml-2 font-normal text-gray-300">
-                                                {(() => {
-                                                    try {
-                                                        const date = new Date(trip.startDate);
-                                                        date.setDate(date.getDate() + (newActivityDay - 1));
-                                                        return `(${date.getMonth() + 1}/${date.getDate()})`;
-                                                    } catch (e) {
-                                                        return '';
-                                                    }
-                                                })()}
-                                            </span>
-                                        )}
-                                    </label>
+                                    <label className="text-xs font-bold text-gray-400 ml-1">{t.day}</label>
                                     <div className="flex items-center bg-white rounded-xl border border-sand px-3">
                                         <span className="text-sm font-bold text-gray-400 mr-2">{t.day}</span>
                                         <input
@@ -552,6 +537,7 @@ const TripItinerary: React.FC<TripItineraryProps> = ({ trip, settings, onUpdateT
                                     className="w-full bg-white p-4 rounded-xl text-base font-bold border-none shadow-sm outline-none placeholder:font-normal placeholder:text-gray-300"
                                 />
                             </div>
+
                             <div className="space-y-1">
                                 <label className="text-xs font-bold text-gray-400 ml-1">{t.location}</label>
                                 <input
@@ -561,55 +547,55 @@ const TripItinerary: React.FC<TripItineraryProps> = ({ trip, settings, onUpdateT
                                     className="w-full bg-white p-4 rounded-xl text-base font-bold border-none shadow-sm outline-none placeholder:font-normal placeholder:text-gray-300"
                                 />
                             </div>
-                        </div>
 
-                        <div className="space-y-1 mt-4">
-                            <label className="text-xs font-bold text-gray-400 ml-1">{t.notes}</label>
-                            <textarea
-                                value={newActivityNotes}
-                                onChange={(e) => setNewActivityNotes(e.target.value)}
-                                placeholder="..."
-                                className="w-full bg-white p-4 rounded-xl text-base font-medium border-none shadow-sm outline-none placeholder:font-normal placeholder:text-gray-300 min-h-[80px]"
-                            />
-                        </div>
-
-                        <div className="pt-4 border-t border-sand mt-4">
-                            <label className="text-xs font-bold text-gray-400 ml-1 mb-2 block">{t.travel_to_next}</label>
-                            <div className="flex gap-2 mb-3 overflow-x-auto no-scrollbar">
-                                {['WALK', 'TRAIN', 'BUS', 'CAR', 'FLIGHT'].map(mode => (
-                                    <button
-                                        key={mode}
-                                        onClick={() => setNewTravelMode(mode as any)}
-                                        className={`p-2 rounded-lg border ${newTravelMode === mode ? 'bg-ink text-white border-ink' : 'bg-white text-gray-400 border-sand'}`}
-                                    >
-                                        {getTravelIcon(mode)}
-                                    </button>
-                                ))}
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <input
-                                    value={newTravelDuration}
-                                    onChange={(e) => setNewTravelDuration(e.target.value)}
-                                    placeholder="1h 30m"
-                                    className="w-full bg-white p-3 rounded-xl text-sm font-bold border-none shadow-sm outline-none"
-                                />
-                                <input
-                                    value={newTravelDetails}
-                                    onChange={(e) => setNewTravelDetails(e.target.value)}
-                                    placeholder="詳細說明..."
-                                    className="w-full bg-white p-3 rounded-xl text-sm font-medium border-none shadow-sm outline-none"
+                            <div className="space-y-1">
+                                <label className="text-xs font-bold text-gray-400 ml-1">{t.notes}</label>
+                                <textarea
+                                    value={newActivityNotes}
+                                    onChange={(e) => setNewActivityNotes(e.target.value)}
+                                    placeholder="..."
+                                    className="w-full bg-white p-4 rounded-xl text-base font-medium border-none shadow-sm outline-none placeholder:font-normal placeholder:text-gray-300 min-h-[80px]"
                                 />
                             </div>
-                        </div>
 
-                        <div className="sticky bottom-0 bg-paper pt-4 mt-4 border-t border-sand z-10 pb-6">
-                            <button
-                                onClick={handleSaveActivity}
-                                disabled={!newActivityName}
-                                className="w-full bg-coral text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-coral/30 active:scale-95 transition-all disabled:opacity-50 disabled:shadow-none"
-                            >
-                                {editingItemId ? t.confirm : t.add_activity}
-                            </button>
+                            <div className="pt-4 border-t border-sand">
+                                <label className="text-xs font-bold text-gray-400 ml-1 mb-2 block">{t.travel_to_next}</label>
+                                <div className="flex gap-2 mb-3 overflow-x-auto no-scrollbar">
+                                    {['WALK', 'TRAIN', 'BUS', 'CAR', 'FLIGHT'].map(mode => (
+                                        <button
+                                            key={mode}
+                                            onClick={() => setNewTravelMode(mode as any)}
+                                            className={`p-2 rounded-lg border ${newTravelMode === mode ? 'bg-ink text-white border-ink' : 'bg-white text-gray-400 border-sand'}`}
+                                        >
+                                            {getTravelIcon(mode)}
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <input
+                                        value={newTravelDuration}
+                                        onChange={(e) => setNewTravelDuration(e.target.value)}
+                                        placeholder="1h 30m"
+                                        className="w-full bg-white p-3 rounded-xl text-sm font-bold border-none shadow-sm outline-none"
+                                    />
+                                    <input
+                                        value={newTravelDetails}
+                                        onChange={(e) => setNewTravelDetails(e.target.value)}
+                                        placeholder="詳細說明..."
+                                        className="w-full bg-white p-3 rounded-xl text-sm font-medium border-none shadow-sm outline-none"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="sticky bottom-0 bg-paper pt-4 mt-4 border-t border-sand z-10 pb-20">
+                                <button
+                                    onClick={handleSaveActivity}
+                                    disabled={!newActivityName}
+                                    className="w-full bg-coral text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-coral/30 active:scale-95 transition-all disabled:opacity-50 disabled:shadow-none"
+                                >
+                                    {editingItemId ? t.confirm : t.add_activity}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -632,7 +618,7 @@ const TripItinerary: React.FC<TripItineraryProps> = ({ trip, settings, onUpdateT
             >
                 <span className="text-3xl font-light mb-1">+</span>
             </button>
-        </div >
+        </div>
     );
 };
 
