@@ -497,7 +497,7 @@ const TripItinerary: React.FC<TripItineraryProps> = ({ trip, settings, onUpdateT
 
             {isAddingActivity && (
                 <div className="fixed inset-0 z-[60] bg-paper sm:bg-black/50 sm:backdrop-blur-sm flex items-start sm:items-center justify-center sm:p-4 animate-fade-in">
-                    <div className="w-full h-full sm:h-auto sm:max-w-sm sm:bg-paper sm:rounded-3xl sm:shadow-2xl p-6 animate-slide-up overflow-y-auto" onClick={e => e.stopPropagation()}>
+                    <div className="w-full h-full sm:h-auto sm:max-w-sm sm:bg-paper sm:rounded-3xl sm:shadow-2xl px-6 pt-6 pb-48 sm:p-6 animate-slide-up overflow-y-auto" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center mb-6 relative">
                             <button
                                 onClick={() => setIsAddingActivity(false)}
