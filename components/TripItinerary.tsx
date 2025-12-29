@@ -496,24 +496,20 @@ const TripItinerary: React.FC<TripItineraryProps> = ({ trip, settings, onUpdateT
 
             {/* Add/Edit Activity Modal */}
             {isAddingActivity && (
-                <div className="fixed inset-0 z-[60] sm:bg-black/50 sm:backdrop-blur-sm flex items-center justify-center sm:p-4 animate-fade-in" onClick={() => setIsAddingActivity(false)}>
-                    {/* Mobile: Full Screen, Desktop: Centered Card */}
-                    <div className="bg-paper w-full h-full sm:h-auto sm:max-h-[85vh] sm:max-w-sm sm:rounded-3xl sm:shadow-2xl flex flex-col" onClick={e => e.stopPropagation()}>
-
-                        {/* Mobile Header */}
-                        <div className="flex sm:hidden items-center justify-between p-4 border-b border-sand bg-white">
-                            <button onClick={() => setIsAddingActivity(false)} className="text-gray-500 font-bold text-sm">取消</button>
-                            <h3 className="text-lg font-bold text-ink">{editingItemId ? t.edit_activity : t.add_activity}</h3>
-                            <div className="w-8"></div> {/* Spacer */}
+                <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in" onClick={() => setIsAddingActivity(false)}>
+                    <div className="bg-paper w-full h-[95vh] sm:h-auto sm:max-h-[90vh] max-w-sm rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 animate-slide-up overflow-y-auto overscroll-contain relative" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-center mb-6 relative">
+                            <button
+                                onClick={() => setIsAddingActivity(false)}
+                                className="absolute left-0 p-2 -ml-2 text-gray-400 hover:text-ink"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                            <h3 className="text-xl font-bold text-ink">{editingItemId ? t.edit_activity : t.add_activity}</h3>
                         </div>
-
-                        {/* Desktop Header (Hidden on Mobile) */}
-                        <div className="hidden sm:block p-6 pb-0">
-                            <h3 className="text-xl font-bold text-ink text-center">{editingItemId ? t.edit_activity : t.add_activity}</h3>
-                        </div>
-
-                        {/* Scrollable Content */}
-                        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 overscroll-contain">
+                        <div className="space-y-4">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div className="space-y-1">
                                     <label className="text-xs font-bold text-gray-400 ml-1">{t.day}</label>
@@ -600,19 +596,16 @@ const TripItinerary: React.FC<TripItineraryProps> = ({ trip, settings, onUpdateT
                                     />
                                 </div>
                             </div>
-                            {/* Empty space at bottom to ensure button doesn't cover content */}
-                            <div className="h-24 sm:h-0"></div>
-                        </div>
 
-                        {/* Footer / Sticky Button */}
-                        <div className="p-4 bg-white border-t border-sand sm:border-none sm:bg-transparent sm:pt-0">
-                            <button
-                                onClick={handleSaveActivity}
-                                disabled={!newActivityName}
-                                className="w-full bg-coral text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-coral/30 active:scale-95 transition-all disabled:opacity-50 disabled:shadow-none"
-                            >
-                                {editingItemId ? t.confirm : t.add_activity}
-                            </button>
+                            <div className="sticky bottom-0 bg-paper pt-4 mt-4 border-t border-sand z-10 pb-20">
+                                <button
+                                    onClick={handleSaveActivity}
+                                    disabled={!newActivityName}
+                                    className="w-full bg-coral text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-coral/30 active:scale-95 transition-all disabled:opacity-50 disabled:shadow-none"
+                                >
+                                    {editingItemId ? t.confirm : t.add_activity}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
