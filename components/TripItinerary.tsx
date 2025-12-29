@@ -496,8 +496,8 @@ const TripItinerary: React.FC<TripItineraryProps> = ({ trip, settings, onUpdateT
 
             {/* Add/Edit Activity Modal */}
             {isAddingActivity && (
-                <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 animate-fade-in" onClick={() => setIsAddingActivity(false)}>
-                    <div className="bg-paper w-full max-w-sm rounded-3xl shadow-2xl p-6 animate-slide-up max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onClick={() => setIsAddingActivity(false)}>
+                    <div className="bg-paper w-full max-w-sm rounded-3xl shadow-2xl p-6 animate-slide-up max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
                         <h3 className="text-xl font-bold text-ink mb-6 text-center">{editingItemId ? t.edit_activity : t.add_activity}</h3>
                         <div className="space-y-4">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -552,16 +552,18 @@ const TripItinerary: React.FC<TripItineraryProps> = ({ trip, settings, onUpdateT
                                     className="w-full bg-white p-4 rounded-xl text-base font-bold border-none shadow-sm outline-none placeholder:font-normal placeholder:text-gray-300"
                                 />
                             </div>
-                            <label className="text-xs font-bold text-gray-400 ml-1">{t.location}</label>
-                            <input
-                                value={newActivityLocation}
-                                onChange={(e) => setNewActivityLocation(e.target.value)}
-                                placeholder="..."
-                                className="w-full bg-white p-4 rounded-xl text-base font-bold border-none shadow-sm outline-none placeholder:font-normal placeholder:text-gray-300"
-                            />
+                            <div className="space-y-1">
+                                <label className="text-xs font-bold text-gray-400 ml-1">{t.location}</label>
+                                <input
+                                    value={newActivityLocation}
+                                    onChange={(e) => setNewActivityLocation(e.target.value)}
+                                    placeholder="..."
+                                    className="w-full bg-white p-4 rounded-xl text-base font-bold border-none shadow-sm outline-none placeholder:font-normal placeholder:text-gray-300"
+                                />
+                            </div>
                         </div>
 
-                        <div className="space-y-1">
+                        <div className="space-y-1 mt-4">
                             <label className="text-xs font-bold text-gray-400 ml-1">{t.notes}</label>
                             <textarea
                                 value={newActivityNotes}
@@ -571,7 +573,7 @@ const TripItinerary: React.FC<TripItineraryProps> = ({ trip, settings, onUpdateT
                             />
                         </div>
 
-                        <div className="pt-4 border-t border-sand">
+                        <div className="pt-4 border-t border-sand mt-4">
                             <label className="text-xs font-bold text-gray-400 ml-1 mb-2 block">{t.travel_to_next}</label>
                             <div className="flex gap-2 mb-3 overflow-x-auto no-scrollbar">
                                 {['WALK', 'TRAIN', 'BUS', 'CAR', 'FLIGHT'].map(mode => (
@@ -600,7 +602,7 @@ const TripItinerary: React.FC<TripItineraryProps> = ({ trip, settings, onUpdateT
                             </div>
                         </div>
 
-                        <div className="sticky bottom-0 bg-paper pt-4 mt-4 border-t border-sand z-10 pb-20">
+                        <div className="sticky bottom-0 bg-paper pt-4 mt-4 border-t border-sand z-10 pb-6">
                             <button
                                 onClick={handleSaveActivity}
                                 disabled={!newActivityName}
