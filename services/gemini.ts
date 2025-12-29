@@ -6,7 +6,8 @@ const getApiKey = () => {
     try {
         // 1. Check LocalStorage (Browser only)
         if (typeof window !== 'undefined' && window.localStorage) {
-            const storedKey = localStorage.getItem('nomad_user_api_key');
+            // Check established key first, then legacy
+            const storedKey = localStorage.getItem('geminiApiKey') || localStorage.getItem('nomad_user_api_key');
             if (storedKey) return storedKey;
         }
 
