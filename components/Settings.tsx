@@ -32,8 +32,9 @@ const Settings: React.FC<SettingsProps> = ({ onBack, settings, onUpdateSettings,
     }, []);
 
     const handleSaveApiKey = (value: string) => {
-        onUpdateSettings({ apiKey: value });
-        localStorage.setItem('nomad_user_api_key', value);
+        const cleanValue = value.trim();
+        onUpdateSettings({ apiKey: cleanValue });
+        localStorage.setItem('nomad_user_api_key', cleanValue);
         if (value) {
             setShowSaved(true);
             setTimeout(() => setShowSaved(false), 2000);
