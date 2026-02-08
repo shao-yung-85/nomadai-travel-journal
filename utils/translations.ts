@@ -126,6 +126,11 @@ export const translations = {
     api_key_placeholder: '貼上您的 API Key',
     api_key_help: '您的 Key 僅會儲存在瀏覽器中，不會上傳伺服器。',
     api_key_saved: 'API Key 已儲存',
+    test_ai_connection: '測試 AI 連線',
+    test_ai_success: '連線成功！',
+    test_ai_failed: '連線失敗',
+    test_ai_testing: '測試中...',
+    api_source: '金鑰來源',
 
     theme_color: '主題顏色',
     payer_me: '我付',

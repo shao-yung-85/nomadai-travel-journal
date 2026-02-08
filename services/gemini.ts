@@ -2,7 +2,8 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
 // Safe API key retrieval for Vite environment
-const getApiKey = () => {
+// Safe API key retrieval for Vite environment
+export const getApiKey = () => {
     try {
         // 1. Check LocalStorage (Browser only)
         if (typeof window !== 'undefined' && window.localStorage) {
@@ -23,6 +24,35 @@ const getApiKey = () => {
         console.warn("Failed to access API key", e);
     }
     return '';
+};
+
+export const testGeminiConnection = async (): Promise<{ success: boolean; message: string; source: string }> => {
+    const key = getApiKey();
+    let source = 'None';
+    if (typeof window !== 'undefined' && window.localStorage && localStorage.getItem('nomad_user_api_key')) {
+        source = 'LocalStorage';
+    } else if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_KEY) {
+        source = 'Vite Env';
+    } else if (typeof process !== 'undefined' && process.env && process.env.VITE_API_KEY) {
+        source = 'Node Env';
+    }
+
+    if (!key) {
+        return { success: false, message: 'No API Key found.', source };
+    }
+
+    try {
+        const client = new GoogleGenAI({ apiKey: key });
+        // Use flash-latest for quick test
+        const response = await client.models.generateContent({
+            model: 'gemini-flash-latest',
+            contents: 'Reply with "OK"',
+        });
+        const text = getResponseText(response);
+        return { success: true, message: `Connected! Response: ${text}`, source };
+    } catch (error: any) {
+        return { success: false, message: error.message || error.toString(), source };
+    }
 };
 
 // Fallback mechanism to switch models on error (e.g. 429 Quota Exceeded)

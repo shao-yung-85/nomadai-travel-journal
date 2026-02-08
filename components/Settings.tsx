@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AppSettings, User } from '../types';
 import { ChevronLeftIcon, TrashIcon, LogOutIcon, KeyIcon } from './Icons';
 import { translations } from '../utils/translations';
+import { testGeminiConnection } from '../services/gemini';
 
 interface SettingsProps {
     onBack: () => void;
@@ -112,6 +113,35 @@ const Settings: React.FC<SettingsProps> = ({ onBack, settings, onUpdateSettings,
                                 取得免費 Key
                             </a>
                         </p>
+                    </div>
+
+                    {/* Diagnostic Tool */}
+                    <div className="mt-4 pt-4 border-t border-gray-100">
+                        <button
+                            onClick={async () => {
+                                const btn = document.getElementById('test-ai-btn');
+                                const resultArea = document.getElementById('test-ai-result');
+                                if (btn) btn.textContent = t.test_ai_testing || 'Testing...';
+                                if (resultArea) resultArea.innerHTML = '';
+
+                                const result = await testGeminiConnection();
+
+                                if (btn) btn.textContent = t.test_ai_connection || 'Test AI Connection';
+                                if (resultArea) {
+                                    resultArea.className = `text-xs p-3 rounded-lg mt-2 ${result.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`;
+                                    resultArea.innerHTML = `
+                                        <strong>${result.success ? (t.test_ai_success || 'Success') : (t.test_ai_failed || 'Failed')}</strong><br/>
+                                        Source: ${result.source}<br/>
+                                        Message: ${result.message}
+                                    `;
+                                }
+                            }}
+                            id="test-ai-btn"
+                            className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-2 rounded-lg transition-colors font-medium"
+                        >
+                            {t.test_ai_connection || '測試 AI 連線'}
+                        </button>
+                        <div id="test-ai-result"></div>
                     </div>
                 </div>
 
