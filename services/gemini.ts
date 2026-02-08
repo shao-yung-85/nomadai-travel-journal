@@ -41,6 +41,17 @@ export const testGeminiConnection = async (): Promise<{ success: boolean; messag
         return { success: false, message: 'No API Key found.', source };
     }
 
+    // Client-side validation
+    if (key.length < 30) {
+        return { success: false, message: `Key too short (${key.length} chars). Check copy-paste.`, source };
+    }
+    if (key.includes(' ')) {
+        return { success: false, message: 'Key contains spaces. Please re-paste.', source };
+    }
+    if (!key.startsWith('AIza')) {
+        return { success: false, message: 'Key should start with "AIza". Wrong key?', source };
+    }
+
     try {
         const client = new GoogleGenAI({ apiKey: key });
         // Use flash-latest for quick test

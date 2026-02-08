@@ -32,7 +32,8 @@ const Settings: React.FC<SettingsProps> = ({ onBack, settings, onUpdateSettings,
     }, []);
 
     const handleSaveApiKey = (value: string) => {
-        const cleanValue = value.trim();
+        // Aggressively remove all whitespace, newlines, and hidden characters
+        const cleanValue = value.replace(/\s/g, '');
         onUpdateSettings({ apiKey: cleanValue });
         localStorage.setItem('nomad_user_api_key', cleanValue);
         if (value) {
