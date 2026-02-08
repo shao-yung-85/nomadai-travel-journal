@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Trip, ItineraryItem, AppSettings } from '../types';
 import { getAttractionGuide, optimizeRoute, getClothingAdvice } from '../services/gemini';
 import { translations } from '../utils/translations';
@@ -476,8 +477,8 @@ const TripItinerary: React.FC<TripItineraryProps> = ({ trip, settings, onUpdateT
             )}
 
             {/* AI Guide Modal */}
-            {selectedAttraction && (
-                <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 animate-fade-in" onClick={() => setSelectedAttraction(null)}>
+            {selectedAttraction && typeof document !== 'undefined' && createPortal(
+                <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 animate-fade-in" onClick={() => setSelectedAttraction(null)}>
                     <div className="bg-paper w-full max-w-sm rounded-3xl shadow-2xl p-6 animate-slide-up max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-xl font-bold text-ink">{selectedAttraction.name}</h3>
@@ -491,11 +492,12 @@ const TripItinerary: React.FC<TripItineraryProps> = ({ trip, settings, onUpdateT
                             <div className="prose prose-sm text-gray-600 leading-relaxed whitespace-pre-line">{aiGuideContent}</div>
                         )}
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* Add/Edit Activity Modal */}
-            {isAddingActivity && (
+            {isAddingActivity && typeof document !== 'undefined' && createPortal(
                 <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 animate-fade-in" onClick={() => setIsAddingActivity(false)}>
                     <div className="bg-paper w-full max-w-sm rounded-3xl shadow-2xl p-6 animate-slide-up max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
                         <h3 className="text-xl font-bold text-ink mb-6 text-center">{editingItemId ? t.edit_activity : t.add_activity}</h3>
@@ -588,7 +590,7 @@ const TripItinerary: React.FC<TripItineraryProps> = ({ trip, settings, onUpdateT
                                 </div>
                             </div>
 
-                            <div className="sticky bottom-0 bg-paper pt-4 mt-4 border-t border-sand z-10 pb-20">
+                            <div className="sticky bottom-0 bg-paper pt-4 mt-4 border-t border-sand z-10 pb-6">
                                 <button
                                     onClick={handleSaveActivity}
                                     disabled={!newActivityName}
@@ -599,7 +601,8 @@ const TripItinerary: React.FC<TripItineraryProps> = ({ trip, settings, onUpdateT
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* Floating Action Button for Adding Activity */}
