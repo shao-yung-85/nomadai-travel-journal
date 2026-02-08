@@ -18,17 +18,21 @@ const Settings: React.FC<SettingsProps> = ({ onBack, settings, onUpdateSettings,
     const t = translations[settings.language] || translations['zh-TW'];
 
     useEffect(() => {
-        // Migration: Check for old local storage key
-        const storedKey = localStorage.getItem('nomad_user_api_key');
+        // Migration: Check for old local storage keys
+        const storedKey = localStorage.getItem('nomad_user_api_key') || localStorage.getItem('geminiApiKey');
         if (storedKey && !settings.apiKey) {
             onUpdateSettings({ apiKey: storedKey });
-            localStorage.removeItem('nomad_user_api_key'); // Clean up
+            // Consolidate to correct key
+            if (!localStorage.getItem('nomad_user_api_key')) {
+                localStorage.setItem('nomad_user_api_key', storedKey);
+            }
+            localStorage.removeItem('geminiApiKey'); // Clean up wrong key
         }
     }, []);
 
     const handleSaveApiKey = (value: string) => {
         onUpdateSettings({ apiKey: value });
-        localStorage.setItem('geminiApiKey', value);
+        localStorage.setItem('nomad_user_api_key', value);
         if (value) {
             setShowSaved(true);
             setTimeout(() => setShowSaved(false), 2000);

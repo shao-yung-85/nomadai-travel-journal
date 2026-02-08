@@ -5,8 +5,7 @@ import { translations } from '../utils/translations';
 import {
     ClockIcon, MapPinIcon, PencilIcon, TrashIcon, RobotIcon,
     ListIcon, SparklesIcon, ShareIcon, LightBulbIcon,
-    WalkIcon, TrainIcon, BusIcon, CarIcon, PlaneIcon, WalletIcon,
-    ChevronLeftIcon
+    WalkIcon, TrainIcon, BusIcon, CarIcon, PlaneIcon, WalletIcon
 } from './Icons';
 
 interface TripItineraryProps {
@@ -495,20 +494,11 @@ const TripItinerary: React.FC<TripItineraryProps> = ({ trip, settings, onUpdateT
                 </div>
             )}
 
+            {/* Add/Edit Activity Modal */}
             {isAddingActivity && (
-                <div className="fixed inset-0 z-[60] bg-paper sm:bg-black/50 sm:backdrop-blur-sm flex items-start sm:items-center justify-center sm:p-4 animate-fade-in">
-                    <div className="w-full h-full sm:h-auto sm:max-w-sm sm:bg-paper sm:rounded-3xl sm:shadow-2xl p-6 animate-slide-up overflow-y-auto" onClick={e => e.stopPropagation()}>
-                        <div className="flex items-center mb-6 relative">
-                            <button
-                                onClick={() => setIsAddingActivity(false)}
-                                className="absolute left-0 p-2 -ml-2 rounded-full text-gray-400 hover:bg-gray-100 sm:hidden"
-                            >
-                                <ChevronLeftIcon className="w-6 h-6" />
-                            </button>
-                            <h3 className="text-xl font-bold text-ink w-full text-center">
-                                {editingItemId ? t.edit_activity : t.add_activity}
-                            </h3>
-                        </div>
+                <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 animate-fade-in" onClick={() => setIsAddingActivity(false)}>
+                    <div className="bg-paper w-full max-w-sm rounded-3xl shadow-2xl p-6 animate-slide-up max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-xl font-bold text-ink mb-6 text-center">{editingItemId ? t.edit_activity : t.add_activity}</h3>
                         <div className="space-y-4">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div className="space-y-1">
@@ -545,6 +535,7 @@ const TripItinerary: React.FC<TripItineraryProps> = ({ trip, settings, onUpdateT
                                     onChange={(e) => setNewActivityName(e.target.value)}
                                     placeholder="..."
                                     className="w-full bg-white p-4 rounded-xl text-base font-bold border-none shadow-sm outline-none placeholder:font-normal placeholder:text-gray-300"
+                                    autoFocus
                                 />
                             </div>
 
