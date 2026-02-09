@@ -190,20 +190,16 @@ export const editTravelPhoto = async (
 
 export const generateCoverImage = async (location: string): Promise<string> => {
     try {
-        // Use Pollinations.ai for real AI image generation (Free, No API Key required)
-        // Format: https://image.pollinations.ai/prompt/{prompt}
-        const prompt = `Cinematic travel photography of ${location}, 4k, high quality, sunny day, vibrant colors, wide angle`;
-        const encodedPrompt = encodeURIComponent(prompt);
-        // Add random seed to ensure fresh images
-        const seed = Math.floor(Math.random() * 1000000);
-        const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1600&height=900&nologo=true&seed=${seed}&model=flux`;
+        // Pollinations.ai is hitting anonymous rate limits (Feb 2026).
+        // Switch to LoremFlickr for reliable, no-key travel photos.
+        const encodedLocation = encodeURIComponent(location);
+        // Use 'travel' and 'landmark' tags to improve relevance
+        const imageUrl = `https://loremflickr.com/1200/800/${encodedLocation},travel,landmark/all`;
 
-        // Return the URL directly
         return imageUrl;
     } catch (error) {
         console.error('Failed to generate cover image:', error);
-        // Fallback to placeholder
-        return `https://via.placeholder.com/1600x900/D4A574/FFFFFF?text=${encodeURIComponent(location)}`;
+        return `https://via.placeholder.com/1200x800/D4A574/FFFFFF?text=${encodeURIComponent(location)}`;
     }
 }
 
